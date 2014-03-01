@@ -1,0 +1,30 @@
+##############################
+# LINUX ALIAS
+##############################
+# CMD
+alias al="vim $INCLUDE/aliases.linux"
+alias agu="sudo apt-get update"
+alias agi="sudo apt-get install"
+alias ls='ls --color=auto -C'
+alias trc="transmission-remote-cli"
+alias postgres="sudo /etc/init.d/postgresql"
+alias serve="node $DEV/simple_file_server/simple_file_server.js"
+
+# DIR
+alias dls="cd $DOWNLOAD"
+
+# Start postgres if not running
+if type psql >/dev/null 2>&1; then
+    if [ "`/etc/init.d/postgresql status | grep down`" ]; then
+        sudo /etc/init.d/postgresql start 1>/dev/null
+        echo "Starting Postgres..."
+    fi
+fi
+
+# Start mongo if not running
+if type mongo >/dev/null 2>&1; then
+    if [[ "$(ps aux | grep mongo | grep -v grep)" = "" ]]; then
+        (sudo mongod --fork -f /etc/mongodb.conf 1>/dev/null)
+        echo "Starting MongoDB..."
+    fi
+fi

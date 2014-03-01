@@ -1,0 +1,46 @@
+##########################################
+# PROMPT COMPONENTS
+##########################################
+username() {
+    [[ "$(uname)" = *Linux* ]] && local NAME="%n-linux" || local NAME="%n"
+    echo "%{$fg[cyan]%}$NAME%{$reset_color%}: "
+}
+collapse_pwd() {
+    if [[ -n $GEEKSTUFF ]]; then
+        CURDIR=$(pwd | sed -e "s,^$HOME,~,g;s,^$GEEKSTUFF,$,g")
+    else
+        CURDIR=$(pwd | sed -e "s,^$HOME,~,g")
+    fi
+    echo "%{$fg[blue]%}$CURDIR%{$reset_color%}"
+}
+prompt_char() {
+    git branch >/dev/null 2>/dev/null && local SIGN='±' || local SIGN='»'
+    echo "$SIGN%{$reset_color%}"
+}
+git_info() {
+    git branch >/dev/null 2>/dev/null && \
+    echo "%{$fg[white]%} on %{$fg[yellow]%}$(parse_git_branch)%{$reset_color%}"
+}
+node_version() {
+    if type node >/dev/null 2>&1; then
+        echo "%{$fg[black]%}[$(node -v)]%{$reset_color%}"
+    fi
+}
+battery() {
+    local PERCENT=$(battery_pct_prompt)
+    [[ "$(uname)" = *Linux* ]] && PERCENT=""
+    [[ "$PERCENT" = "∞" ]] && PERCENT="[$PERCENT]"
+    echo $PERCENT
+}
+
+##########################################
+# PROMPT
+##########################################
+local STATUS="%(?:%{$fg[green]%}:%{$fg[red]%}%s)"
+PROMPT=$'\n$(username)$(collapse_pwd)$(git_info)
+${STATUS}$(prompt_char) '
+PROMPT2='%{$fg[red]%} »%{$reset_color%} '
+RPROMPT='$(node_version)$(battery)'
+
+# NOTE: Consider simple lambda prompt when fancy symbols allowed
+

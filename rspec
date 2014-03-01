@@ -1,0 +1,6 @@
+--colour
+//--profile 5
+--format p
+--fail-fast
+//--drb
+//--format NyanCatFormatter

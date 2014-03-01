@@ -1,0 +1,46 @@
+############################
+###   GLOBAL GITIGNORE   ###
+############################
+#
+# Run this to add global gitignore to projects
+# git config --global core.excludesfile ~/.gitignore
+#
+
+# General
+*.DS_Store
+*~
+.secret
+
+### Ruby/Rails
+.bundle
+.sass-cache/
+db/*.sqlite3
+log/*.log
+rerun.txt
+tags
+tmp/**/*
+!tmp/cache/.keep
+vendor/bundler_gems
+.rspec
+
+### Vim
+*.sw[nop]
+Session.vim
+vim/.netrwhist
+vitunes.vim
+
+### Local Dev Files
+.env*
+!.env.public
+todo.md
+
+### Zeus
+custom_plan.rb
+zeus.json
+
+### Spring
+bin/spring
+bin/rspec
+
+### Node.js
+node_modules/*

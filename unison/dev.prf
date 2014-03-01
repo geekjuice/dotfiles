@@ -1,0 +1,15 @@
+# Dev Unison Settings
+
+# Directories to sync
+root = /Volumes/GeekStuff/dev
+root = /Volumes/GeekStuff/Documents/Google Drive/dev
+
+# Ignores
+ignore = Name .DS_Store
+ignore = Name */node_modules
+
+# Force changes from this to other
+force = /Volumes/GeekStuff/dev
+
+# Automatically accet default actions
+auto = true

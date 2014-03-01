@@ -1,0 +1,12 @@
+#!/bin/sh
+
+# Rspec
+clear
+if [ -S .zeus.sock ];then
+  echo 'Using zeus rspec...' && zeus rspec "$@"
+elif [ -f bin/rspec ];then
+  echo 'Using spring rspec...' && bin/rspec "$@"
+else
+  command rspec "$@"
+fi
+

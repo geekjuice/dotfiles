@@ -1,0 +1,102 @@
+##############################
+# GIT
+##############################
+alias git="hub"
+alias gaa="git add -A && git status -s"
+alias gau="git add -u && git status -s"
+alias gci="git commit -v"
+alias gbr="git branch"
+alias gco="git checkout"
+alias gri="git rebase -i"
+alias gmr="git merge"
+alias gst="git status -s"
+alias grm="git remote"
+alias grv="git remote -v"
+alias gft="git fetch"
+alias gph="git push"
+alias gpl="git pull"
+alias gdt="git difftool"
+alias gdc="git difftool --cached"
+alias gmt="git mergetool"
+alias grf="git reflog"
+alias grh="git reset HEAD"
+
+# GIT SUBMODULE ALIAS
+alias gsi="git submodule init"
+alias gsa="git submodule add"
+alias gsu="git submodule update"
+
+# GIT COMMIT DIFF STATS
+gds() {
+    local isNumber='^[0-9]+$'
+    case $# in
+        0 )
+            git --no-pager diff --stat HEAD HEAD~1 ;;
+        1 )
+            if [[ $1 =~ $isNumber ]]; then
+                git --no-pager diff --stat HEAD HEAD~$1
+            else
+                echo "$1 is not an integer"; exit 1;
+            fi ;;
+        * )
+            if [[ $1 =~ $isNumber ]] && [[ $2 =~ $isNumber ]]; then
+                git --no-pager diff --stat HEAD~$1 HEAD~$2
+            else
+                echo "Arguments need to be integer"; exit 1;
+            fi ;;
+    esac
+}
+
+
+# PRETTY GIT LOG
+glp() {
+  # Defaults
+  local limit="";
+  local all=""
+  local format="%Cred%h%Creset -%C(yellow)%d%Creset %C(white)%s%Creset %Cgreen(%cr) %C(bold blue)<%an>%Creset"
+  # If extra options
+  if [[ "$1" = *-* ]]; then
+    # Long Format
+    if [[ "$1" = *l* ]]; then
+      format="%Cred%h%Creset -%C(yellow)%d%Creset %Cgreen(%cr) %C(bold blue)<%an> %n%C(white)### %C(white)%s %Creset %n%n%b"
+    fi
+    # All branches
+    if [[ "$1" = *a* ]]; then all="--all"; fi
+    # Limit Number
+    if [[ "$2" != "" ]]; then limit="-n $2"; fi
+  # Else if limit
+  elif [[ "$1" != "" ]] && [[ "$1" != *-* ]]; then limit="-n $1"; fi
+
+  # Output
+  if [[ "$limit" != "" ]]; then
+    git --no-pager log $limit $all --graph --abbrev-commit --pretty=tformat:$format
+  else
+    git log $all --graph --abbrev-commit --pretty=tformat:$format
+  fi
+}
+
+# PRETTY GIT LOG ALIAS
+alias glpa="glp -a"
+alias glpl="glp -l"
+alias glpla="glp -la"
+
+# GIT STATUS
+parse_git_deleted() {
+  [[ $(git status --ignore-submodules 2> /dev/null | grep deleted:) != "" ]] && echo "-"
+}
+parse_git_added() {
+  [[ $(git status --ignore-submodules 2> /dev/null | grep "Untracked files:") != "" ]] && echo '+'
+}
+parse_git_modified() {
+  [[ $(git status --ignore-submodules 2> /dev/null | grep modified:) != "" ]] && echo "*"
+}
+parse_git_dirty() {
+  echo "$(parse_git_added)$(parse_git_modified)$(parse_git_deleted)"
+}
+
+# GIT BRANCH
+parse_git_branch() {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/[\1$(parse_git_dirty)]/"
+}
+
+

@@ -1,0 +1,27 @@
+# Update
+update
+
+# Packages
+install bower
+install brewcleaner
+install casperjs
+install chai
+install coffee-script
+install connect
+install dispatch-proxy
+install express
+install grunt-cli
+install gulp
+install jsonlint
+install marked
+install mocha
+install node-inspector
+install nodemon
+install npm
+install phantomjs
+install requirejs
+install yo
+
+# Clean Up
+cache clean
+

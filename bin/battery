@@ -1,0 +1,20 @@
+#!/bin/sh
+
+if [[ "$(uname)" = *Darwin* ]]; then
+    # Executable for tmux status line
+    smart_battery_status="$(ioreg -rc "AppleSmartBattery")"
+    typeset maxcapacity=$(echo $smart_battery_status \
+                        | grep '^.*"MaxCapacity"\ =\ ' \
+                        | sed -e 's/^.*"MaxCapacity"\ =\ //' \
+                        | cut -d" " -f1)
+    typeset currentcapacity=$(echo $smart_battery_status \
+                            | grep '^.*"CurrentCapacity"\ =\ ' \
+                            | sed -e 's/^.*CurrentCapacity"\ =\ //' \
+                            | cut -d" " -f1)
+
+    if [[ $currentcapacity ]] && [[ $maxcapacity ]]; then
+        percent=$((100 * currentcapacity/maxcapacity))
+    fi
+fi
+
+[[ $percent ]] && echo '['$percent'%]' || echo ''

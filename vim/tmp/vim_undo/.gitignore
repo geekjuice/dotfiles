@@ -1,0 +1,8 @@
+############################
+###      GITIGNORE       ###
+############################
+# Ignores everything in dir except gitignore
+# Allows for psuedo empty dir to be checked in
+
+*
+!.gitignore

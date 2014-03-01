@@ -1,0 +1,38 @@
+##############################
+# OSX ALIAS
+##############################
+# CMD
+alias al="vim $INCLUDE/aliases.osx"
+alias ls="ls -G"
+alias ll="ls -GAl"
+alias rm="rm -i"
+alias rsi="sips -Z"
+alias ss="open -jg $APP/Subsonic.app"
+alias julia="$APP/Julia.app/Contents/Resources/julia/bin/julia"
+alias b2d='unison cloud'
+alias d2d='unison dev'
+
+# DIR
+alias vol="cd /Volumes"
+alias desk="cd /Users/Geekjuice/Desktop"
+alias stf="cd $GEEKSTUFF"
+alias dls="cd $GEEKSTUFF/Downloads"
+alias tdl="cd $GEEKSTUFF/Torrent\ Downloads"
+alias drv="cd $DRIVE"
+alias box="cd $DROPBOX"
+alias code="cd $DROPBOX/Coding"
+
+# Homebrew
+alias bud="brew update && brew outdated"
+alias buc="brew upgrade && brew cleanup"
+alias bucc="buc && brewcleaner run $DOT/brew_whitelist.json"
+
+
+##############################
+# SYSTEM
+##############################
+alias ethmac="sudo ifconfig en0 | grep ether"
+alias wifimac="sudo ifconfig en1 | grep ether"
+alias fastmc="defaults write com.apple.dock expose-animation-duration -float 0.15 && killall Dock"
+alias itermplist="cp ~/Library/Preferences/com.googlecode.iterm2.plist $DOT/terminal/flatvisor.iterm"
+alias nukegems='gem list | cut -d " " -f1 | xargs gem uninstall -Iax'

@@ -1,0 +1,15 @@
+# Dropbox/Drive Unison Settings
+
+# Directories to sync
+root = /Volumes/GeekStuff/Documents/Dropbox
+root = /Volumes/GeekStuff/Documents/Google Drive
+
+# Ignores
+ignore = Name .DS_Store
+ignore = Name dev
+
+# Force changes from this to other
+force = /Volumes/GeekStuff/Documents/Dropbox
+
+# Automatically accet default actions
+auto = true

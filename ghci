@@ -1,0 +1,1 @@
+:set prompt "\ESC[33m{\ESC[34mλ\ESC[33m} \ESC[30m[%s] \ESC[31m» \ESC[m"

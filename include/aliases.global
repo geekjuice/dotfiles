@@ -1,0 +1,74 @@
+##############################
+# ALIAS
+##############################
+# Edits
+alias gal="vim $INCLUDE/aliases.global"
+alias fn="vim $INCLUDE/functions"
+alias vr="vim $DOT/vimrc"
+alias tme="vim $DOT/tmux.conf"
+alias edithosts="vim /etc/hosts"
+alias editpaths="vim /etc/paths"
+
+# Scripts
+alias msl="$SCRIPT/makesymlinks.sh"
+alias uvp="$SCRIPT/updateplugins.sh"
+alias color="$SCRIPT/color.sh"
+alias it="$SCRIPT/itunes.sh"
+alias sshp="$SCRIPT/sshp.sh"
+alias cov="$SCRIPT/coverage.js"
+alias fancy="source $SCRIPT/fancy_symbols.sh"
+
+# Change Dir
+alias dev="cd $DEV"
+alias dot="cd $DOT"
+
+# Commands
+alias v="$VISUAL"
+alias cl="clear"
+alias cls="clear && ls"
+alias mv="mv -i"
+alias cp="cp -ri"
+alias mkdir="mkdir -p"
+alias grep='grep --color=auto'
+alias rsync="rsync -vrei --delete"
+alias rf="unalias -a && source $HOME/.profile"
+alias path="echo $PATH | tr ':' '\n'"
+alias rmvimtmp="rm -f $DOT/vim/tmp/vim_undo/*"
+alias ghi="ghci 2>&1 | HsColour -tty"
+
+# Rails
+alias rl="rails"
+alias rk="rake"
+alias z="zeus"
+alias zs="clear && zeus start"
+alias fs="foreman start"
+alias glr="guard -P livereload"
+alias b="bundle"
+alias be="bundle exec"
+alias migrate="rake db:migrate && rake db:rollback && rake db:migrate"
+alias m="migrate && rake db:test:prepare"
+alias mr="migrate && rake db:reset"
+
+# JS/Coffee
+alias cf="coffee"
+alias gp="gulp"
+alias nd="node"
+alias bw="bower"
+
+# npm
+alias nod="npm outdated --depth=0"
+alias nup="npm up"
+alias nls="npmlist"
+
+# Pipes
+if [[ "$SHELL" = *zsh* ]]; then
+    alias -g A='| ag -S --color-match="1;34"'
+    alias -g G='| grep'
+    alias -g M='| less'
+    alias -g L='| wc -l'
+    alias -g ONE="| awk '{ print \$1}'"
+    alias -g K="| awkrc"
+    alias -g C='| colout'
+fi
+
+

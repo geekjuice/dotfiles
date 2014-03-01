@@ -1,0 +1,88 @@
+# Gmail Configs
+set imap_user = $MUTT_EMAIL
+set imap_pass = $MUTT_PASS
+set smtp_url  = "smtp://$MUTT_USER@smtp.gmail.com:587/"
+set smtp_pass = $MUTT_PASS
+set realname  = $MUTT_NAME
+set from      = $MUTT_EMAIL
+set folder    = "imaps://imap.gmail.com:993"
+set spoolfile = "+INBOX"
+set postponed = "+[Gmail]/Drafts"
+
+# Vim with spell check
+set editor = "vim -c 'set spell spelllang=en'"
+
+# Configurations
+unset record
+unset mark_old
+unset collapse_unread
+set tilde
+set status_on_top
+set markers=no
+set help=yes
+set fast_reply=yes
+set pager_stop=yes
+set pager_context=5
+set pager_index_lines=20
+
+# Message View
+auto_view text/html
+alternative_order text/plain text/html *
+
+# Cache
+set header_cache=~/.mutt/cache/headers
+set message_cachedir=~/.mutt/cache/bodies
+set certificate_file=~/.mutt/certificates
+
+# Sort
+set sort = 'threads'
+set sort_aux = 'reverse-last-date-received'
+
+# Timeouts
+set timeout = 300
+set imap_keepalive = 300
+set mail_check = 120
+
+# Gmail IMAP IDLE support
+set imap_idle
+set imap_check_subscribed
+unset imap_passive
+unset imap_peek
+
+# Macros
+macro index sn "l~N~O<enter>" "Show unread"
+macro index sd "l~D<enter>" "Show deleted"
+macro index sa "lall<enter>" "Show all"
+macro index,pager gi "c=INBOX<enter>" "Go to Inbox"
+macro index,pager ga "c=[Gmail]/All<quote-char> Mail<enter>" "Go to All Mail"
+macro index,pager gs "c=[Gmail]/Sent<quote-char> Mail<enter>" "Go to Sent Mail"
+macro index,pager gd "c=[Gmail]/Drafts<enter>" "Go to Drafts"
+macro index,pager gt "c=[Gmail]/Trash<enter>" "Go to Trash"
+
+# Formats
+set folder_format="%2C: %t %N %F %2l %-8.8u %-8.8g %8s %d %f"
+set index_format="%4C: %Z %{%b %d} %-25.25L  %s"
+set status_format=" [Mutt:Gmail]%f%> [%?l?%l?%?n?, %n new?%?o?, %o unread?%?d?, %d deleted?%?t?, %t tagged?%?p?, %p postponed?] "
+set pager_format="---[%{%a, %d %b %Y}]: %s %|-"
+set to_chars="   C L"
+
+# Colors
+color attachment  blue default
+color body        blue default (http[s]?|ftp)://[_a-zA-Z0-9\?\=\&\@\%\#\:\,\./~\-]+
+color body        cyan default [_a-z\.\$A-Z0-9-]+@[a-zA-Z0-9\./\-]+
+color body        white default .
+color header      black default .
+color header      cyan default ^(Date|From|Subject|To)
+color index       blue default  '~D'
+color index       red default  '~T'
+color index       green default  '~N'
+color index       green default  '~O'
+color indicator   white blue
+color normal      brightblack default
+color quoted      cyan default
+color quoted1     black default
+color signature   cyan default
+color status      white black
+color tilde       blue default
+color tree        brightblack default
+ 

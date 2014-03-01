@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Executable for tmux status line
+
+tell_app_to(){
+    local cmd="tell application \"$1\" to $2"
+    echo $(osascript -e "$cmd" 2>/dev/null)
+}
+
+if [[ $(uname) = *Darwin* ]]; then
+    running=$(tell_app_to "System Events" "(name of processes) contains \"iTunes\"")
+    if [[ $running = "true" ]]; then
+        state=$(tell_app_to "iTunes" "player state as string")
+        if [[ $state = "playing" ]]; then
+            artist=$(tell_app_to "iTunes" "artist of current track as string")
+            track=$(tell_app_to "iTunes" "name of current track as string")
+            echo "[ ♫  $artist - $track ]"
+        fi
+    fi
+fi

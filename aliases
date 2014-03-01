@@ -1,0 +1,35 @@
+##############################
+# EXPORT ENV VARIABLES
+##############################
+ENV="$HOME/.dotfiles/.env.public"
+PENV="$HOME/.dotfiles/.env"
+
+[ -e "$ENV" ] && source "$ENV"
+[ -e "$PENV" ] && source "$PENV"
+
+##############################
+# FUNCTIONS
+##############################
+[ -e "$INCLUDE/functions" ] && source "$INCLUDE/functions"
+
+##############################
+# GLOBAL ALIASES
+##############################
+[ -e "$INCLUDE/aliases.global" ] && source "$INCLUDE/aliases.global"
+
+##############################
+# GIT
+##############################
+[ -e "$INCLUDE/aliases.git" ] && source "$INCLUDE/aliases.git"
+
+##############################
+# TMUX SESSIONS
+##############################
+[ -e "$INCLUDE/aliases.tmux" ] && source "$INCLUDE/aliases.tmux"
+
+##############################
+# OS SPECIFIC ALIAS
+##############################
+[[ "$(uname)" = *Darwin* ]] && source "$INCLUDE/aliases.osx"
+[[ "$(uname)" = *Linux* ]] && source "$INCLUDE/aliases.linux"
+
