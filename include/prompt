@@ -33,14 +33,22 @@ battery() {
     echo $PERCENT
 }
 
+
+##########################################
+# AUTORUN COMMANDS
+##########################################
+tmux_pane_pwd() {
+    [ -n "$TMUX" ] && tmux rename-window $(basename $(pwd))
+}
+
+
 ##########################################
 # PROMPT
 ##########################################
 local STATUS="%(?:%{$fg[green]%}:%{$fg[red]%}%s)"
-PROMPT=$'\n$(username)$(collapse_pwd)$(git_info)
+PROMPT=$'$(tmux_pane_pwd)\n$(username)$(collapse_pwd)$(git_info)
 ${STATUS}$(prompt_char) '
 PROMPT2='%{$fg[red]%} »%{$reset_color%} '
 RPROMPT='$(node_version)$(battery)'
 
-# NOTE: Consider simple lambda prompt when fancy symbols allowed
-
+# NOTE: Consider simple lambda prompt when fancy symbols allowed λ
