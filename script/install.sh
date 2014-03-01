@@ -20,6 +20,7 @@ _echo() { printf "\n${_b}%b${_o}\n" "$1" }
 # Start
 printf "\n${_y}{{ Starting OS X Dev Script }}${_o}\n"
 
+
 # Prompt about pre-install steps
 if [[ "$SHELL" != *zsh* ]]; then
     printf "\n${_y}Did you install xcode tools and change to zsh?${_o}\n"
@@ -29,6 +30,7 @@ if [[ "$SHELL" != *zsh* ]]; then
     printf "${_g}chsh -s /bin/zsh${_o}\n"
     exit 1
 fi
+
 
 # Fix OSX zsh env bug
 if [[ -f /etc/zshenv ]]; then
@@ -101,6 +103,7 @@ _echo "Installing NVM, a Node Version Manager (Geekjuice Flavor) ..."
     nvm dev install
     nvm stable install
 
+
 # Compiler and Libraries
 _echo "Installing GNU Compiler Collection, a necessary prerequisite to installing Ruby ..."
     brew tap homebrew/dupes
@@ -116,31 +119,25 @@ export CC=gcc-4.2
 
 
 # Ruby
-# _echo "Installing rbenv, to change Ruby versions ..."
-# brew install rbenv
+_echo "Installing rbenv, to change Ruby versions ..."
+    brew install rbenv
 
-# _echo "Installing rbenv-gem-rehash so the shell automatically picks up binaries after installing gems with binaries..."
-# brew install rbenv-gem-rehash
+_echo "Installing rbenv-gem-rehash so the shell automatically picks up binaries after installing gems with binaries..."
+    brew install rbenv-gem-rehash
 
-# _echo "Installing ruby-build, to install Rubies ..."
-# brew install ruby-build
+_echo "Installing ruby-build, to install Rubies ..."
+    brew install ruby-build
 
-# _echo "Installing Ruby 2.0.0-p353 ..."
-# rbenv install 2.0.0-p353
-# rbenv install 2.1.0
+_echo "Installing Ruby 2.1.1 ..."
+    rbenv install 2.1.1
+    rbenv global 2.1.1
+    rbenv rehash
 
-# _echo "Setting Ruby 2.0.0-p353 as global default Ruby ..."
-# rbenv global 2.0.0-p353
-# rbenv rehash
+_echo "Updating to latest Rubygems version ..."
+    gem update --system
 
-# _echo "Updating to latest Rubygems version ..."
-# gem update --system
-
-# _echo "Installing Bundler to install project-specific Ruby gems ..."
-# gem install bundler --no-document --pre
-
-# _echo "Installing Rails ..."
-# gem install rails --no-document
+_echo "Installing Bundler to install project-specific Ruby gems ..."
+    gem install bundler --no-document --pre
 
 
 # CLI Clients
@@ -170,14 +167,15 @@ _echo "Installing Tmux-mem-cpu-load ..."
     git clone https://github.com/thewtex/tmux-mem-cpu-load.git
     cd tmux-mem-cpu-load
     cmake . && make && sudo make install
-#     cd - && rm -rf tmux-mem-cpu-load
+    cd - && rm -rf tmux-mem-cpu-load
 
-# # Personal Touch
-# _echo "Cloning dotfiles into ~/.dotfiles with submodules..."
-#     git clone --rescurive https://github.com/geekjuice/dotfiles ~/.dotfiles
 
-# _echo "Creating symlinks to dotfiles ..."
-#     ~/.dotfiles/script/makesymlinks.sh
+# Personal Touch
+_echo "Cloning dotfiles into ~/.dotfiles with submodules..."
+    git clone --rescurive https://github.com/geekjuice/dotfiles ~/.dotfiles
 
-# _echo "Finally, sourcing zshrc ..."
-#     source ~/.dotfiles/zshrc
+_echo "Creating symlinks to dotfiles ..."
+    ~/.dotfiles/script/makesymlinks.sh
+
+_echo "Finally, sourcing zshrc ..."
+    source ~/.dotfiles/zshrc
