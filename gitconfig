@@ -1,6 +1,6 @@
 [user]
-  name = Nicholas Hwang
-  email = nick.joosung.hwang@gmail.com
+	name = Nick Hwang
+	email = nhwang@hubspot.com
 [push]
   default = upstream
 [color]
@@ -29,3 +29,5 @@
   tool = vimdiff
 [difftool]
   prompt = false
+[rerere]
+	enabled = 1
