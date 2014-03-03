@@ -64,7 +64,7 @@ _echo "Installing vim, the one true editor ..."
     brew install vim
 
 _echo "Installing git, a distributed revision control and source code management ..."
-    brew install vim
+    brew install git
 
 _echo "Installing hub, git with Github flavor ..."
     brew install hub
@@ -155,11 +155,6 @@ _echo "Installing the heroku-config plugin to pull config variables locally to b
 # Oh-my-zsh
 _echo "Installing oh-my-zsh ..."
     curl -L https://github.com/robbyrussell/oh-my-zsh/raw/master/tools/install.sh | sh
-
-_echo "Installing zsh syntax highlighting ..."
-    mkdir ~/.oh-my-zsh/custom/plugins && cd ~/.oh-my-zsh/custom/plugins
-    git clone git://github.com/zsh-users/zsh-syntax-highlighting.git
-    rm -rf zsh-syntax-highlighting && cd -
 
 
 # Tmux
