@@ -33,3 +33,7 @@ PENV="$HOME/.dotfiles/.env"
 [[ "$(uname)" = *Darwin* ]] && source "$INCLUDE/aliases.osx"
 [[ "$(uname)" = *Linux* ]] && source "$INCLUDE/aliases.linux"
 
+##############################
+# ITUNES SESSIONS
+##############################
+[ -e "$INCLUDE/aliases.itunes" ] && source "$INCLUDE/aliases.itunes"

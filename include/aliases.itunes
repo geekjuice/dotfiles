@@ -1,0 +1,53 @@
+##############################
+# SSH ITUNES
+##############################
+
+# Colors
+_r='\e[0;31m'
+_g='\e[0;32m'
+_b='\e[0;34m'
+_o='\e[0m'
+
+# Log File
+PIDfile() {
+    local PIDfile=/tmp/itunes_pid
+    echo $PIDfile
+}
+
+# Log processID
+logPID() { echo $! >> $1 }
+
+# iTunes Tunnel Toggle
+itunes_tunnel() {
+    local PIDfile=$(PIDfile)
+    [ -e $PIDfile ] && stop_itunes_tunnel || start_itunes_tunnel $1
+}
+
+# Start iTunes Tunnel
+start_itunes_tunnel() {
+    local SSH=$1
+    [ -z $SSH ] && printf "\n${_r}No SSH path given ${_o}...\n" && return
+    local PIDfile=$(PIDfile)
+    printf "\n${_g}Starting ${_b}iTunes ${_g}tunnel ${_o}...\n"
+    rm -f $PIDfile
+    (
+        dns-sd -P "Geekjuice" _daap._tcp local 3689 localhost.local. 127.0.0.1 "Geek" >/dev/null 2>&1 &
+        logPID $PIDfile
+    )
+    (
+        ssh -CNL 3689:localhost:3689 $1 &
+        logPID $PIDfile
+    )
+}
+
+# Stop iTunes Tunnels
+stop_itunes_tunnel() {
+    local PIDfile=$(PIDfile)
+    printf "\n${_r}Closing ${_b}iTunes ${_r}tunnel ${_o}...\n"
+    cat $PIDfile | xargs -I% kill -9 %
+    rm -f $PIDfile
+}
+
+# Alias
+alias music="itunes_tunnel Geek"
+alias musiclocal="itunes_tunnel Geeklocal"
