@@ -86,6 +86,14 @@ eval "$(rbenv init -)"
 
 
 ##########################################
+# Z
+##########################################
+if command -v brew >/dev/null 2>&1; then
+    [ -f $(brew --prefix)/etc/profile.d/z.sh ] && source $(brew --prefix)/etc/profile.d/z.sh
+fi
+
+
+##########################################
 # HUBSPOT
 ##########################################
 source ~/.hsrc

@@ -39,5 +39,6 @@
   "vim": true,
   "watch": true,
   "wget": true,
+  "z": true,
   "zsh": true
 }

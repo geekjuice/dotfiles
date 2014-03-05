@@ -44,6 +44,7 @@ install unrar
 install vim
 install watch
 install wget
+install z
 install zsh
 
 # Cleanup
