@@ -15,9 +15,8 @@ alias d2d='unison dev'
 # DIR
 alias vol="cd /Volumes"
 alias desk="cd /Users/Geekjuice/Desktop"
-alias stf="cd $GEEKSTUFF"
-alias dls="cd $GEEKSTUFF/Downloads"
-alias tdl="cd $GEEKSTUFF/Torrent\ Downloads"
+alias dls="cd $HOME/Downloads"
+alias tdl="cd $HOME/Torrent\ Downloads"
 alias drv="cd $DRIVE"
 alias box="cd $DROPBOX"
 alias code="cd $DROPBOX/Coding"
