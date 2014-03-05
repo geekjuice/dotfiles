@@ -288,8 +288,9 @@ autocmd Filetype conf setlocal syntax=sh
 autocmd Filetype conf,sh,zsh setlocal ai ts=4 sts=4 et sw=4
 
 " HTML/Jade
-autocmd Filetype html setlocal ai ts=4 sts=4 et sw=4
+autocmd Filetype html setlocal ai ts=2 sts=2 et sw=2
 autocmd Filetype jade setlocal ai ts=2 sts=2 et sw=2
+autocmd BufRead,BufNewFile *.handlebars setlocal filetype=html
 
 " Python
 autocmd Filetype python setlocal ai ts=4 sts=4 et sw=4
