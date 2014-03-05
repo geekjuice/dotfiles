@@ -37,17 +37,20 @@ alias rmvimtmp="rm -f $DOT/vim/tmp/vim_undo/*"
 alias ghi="ghci 2>&1 | HsColour -tty"
 
 # Rails
-alias rl="rails"
-alias rk="rake"
-alias z="zeus"
-alias zs="clear && zeus start"
-alias fs="foreman start"
-alias glr="guard -P livereload"
-alias b="bundle"
-alias be="bundle exec"
-alias migrate="rake db:migrate && rake db:rollback && rake db:migrate"
-alias m="migrate && rake db:test:prepare"
-alias mr="migrate && rake db:reset"
+USERAILS='false'
+if [[ "$USERAILS" = "true" ]]; then
+    alias rl="rails"
+    alias rk="rake"
+    alias zs="zeus"
+    alias zcs="clear && zeus start"
+    alias fs="foreman start"
+    alias glr="guard -P livereload"
+    alias b="bundle"
+    alias be="bundle exec"
+    alias migrate="rake db:migrate && rake db:rollback && rake db:migrate"
+    alias m="migrate && rake db:test:prepare"
+    alias mr="migrate && rake db:reset"
+fi
 
 # JS/Coffee
 alias cf="coffee"
