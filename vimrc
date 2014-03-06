@@ -153,7 +153,7 @@ endif
 let g:ctrlp_show_hidden = 1             "Start with CtrlP not working dotfiles
 let g:ctrlp_match_window_reversed = 1   "Show matched starting frm bottom
 let g:ctrlp_switch_buffer = 0           "Open new instances regardless if open
-let g:ctrlp_by_filename = 1             "Default filename search
+let g:ctrlp_by_filename = 0             "Default filename search
 let g:ctrlp_clear_cache_on_exit = 0     "Keep corss session cache
 let g:ctrlp_working_path_mode = 0       "Don't set local dir on every invoke
 
