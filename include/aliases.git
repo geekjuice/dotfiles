@@ -1,7 +1,7 @@
 ##############################
 # GIT
 ##############################
-alias git="hub"
+git() { hub $@ } # Fixed autocomplete issue
 alias gaa="git add -A && git status -s"
 alias gau="git add -u && git status -s"
 alias gci="git commit -v"
