@@ -55,3 +55,6 @@
 [submodule "terminal/flat-terminal"]
 	path = terminal/flat-terminal
 	url = https://github.com/ahmetsulek/flat-terminal.git
+[submodule "vim/bundle/ag.vim"]
+	path = vim/bundle/ag.vim
+	url = https://github.com/rking/ag.vim.git
