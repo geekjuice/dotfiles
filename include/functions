@@ -107,7 +107,7 @@ upgrade_nvm() {
     if [[ -d $NVM_DIR ]]; then
         cd $NVM_DIR
         local UPDATED="*"
-        git pull --rebase 2>&1 | grep -q "up to date." && UPDATED=""
+        git fetch -p --all | grep -q "up to date." && UPDATED=""
         [[ "$UPDATED" = "*" ]] && echo "NVM updated." || echo "NVM up to date."
         cd - >/dev/null
     fi

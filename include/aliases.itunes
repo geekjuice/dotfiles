@@ -2,6 +2,8 @@
 # SSH ITUNES
 ##############################
 
+# NOTE: Add trap to watch for dead ssh connection and restart or stop
+
 # Colors
 _r='\e[0;31m'
 _g='\e[0;32m'
@@ -26,9 +28,9 @@ itunes_tunnel() {
 # Start iTunes Tunnel
 start_itunes_tunnel() {
     local SSH=$1
-    [ -z $SSH ] && printf "\n${_r}No SSH path given ${_o}...\n" && return
+    [ -z $SSH ] && printf "${_r}No SSH path given ${_o}...\n" && return
     local PIDfile=$(PIDfile)
-    printf "\n${_g}Starting ${_b}iTunes ${_g}tunnel ${_o}...\n"
+    printf "${_g}Starting ${_b}iTunes ${_g}tunnel ${_o}...\n"
     rm -f $PIDfile
     (
         dns-sd -P "Geekjuice" _daap._tcp local 3689 localhost.local. 127.0.0.1 "Geek" >/dev/null 2>&1 &
@@ -43,7 +45,7 @@ start_itunes_tunnel() {
 # Stop iTunes Tunnels
 stop_itunes_tunnel() {
     local PIDfile=$(PIDfile)
-    printf "\n${_r}Closing ${_b}iTunes ${_r}tunnel ${_o}...\n"
+    printf "${_r}Closing ${_b}iTunes ${_r}tunnel ${_o}...\n"
     cat $PIDfile | xargs -I% kill -9 %
     rm -f $PIDfile
 }
