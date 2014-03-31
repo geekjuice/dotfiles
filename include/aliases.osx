@@ -11,6 +11,7 @@ alias ss="open -jg $APP/Subsonic.app"
 alias julia="$APP/Julia.app/Contents/Resources/julia/bin/julia"
 alias b2d='unison cloud'
 alias d2d='unison dev'
+alias ag='ag -i'
 
 # DIR
 alias vol="cd /Volumes"

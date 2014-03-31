@@ -46,7 +46,7 @@ start_itunes_tunnel() {
 stop_itunes_tunnel() {
     local PIDfile=$(PIDfile)
     printf "${_r}Closing ${_b}iTunes ${_r}tunnel ${_o}...\n"
-    cat $PIDfile | xargs -I% kill -9 %
+    cat $PIDfile | xargs -I% kill -9 &>/dev/null %
     rm -f $PIDfile
 }
 
