@@ -1,4 +1,4 @@
-"======================================
+"fiotter======================================
 "   GLOBAL VARIABLES
 "======================================
 let g:vimtmp = "~/.dotfiles/vim/tmp/"
@@ -51,7 +51,11 @@ nnoremap <leader>w= <c-w>=
 nnoremap <leader>; <c-^><cr>
 
 " Whitespace cleaner
-nnoremap <leader><BS> mz:%s/\v\s+$//g<cr>:ret<cr>`z
+nnoremap <leader><BS> mz:ret<cr>:%s/\v\s+$//g<cr>`z
+
+" Tab Width Toggles
+noremap <leader>2 :set ai et ts=2 sts=2 sw=2<cr>
+noremap <leader>4 :set ai et ts=4 sts=4 sw=4<cr>
 
 " Commands
 nnoremap <leader>R @:<cr>
