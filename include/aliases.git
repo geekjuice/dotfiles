@@ -34,16 +34,16 @@ gds() {
     local isNumber='^[0-9]+$'
     case $# in
         0 )
-            git --no-pager diff --stat HEAD HEAD~1 ;;
+            git --no-pager diff --stat HEAD~1 HEAD ;;
         1 )
             if [[ $1 =~ $isNumber ]]; then
-                git --no-pager diff --stat HEAD HEAD~$1
+                git --no-pager diff --stat HEAD~$1 HEAD
             else
                 echo "$1 is not an integer"; exit 1;
             fi ;;
         * )
             if [[ $1 =~ $isNumber ]] && [[ $2 =~ $isNumber ]]; then
-                git --no-pager diff --stat HEAD~$1 HEAD~$2
+                git --no-pager diff --stat HEAD~$2 HEAD~$1
             else
                 echo "Arguments need to be integer"; exit 1;
             fi ;;
