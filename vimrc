@@ -258,6 +258,8 @@ nnoremap <leader>o :NERDTreeToggle<CR><c-w>=
 "======================================
 "   GOYO
 "======================================
+let g:goyo_width = 100
+
 " Goyo toggle
 nnoremap <leader>z :Goyo<cr>
 
