@@ -38,8 +38,6 @@ nnoremap <leader>h :nohlsearch<CR>
 nnoremap <leader>q <esc>:q
 nnoremap <leader>w <esc>:w<CR>:echoe "File saved"<cr>
 nnoremap <leader>s <esc>:mks!<cr>:echoe "Session saved"<cr>
-nnoremap <leader>[ <esc>:e ~/.vimrc<CR>
-nnoremap <leader>] :source $MYVIMRC<cr>:echoe "Vimrc updated"<cr>
 nnoremap <leader>W :w !sudo tee > /dev/null %<cr>
 
 " Splits
@@ -214,13 +212,31 @@ nnoremap <leader>tl :call RunLastSpec()<CR>
 
 
 "======================================
-"   CTAGS
+"   CTAGS/TAGBAR
 "======================================
-" exclude javascript files in :rtags via rails.vim due to warnings when
-let g:Tlist_Ctags_Cmd="ctags --exclude='*.js'"
+" Tagbar
+let g:tagbar_autofocus = 1
 
-" Index ctags from any project, including those outside Rails
+" CoffeeTags
+if executable('coffeetags')
+  let g:tagbar_type_coffee = {
+        \ 'ctagsbin' : 'coffeetags',
+        \ 'ctagsargs' : '',
+        \ 'kinds' : [
+        \ 'f:functions',
+        \ 'o:object',
+        \ ],
+        \ 'sro' : ".",
+        \ 'kind2scope' : {
+        \ 'f' : 'object',
+        \ 'o' : 'object',
+        \ }
+        \ }
+endif
+
+" Index ctags and open tagbar
 nnoremap <Leader>ct :!ctags -R .<CR>
+nnoremap <leader>] :TagbarToggle<CR><c-w>=
 
 
 "======================================
@@ -252,7 +268,7 @@ let NERDTreeQuitOnOpen = 1              "Closes NerdTree after open file
 let NERDSpaceDelims = 1                 "Adds space between comments
 
 " NERDtree toggle
-nnoremap <leader>o :NERDTreeToggle<CR><c-w>=
+nnoremap <leader>[ :NERDTreeToggle<CR><c-w>=
 
 
 "======================================
@@ -296,8 +312,6 @@ autocmd Filetype conf setlocal syntax=sh
 autocmd Filetype conf,sh,zsh setlocal ai ts=4 sts=4 et sw=4
 
 " HTML/Jade
-autocmd Filetype html setlocal ai ts=2 sts=2 et sw=2
-autocmd Filetype jade setlocal ai ts=2 sts=2 et sw=2
 autocmd BufRead,BufNewFile *.handlebars setlocal filetype=html
 
 " Python
@@ -307,13 +321,7 @@ autocmd Filetype python setlocal ai ts=4 sts=4 et sw=4
 autocmd BufRead,BufNewFile *.ru set filetype=ruby
 autocmd BufRead,BufNewFile Gemfile* set filetype=ruby
 
-" Syntax Grabber
-map <F5> :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
-\ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
-\ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
-
 " Set color depending on terminal color support
 if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"
   set t_Co=256
 endif
-
