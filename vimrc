@@ -216,6 +216,8 @@ nnoremap <leader>tl :call RunLastSpec()<CR>
 "======================================
 " Tagbar
 let g:tagbar_autofocus = 1
+let g:tagbar_left = 0
+let g:tagbar_width = 30
 
 " CoffeeTags
 if executable('coffeetags')
@@ -237,6 +239,7 @@ endif
 " Index ctags and open tagbar
 nnoremap <Leader>ct :!ctags -R .<CR>
 nnoremap <leader>] :TagbarToggle<CR><c-w>=
+nnoremap <leader>[ :TagbarTogglePause<CR>
 
 
 "======================================
@@ -268,7 +271,7 @@ let NERDTreeQuitOnOpen = 1              "Closes NerdTree after open file
 let NERDSpaceDelims = 1                 "Adds space between comments
 
 " NERDtree toggle
-nnoremap <leader>[ :NERDTreeToggle<CR><c-w>=
+nnoremap <leader>o :NERDTreeToggle<CR><c-w>=
 
 
 "======================================
