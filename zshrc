@@ -103,5 +103,5 @@ alias deployer='/Users/nhwang/.fabric_deploy_virtualenv/bin/deployer'
 ##########################################
 # Initiate TMUX
 ##########################################
-[[ -z "$TMUX" ]] && $SCRIPT/start_tmux.sh
+[[ -z "$TMUX" ]] && $SCRIPT/start_tmux.sh hubspot
 

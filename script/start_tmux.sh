@@ -82,10 +82,11 @@ if [[ $number_of_sessions -gt 0 ]]; then
             printf "${blue}Already in session: ${yellow}$current_session${reset}\n"
         fi
     fi
-    # Else if no sessions, create new called nick
+    # Else if no sessions, create a new one
 else
-    tmux new-session -s nick -n geek -d
-    tmux send-keys -t nick "cls" C-m
-    tmux attach -t nick
+    [[ $# -eq 0 ]] && session_name="nick" || session_name=$1
+    tmux new-session -s $session_name -n geek -d
+    tmux send-keys -t $session_name "cls" C-m
+    tmux attach -t $session_name
 fi
 
