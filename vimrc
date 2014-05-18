@@ -320,8 +320,12 @@ autocmd BufRead,BufNewFile *.handlebars setlocal filetype=html
 autocmd Filetype python setlocal ai ts=4 sts=4 et sw=4
 
 " Ruby
-autocmd BufRead,BufNewFile *.ru set filetype=ruby
-autocmd BufRead,BufNewFile Gemfile* set filetype=ruby
+autocmd BufRead,BufNewFile *.ru setlocal filetype=ruby
+autocmd BufRead,BufNewFile Gemfile* setlocal filetype=ruby
+
+" Java/Gradle
+autocmd Filetype java,groovy setlocal ai ts=4 sts=4 et sw=4
+autocmd BufNewFile,BufRead *.gradle setlocal filetype=groovy
 
 " Set color depending on terminal color support
 if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"

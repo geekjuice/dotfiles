@@ -70,10 +70,14 @@ alias rf='unalias -m "*" && source ~/.zshrc'
 
 
 ##########################################
-# RBENV, CABAL, NVM, & CLEANUP PATH
+# RBENV, JENV, CABAL, NVM, & CLEANUP PATH
 ##########################################
 # Haskell/Cabal
 export PATH=$HOME/Library/Haskell/bin:$DOT/bin:$HOME/.rbenv/bin:$PATH
+
+# Java
+export PATH="$HOME/.jenv/bin:$PATH"
+eval "$(jenv init -)"
 
 # RBENV
 eval "$(rbenv init -)"
