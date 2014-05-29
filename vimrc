@@ -188,6 +188,10 @@ endif
 
 let g:agprg = 'ag --column -i'
 
+" Search mappings
+nnoremap \ :Ag<space>
+nnoremap <space>\ :execute ":Ag " . shellescape(expand("<cword>"))<cr>
+
 
 "======================================
 "   TSLIME
