@@ -45,6 +45,9 @@ nnoremap <leader>n :vne<cr>
 nnoremap <leader>m :sp<cr>
 nnoremap <leader>w= <c-w>=
 
+" Tabs
+nnoremap <leader>t :tabnew<cr>
+
 " Last buffer
 nnoremap <leader>; <c-^><cr>
 
@@ -57,6 +60,7 @@ noremap <leader>4 :set ai et ts=4 sts=4 sw=4<cr>
 
 " Commands
 nnoremap <leader>R @:<cr>
+
 " Folding
 nnoremap <leader><leader> za
 vnoremap <leader><leader> zf
@@ -189,8 +193,8 @@ endif
 let g:agprg = 'ag --column -i'
 
 " Search mappings
+nnoremap K :Ag "\b<C-R><C-W>\b"<CR>
 nnoremap \ :Ag<space>
-nnoremap <space>\ :execute ":Ag " . shellescape(expand("<cword>"))<cr>
 
 
 "======================================
