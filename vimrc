@@ -193,11 +193,14 @@ if executable('ag')
   let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
 endif
 
-let g:agprg = 'ag --column -i'
+let g:agprg = 'ag --column -S'
 
 " Search mappings
 nnoremap K :Ag "\b<C-R><C-W>\b"<CR>
 nnoremap \ :Ag<space>
+
+" NOTE/TODO Search
+nnoremap <leader>\ :Ag "NOTE\|TODO"<CR>
 
 
 "======================================
