@@ -312,6 +312,13 @@ let g:goyo_callbacks = [ function('s:goyo_before'), function('s:goyo_after') ]
 
 
 "======================================
+"   INDENTLINE
+"======================================
+let g:indentLine_color_term = 236
+let g:indentLine_char = '¦'
+
+
+"======================================
 "   SYNTAX/FILETYPE/HIGHLIGHT
 "======================================
 " Auto save last session on close
