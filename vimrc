@@ -312,13 +312,6 @@ let g:goyo_callbacks = [ function('s:goyo_before'), function('s:goyo_after') ]
 
 
 "======================================
-"   INDENTLINE
-"======================================
-let g:indentLine_color_term = 236
-let g:indentLine_char = '¦'
-
-
-"======================================
 "   SYNTAX/FILETYPE/HIGHLIGHT
 "======================================
 " Auto save last session on close
@@ -329,6 +322,10 @@ autocmd Filetype gitcommit setlocal spell textwidth=72
 
 " Markdown
 autocmd BufRead,BufNewFile *.md setlocal spell textwidth=80 filetype=markdown
+
+" YAML
+autocmd BufRead,BufNewFile *.lyaml setlocal filetype=yaml
+autocmd Filetype yaml setlocal ai ts=2 sts=2 et sw=2
 
 " Shell
 autocmd Filetype conf setlocal syntax=sh

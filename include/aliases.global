@@ -63,6 +63,9 @@ alias nod="npm outdated --depth=0"
 alias nup="npm up"
 alias nls="npmlist"
 
+# Python
+alias static="python -m SimpleHTTPServer"
+
 # Pipes
 if [[ "$SHELL" = *zsh* ]]; then
     alias -g A='| ag -S --color-match="1;34"'
