@@ -1,0 +1,18 @@
+#!/bin/sh
+
+type ifstat >/dev/null 2>&1
+[[ "$?" -ne 0 ]] && return 1
+
+# Add -b for KB/s
+data=$(ifstat -zSq 1 1)
+flow_data=$(echo -e "${data}" | tail -n 1 | sed "s/\s\{1,\}/,/g")
+
+downloadKbs=$(echo -e "$flow_data" | awk '{for(i=1;i<=NF;i=i+2) t+=$i; print t; t=0}')
+uploadKbs=$(echo -e "$flow_data" | awk '{for(i=2;i<=NF;i=i+2) t+=$i; print t; t=0}')
+
+downloadMBs=$(echo "scale=3; $downloadKbs/1024" | bc)
+uploadMBs=$(echo "scale=3; $uploadKbs/1024" | bc)
+
+speeds=$(printf "⇊ %.2f ⇈ %.2f MB/s" $downloadMBs $uploadMBs)
+
+[[ $speeds ]] && echo '[ '$speeds' ]' || echo ''

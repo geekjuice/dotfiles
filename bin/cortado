@@ -7,5 +7,5 @@ NODE_ENV=test mocha \
     --compilers coffee:coffee-script/register \
     --recursive \
     --reporter spec \
-    --slow 100 \
+    --slow 2000 \
     "$@"
