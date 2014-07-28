@@ -32,12 +32,13 @@ let mapleader = " "
 
 " Toggles
 nnoremap <leader>p :set invpaste paste?<CR>
+nnoremap <leader>s :set invspell spell?<CR>
 nnoremap <leader>h :nohlsearch<CR>
 
 " Read/Write
 nnoremap <leader>q <esc>:q
 nnoremap <leader>w <esc>:w<CR>:echoe "File saved"<cr>
-nnoremap <leader>s <esc>:mks!<cr>:echoe "Session saved"<cr>
+nnoremap <leader>S <esc>:mks!<cr>:echoe "Session saved"<cr>
 nnoremap <leader>W :w !sudo tee > /dev/null %<cr>
 
 " Splits
@@ -52,14 +53,14 @@ nnoremap <leader>t :tabnew<cr>
 nnoremap <leader>; <c-^><cr>
 
 " Whitespace cleaner
-nnoremap <leader><BS> mz:ret<cr>:%s/\v\s+$//g<cr>`z
+nnoremap <leader><BS> mz:ret<cr>:%s/\v\s+$//ge<cr>:echoe "Whitespace cleaned"<cr>`z
 
 " Tab Width Toggles
-noremap <leader>2 :set ai et ts=2 sts=2 sw=2<cr>
-noremap <leader>4 :set ai et ts=4 sts=4 sw=4<cr>
+noremap <leader>2 :set ai et ts=2 sts=2 sw=2<cr>:echoe "Tabs: 2"<cr>
+noremap <leader>4 :set ai et ts=4 sts=4 sw=4<cr>:echoe "Tabs: 4"<cr>
 
 " Commands
-nnoremap <leader>R @:<cr>
+nnoremap <leader>r @:
 
 " Folding
 nnoremap <leader><leader> za
