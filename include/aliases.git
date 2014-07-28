@@ -28,6 +28,8 @@ alias gpr="git pull-request"
 alias gsi="git submodule init"
 alias gsa="git submodule add"
 alias gsu="git submodule update"
+alias gsl="grep path .gitmodules | sed -E 's/^.*\/(.+)$/\1/' | sort"
+alias gsll="grep path .gitmodules | sed 's/.*= //'"
 
 # GIT COMMIT DIFF STATS
 gds() {

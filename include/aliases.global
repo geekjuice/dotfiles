@@ -58,10 +58,11 @@ alias gp="gulp"
 alias nd="node"
 alias bw="bower"
 
-# npm
+# NPM
 alias nod="npm outdated --depth=0"
 alias nup="npm up"
 alias nls="npmlist"
+alias hi="hicat"
 
 # Python
 alias static="python -m SimpleHTTPServer"
