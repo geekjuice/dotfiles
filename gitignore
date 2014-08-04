@@ -7,7 +7,7 @@
 #
 
 # General
-*.DS_Store
+.DS_Store
 *~
 .secret
 
@@ -44,3 +44,9 @@ bin/rspec
 
 ### Node.js
 node_modules/*
+
+### Java Console
+JavaConsole.java
+
+### I18n
+all_langs.txt

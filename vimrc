@@ -201,7 +201,7 @@ nnoremap K :Ag "\b<C-R><C-W>\b"<CR>
 nnoremap \ :Ag<space>
 
 " NOTE/TODO Search
-nnoremap <leader>\ :Ag "NOTE\|TODO"<CR>
+nnoremap <leader>\ :Ag "NOTE\|TODO\|DEBUG"<CR>
 
 
 "======================================
@@ -291,7 +291,7 @@ nnoremap <leader>o :NERDTreeToggle<CR><c-w>=
 "======================================
 "   GOYO
 "======================================
-let g:goyo_width = 100
+let g:goyo_width = 120
 
 " Goyo toggle
 nnoremap <leader>z :Goyo<cr>
