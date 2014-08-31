@@ -82,6 +82,10 @@ eval "$(jenv init -)"
 # RBENV
 eval "$(rbenv init -)"
 
+# GO
+export GOPATH=$HOME/.go
+export PATH=$PATH:$GOPATH/bin
+
 # NVM
 [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
 

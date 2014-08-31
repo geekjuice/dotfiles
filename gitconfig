@@ -31,3 +31,5 @@
   prompt = false
 [rerere]
 	enabled = 1
+[heroku]
+	account = personal
