@@ -13,8 +13,16 @@ if [[ "$(uname)" = *Darwin* ]]; then
                             | cut -d" " -f1)
 
     if [[ $currentcapacity ]] && [[ $maxcapacity ]]; then
-        percent=$((100 * currentcapacity/maxcapacity))
+        percent=$((100 * currentcapacity/(maxcapacity - 1)))
     fi
 fi
 
-[[ $percent ]] && echo '['$percent'%]' || echo ''
+if [[ $percent ]]; then
+    if [[ "$percent" = "100" ]]; then
+        echo "[^.^]"
+    else
+        echo '['$percent'%]'
+    fi
+else
+    echo ''
+fi
