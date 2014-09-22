@@ -93,10 +93,15 @@ parse_git_added() {
   [[ $(git status --ignore-submodules 2> /dev/null | grep "Untracked files:") != "" ]] && echo '+'
 }
 parse_git_modified() {
-  [[ $(git status --ignore-submodules 2> /dev/null | grep modified:) != "" ]] && echo "*"
+  [[ $(git status --ignore-submodules 2> /dev/null | grep modified:) != "" ]] && echo "\u2717"
 }
 parse_git_dirty() {
-  echo "$(parse_git_added)$(parse_git_modified)$(parse_git_deleted)"
+  dirty="$(parse_git_modified)$(parse_git_added)$(parse_git_deleted)"
+  [[ $dirty = "" ]] && echo "" || echo " $dirty"
+}
+
+git_branch() {
+  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1/"
 }
 
 # GIT BRANCH

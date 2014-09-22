@@ -22,17 +22,27 @@ node_version() {
         echo "%{$fg[black]%}[$(node -v)]%{$reset_color%}"
     fi
 }
+
+##########################################
+# PROMPT COMPONENTS (MINIMAL)
+##########################################
+minimal_pwd() {
+    echo "%{$fg[blue]%}$(basename `pwd`)"
+}
+minimal_git() {
+    git branch >/dev/null 2>/dev/null && \
+    echo " %{$fg[white]%}\u2234 %{$fg[cyan]%}$(git_branch)%{$fg[red]%}$(parse_git_dirty)"
+}
+minimal_prompt1() {
+    echo "%{$fg[black]%}{ $(minimal_pwd)$(minimal_git) %{$fg[black]%}}"
+}
+minimal_prompt2() {
+    echo "%{$fg[white]%}\u3bb %{$fg[black]%}\ubb "
+}
 multiline_prompt() {
     echo "%{$fg[red]%} »%{$reset_color%} "
 }
 
-minimal_prompt() {
-    echo "%{$fg[red]%}\u3bb $(minimal_git)%{$fg[blue]%}\ubb "
-}
-minimal_git() {
-    git branch >/dev/null 2>/dev/null && \
-    echo "%{$fg[cyan]%}{$(parse_git_branch)}%{$reset_color%} "
-}
 
 
 ##########################################
@@ -52,5 +62,6 @@ tmux_pane_pwd() {
 # PROMPT2='$(multiline_prompt)'
 # RPROMPT='$(node_version)'
 
-PROMPT=$'$(tmux_pane_pwd)\n$(minimal_prompt)'
+PROMPT=$'$(tmux_pane_pwd)\n$(minimal_prompt1)
+$(minimal_prompt2)'
 PROMPT2='$(multiline_prompt)'
