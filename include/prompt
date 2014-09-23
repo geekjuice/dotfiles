@@ -37,7 +37,7 @@ minimal_prompt1() {
     echo "%{$fg[black]%}{ $(minimal_pwd)$(minimal_git) %{$fg[black]%}}"
 }
 minimal_prompt2() {
-    echo "%{$fg[white]%}\u3bb %{$fg[black]%}\ubb "
+    echo "%{$fg[white]%}\u3bb %{$fg[black]%}\ubb%{$reset_color%} "
 }
 multiline_prompt() {
     echo "%{$fg[red]%} »%{$reset_color%} "
