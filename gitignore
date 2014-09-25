@@ -43,7 +43,7 @@ bin/spring
 bin/rspec
 
 ### Node.js
-node_modules/*
+node_modules
 
 ### Java Console
 JavaConsole.java
