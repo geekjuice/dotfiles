@@ -273,6 +273,7 @@ nnoremap <leader>g :GitGutterLineHighlightsToggle<cr>
 "======================================
 let g:syntastic_check_on_open=1         "Check on open
 let g:syntastic_javascript_checkers = ['jsl']
+let g:syntastic_java_checkers = ['checkstyle']
 
 " Syntastic Toggle
 nnoremap <leader>e :SyntasticToggleMode<cr>

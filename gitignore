@@ -11,6 +11,9 @@
 *~
 .secret
 
+*.iml
+.idea
+
 ### Ruby/Rails
 .bundle
 .sass-cache/
