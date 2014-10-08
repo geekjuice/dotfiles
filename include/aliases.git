@@ -8,14 +8,16 @@ alias gci="git commit -v"
 alias gca="git commit -v --amend"
 alias gbr="git branch"
 alias gco="git checkout"
+alias gcb="git checkout -b"
 alias gri="git rebase -i"
 alias gmr="git merge"
-alias gst="git status -s"
+alias gst="git status"
+alias gss="git status -s"
 alias grm="git remote"
 alias grv="git remote -v"
 alias gft="git fetch -p --all"
 alias gph="git push"
-alias gpl="git pull"
+alias gpl="git pull --rebase"
 alias gdt="git difftool"
 alias gdc="git difftool --cached"
 alias gmt="git mergetool"
@@ -36,10 +38,12 @@ gds() {
     local isNumber='^[0-9]+$'
     case $# in
         0 )
-            git --no-pager diff --stat HEAD~1 HEAD ;;
+            git --no-pager diff --stat;;
         1 )
             if [[ $1 =~ $isNumber ]]; then
                 git --no-pager diff --stat HEAD~$1 HEAD
+            elif [[ $1 = "--cached" ]]; then
+                git --no-pager diff --stat --cached
             else
                 echo "$1 is not an integer"; exit 1;
             fi ;;
@@ -52,6 +56,7 @@ gds() {
     esac
 }
 
+alias gdsc="gds --cached"
 
 # PRETTY GIT LOG
 glp() {
