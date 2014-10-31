@@ -92,6 +92,15 @@ pry() {
 }
 
 
+# http
+get() {
+    curl -s $@ | jq '.'
+}
+
+post() {
+    curl -s -H "Content-Type: application/json" -d @$2 $1 | jq '.'
+}
+
 # Heroku
 staging() { heroku $@ --app $(basename `pwd | tr ' ' '_'`)-staging }
 production() { heroku $@ --app $(basename `pwd | tr ' ' '_'`)-production }
