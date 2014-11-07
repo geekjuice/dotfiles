@@ -11,6 +11,7 @@
 *~
 .secret
 *DELETE_ME*
+*DEBUG*
 
 ### IntelliJ
 *.iml

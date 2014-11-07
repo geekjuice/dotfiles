@@ -37,7 +37,7 @@ start_itunes_tunnel() {
         logPID $PIDfile
     )
     (
-        ssh -CNL 3689:localhost:3689 $1 &
+        ssh -o "ServerAliveInterval 300" -o "ServerAliveCountMax 12" -CNL 3689:localhost:3689 $1 &
         logPID $PIDfile
     )
 }

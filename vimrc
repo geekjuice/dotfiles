@@ -27,6 +27,9 @@ colorscheme molokai
 " Force <c-c> to behave exactly like <esc>
 noremap <c-c> <esc>
 
+" Colon -> Semicolon
+nnoremap ; :
+
 " Leader Commands
 let mapleader = " "
 
@@ -69,6 +72,13 @@ vnoremap <leader><leader> zf
 " Bracket jump
 nnoremap <leader><tab> %
 vnoremap <leader><tab> %
+
+" Move Visual Blocks
+vnoremap J :m '>+1<CR>gv=gv
+vnoremap K :m '<-2<CR>gv=gv
+
+" Screw Ex Mode
+nnoremap Q <Nop>
 
 " Get off my lawn
 nnoremap <Left> :echoe "Use h"<CR>

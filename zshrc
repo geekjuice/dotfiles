@@ -105,7 +105,6 @@ fi
 # HUBSPOT
 ##########################################
 source ~/.hsrc
-alias deployer='/Users/nhwang/.fabric_deploy_virtualenv/bin/deployer'
 
 
 ##########################################

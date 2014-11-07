@@ -64,3 +64,6 @@
 [submodule "vim/bundle/html5.vim"]
 	path = vim/bundle/html5.vim
 	url = git@github.com:othree/html5.vim.git
+[submodule "vim/bundle/vim-smartinput"]
+	path = vim/bundle/vim-smartinput
+	url = git@github.com:kana/vim-smartinput.git
