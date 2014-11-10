@@ -7,14 +7,19 @@ tell_app_to(){
     echo $(osascript -e "$cmd" 2>/dev/null)
 }
 
+apps=("iTunes" "Rdio")
+
 if [[ $(uname) = *Darwin* ]]; then
-    running=$(tell_app_to "System Events" "(name of processes) contains \"iTunes\"")
-    if [[ $running = "true" ]]; then
-        state=$(tell_app_to "iTunes" "player state as string")
-        if [[ $state = "playing" ]]; then
-            artist=$(tell_app_to "iTunes" "artist of current track as string")
-            track=$(tell_app_to "iTunes" "name of current track as string")
-            echo "[ ♫  $artist - $track ]"
+    for app in "${apps[@]}"; do
+        running=$(tell_app_to "System Events" "(name of processes) contains \"$app\"")
+        if [[ $running = "true" ]]; then
+            state=$(tell_app_to $app "player state as string")
+            if [[ $state = "playing" ]]; then
+                artist=$(tell_app_to $app "artist of current track as string")
+                track=$(tell_app_to $app "name of current track as string")
+                echo "[ ♫  $artist - $track ]"
+                exit 0
+            fi
         fi
-    fi
+    done
 fi
