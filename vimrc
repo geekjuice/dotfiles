@@ -357,6 +357,10 @@ autocmd BufRead,BufNewFile Gemfile* setlocal filetype=ruby
 autocmd Filetype java,groovy setlocal ai ts=4 sts=4 et sw=4
 autocmd BufNewFile,BufRead *.gradle setlocal filetype=groovy
 
+" JSON
+autocmd Filetype json nnoremap <leader>j :%!jq .<cr>
+
+
 " Set color depending on terminal color support
 if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"
   set t_Co=256

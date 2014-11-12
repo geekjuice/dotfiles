@@ -49,10 +49,12 @@ showHelp () {
     echo " vol down     = Increase $APP' volume by 10%";
     echo " vol #        = Set $APP' volume to # [0-100]";
     echo " stop         = Stop $APP";
-    echo " playlist     = Show playlists saved in $APP";
-    echo " tracks       = Show tracks for current or given playlist";
-    echo " shuffle      = Shuffle current playlist";
-    echo " noshuffle    = Do not shuffle current playlist";
+    if [[ "$APP" = "iTunes" ]]; then
+        echo " playlist     = Show playlists saved in $APP";
+        echo " tracks       = Show tracks for current or given playlist";
+        echo " shuffle      = Shuffle current playlist";
+        echo " noshuffle    = Do not shuffle current playlist";
+    fi
     echo " quit         = Quit $APP";
 }
 
@@ -124,12 +126,12 @@ while [[ $# -gt 1 ]]; do
 
         "mute" )
             echo "Muting $APP volume level";
-            osascript -e 'tell application "'$APP'" to set mute to true';
+            osascript -e 'tell application "'$APP'" to set sound volume to 0';
             break ;;
 
         "unmute" )
             echo "Unmuting $APP volume level";
-            osascript -e 'tell application "'$APP'" to set mute to false';
+            osascript -e 'tell application "'$APP'" to set sound volume to 100';
             break ;;
 
         "vol" )
