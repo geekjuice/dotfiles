@@ -36,7 +36,7 @@ let mapleader = " "
 " Toggles
 nnoremap <leader>p :set invpaste paste?<CR>
 nnoremap <leader>s :set invspell spell?<CR>
-nnoremap <leader>h :nohlsearch<CR>
+nnoremap <leader>h :set nohlsearch<CR>
 
 " Read/Write
 nnoremap <leader>q <esc>:q
@@ -359,6 +359,9 @@ autocmd BufNewFile,BufRead *.gradle setlocal filetype=groovy
 
 " JSON
 autocmd Filetype json nnoremap <leader>j :%!jq .<cr>
+
+" CJSX
+autocmd BufRead,BufNewFile *.cjsx let g:syntastic_coffee_checkers = []
 
 
 " Set color depending on terminal color support

@@ -26,6 +26,11 @@ bindkey -v
 bindkey "^F" vi-cmd-mode
 bindkey jj vi-cmd-mode
 
+# edit command in editor
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey -M vicmd v edit-command-line
+
 # use incremental search
 bindkey "^R" history-incremental-search-backward
 

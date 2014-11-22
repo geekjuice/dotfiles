@@ -1,107 +1,11 @@
 ##############################
 # FUNCTIONS
 ##############################
-# Get TODO list
-gettodo() {
-    [[ "$1" = "." ]] && echo $SECRET/todo.md && return
-    [[ -f todo.md ]] && echo todo.md
-}
-
-
-# Edit TODO List
-todo() {
-    [[ -n $(gettodo $1) ]] && vim $(gettodo $1) && return
-    echo "todo.md not found"
-}
-
-
-# Colout Todo.md files
-list() {
-    local _todo=$(gettodo $1)
-    [[ -z $_todo ]] && echo "todo.md not found" && return
-    if type colout &>/dev/null; then
-        cat $_todo \
-            | colout "^([#]+)\s*(.*)$" blue,yellow normal\
-            | colout "^([//]{2,}[^ ]*)\s*(.*)" blue,yellow normal\
-            | colout "^\s*[-*]+\s" red\
-            | less
-    else
-        cat $_todo | less
-    fi
-}
-
-
-# Make dir and enter
-mcd() {
-    [ "$1" != "" ] && mkdir $1 && cd $1 && return
-    echo "No dir name entered"
-}
-
-
-# AWK with row and column
-awkrc() {
-    [[ "$1" = "" ]] && r=1 || r=$1
-    [[ "$2" = "" ]] && c=1 || c=$2
-    awk -v row=$r -v col=$c 'FNR == row { print $col }'
-}
-
 
 # Vim Session Start
 vs() {
     [[ -f Session.vim ]] && vim "$@" -S Session.vim || vim "$@"
 }
-
-
-# Rails
-rails() {
-    if [ -S .zeus.sock ]; then
-        echo 'Using zeus rails...' && zeus "$@"
-    elif [ -f bin/rails ]; then
-        echo 'Using bin/rails...' && bin/rails "$@"
-    else
-        command rails "$@"
-    fi
-}
-
-
-# Rake
-rake() {
-    if [ -S .zeus.sock ];then
-        echo 'Using zeus rake...' && zeus rake "$@"
-    elif [ -f bin/rake ];then
-        echo 'Using bin/rake...' && bin/rake "$@"
-    else
-        command rake "$@"
-    fi
-}
-
-
-# Pry
-pry() {
-    if [ -f config/environment.rb ];then
-        echo 'Prying using environment.rb...'
-        if [ -f Gemfile -a  "$(cat Gemfile | grep pry)" != '' ]; then
-            echo 'Bundle exec pry...'
-            bundle exec pry -r ./config/environment.rb
-        else
-            command pry -r ./config/environment.rb
-        fi
-    else
-        command pry "$@"
-    fi
-}
-
-
-# Heroku
-staging() { heroku $@ --app $(basename `pwd | tr ' ' '_'`)-staging }
-production() { heroku $@ --app $(basename `pwd | tr ' ' '_'`)-production }
-
-
-# Mongo
-mgd() { mongo $(basename `pwd`)_dev $@ }
-mgt() { mongo $(basename `pwd`)_test $@ }
-
-
 # Update NVM
 upgrade_nvm() {
     if [[ -d $NVM_DIR ]]; then
@@ -111,4 +15,12 @@ upgrade_nvm() {
         [[ "$UPDATED" = "*" ]] && echo "NVM updated." || echo "NVM up to date."
         cd - >/dev/null
     fi
+}
+
+# URI Component Encode/Decode
+enc() {
+    node -e "console.log(encodeURIComponent('$1'))"
+}
+dev() {
+    node -e "console.log(decodeURIComponent('$1'))"
 }

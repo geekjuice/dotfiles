@@ -33,20 +33,11 @@ vendor/bundler_gems
 *.sw[nop]
 Session.vim
 vim/.netrwhist
-vitunes.vim
 
 ### Local Dev Files
 .env*
 !.env.public
 todo.md
-
-### Zeus
-custom_plan.rb
-zeus.json
-
-### Spring
-bin/spring
-bin/rspec
 
 ### Node.js
 node_modules
