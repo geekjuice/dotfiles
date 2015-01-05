@@ -56,6 +56,7 @@ alias cf="coffee"
 alias gp="gulp"
 alias nd="node"
 alias bw="bower"
+alias cfl="coffeelint -f ~/.coffeelint.json"
 
 # NPM
 alias nod="npm outdated --depth=0"
@@ -75,8 +76,9 @@ if [[ "$SHELL" = *zsh* ]]; then
     alias -g M='| less'
     alias -g L='| wc -l'
     alias -g ONE="| awk '{ print \$1}'"
-    alias -g K="| awkrc"
+    alias -g K='| awkrc'
     alias -g C='| colout'
+    alias -g V="| vim -c 'set paste' -c 'write! /tmp/scratch' -c 'set nopaste' -"
 fi
 
 

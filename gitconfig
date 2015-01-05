@@ -33,3 +33,5 @@
 	enabled = 1
 [heroku]
 	account = personal
+[hub]
+	host = git.hubteam.com

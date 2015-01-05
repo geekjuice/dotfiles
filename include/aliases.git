@@ -26,13 +26,16 @@ alias grf="git reflog"
 alias gus="git reset HEAD"
 alias guc="git reset --soft HEAD^"
 alias gpr="git pull-request"
+alias gsh="git stash"
+alias gsp="git stash pop"
+alias gsl="git stash list"
 
 # GIT SUBMODULE ALIAS
 alias gsi="git submodule init"
 alias gsa="git submodule add"
 alias gsu="git submodule update"
-alias gsl="grep path .gitmodules | sed -E 's/^.*\/(.+)$/\1/' | sort"
-alias gsll="grep path .gitmodules | sed 's/.*= //'"
+alias gml="grep path .gitmodules | sed -E 's/^.*\/(.+)$/\1/' | sort"
+alias gmll="grep path .gitmodules | sed 's/.*= //'"
 
 # GIT COMMIT DIFF STATS
 gds() {

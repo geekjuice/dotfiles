@@ -27,7 +27,8 @@ node_version() {
 # PROMPT COMPONENTS (MINIMAL)
 ##########################################
 minimal_pwd() {
-    echo "%{$fg[blue]%}$(basename `pwd`)"
+    local CURRENT="$(pwd)"
+    echo "%{$fg[blue]%}$(basename $CURRENT)"
 }
 minimal_git() {
     git branch >/dev/null 2>/dev/null && \

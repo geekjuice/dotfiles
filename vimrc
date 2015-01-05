@@ -36,7 +36,7 @@ let mapleader = " "
 " Toggles
 nnoremap <leader>p :set invpaste paste?<CR>
 nnoremap <leader>s :set invspell spell?<CR>
-nnoremap <leader>h :set nohlsearch<CR>
+nnoremap <leader>h :set invhlsearch hlsearch?<CR>
 
 " Read/Write
 nnoremap <leader>q <esc>:q
@@ -133,7 +133,7 @@ execute "set undodir=" . g:vimtmp . "vim_undo"
 " Viminfo
 execute "set viminfo+=n" . g:vimtmp . "viminfo"
 
-" Tab settings
+" Whitespace settings
 set smarttab
 set expandtab
 set smartindent
@@ -146,6 +146,9 @@ set nojoinspaces
 " New split settings
 set splitbelow
 set splitright
+
+" Tab settings
+set guitablabel=%t
 
 
 "======================================
@@ -284,6 +287,7 @@ nnoremap <leader>g :GitGutterLineHighlightsToggle<cr>
 let g:syntastic_check_on_open=1         "Check on open
 let g:syntastic_javascript_checkers = ['jsl']
 let g:syntastic_java_checkers = ['checkstyle']
+let g:syntastic_coffee_coffeelint_args = "--file ~/.coffeelint.json"
 
 " Syntastic Toggle
 nnoremap <leader>e :SyntasticToggleMode<cr>
