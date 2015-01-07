@@ -1,0 +1,27 @@
+#!/usr/bin/env zsh
+
+###
+# PRE-PUSH HOOK
+###
+unsetopt nomatch
+
+## Coffeescript Lint
+COFFEELINT="coffeelint"
+COFFEELINT_CONFIG="~/.coffeelint.json"
+
+if ! type "$COFFEELINT" > /dev/null; then
+    echo "[INFO] Coffeelint not found."
+else
+    for f in **/*.coffee; do
+        if  [ -e "$f" ]; then
+            echo "Linting Coffee files..."
+            if [ -f "$COFFEELINT_CONFIG" ]; then
+                $COFFEELINT -f $COFFEELINT_CONFIG **/*.coffee
+            else
+                $COFFEELINT $COFFEE_FILES **/*.coffee
+            fi
+        fi
+    done
+fi
+
+exit 0

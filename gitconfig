@@ -1,24 +1,12 @@
 [user]
-	name = Nick Hwang
-	email = nhwang@hubspot.com
+  name = Nick Hwang
+  email = nhwang@hubspot.com
 [push]
   default = upstream
 [color]
   ui = auto
-[alias]
-  aa = add --all
-  ap = add --patch
-  ca = commit --amend
-  ci = commit -v
-  co = checkout
-  create-branch = !sh -c 'git push origin HEAD:refs/heads/$1 && git fetch origin && git branch --track $1 origin/$1 && cd . && git checkout $1' -
-  delete-branch = !sh -c 'git push origin :refs/heads/$1 && git remote prune origin && git branch -D $1' -
-  merge-branch = !git checkout master && git merge @{-1}
-  pr = !hub pull-request
-  st = status
-  up = !git fetch origin && git rebase origin/master
-  unstage = reset HEAD
-  uncommit = reset --soft HEAD^
+[init]
+  templatedir = ~/.git_template
 [core]
   editor = vim
   excludesfile = ~/.gitignore
@@ -28,10 +16,10 @@
 [diff]
   tool = vimdiff
 [difftool]
-  prompt = false
+  prompt = true
 [rerere]
-	enabled = 1
+  enabled = 1
 [heroku]
-	account = personal
+  account = personal
 [hub]
-	host = git.hubteam.com
+  host = git.hubteam.com
