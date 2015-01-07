@@ -5,8 +5,8 @@
   default = upstream
 [color]
   ui = auto
-[init]
-  templatedir = ~/.git_template
+# [init]
+#   templatedir = ~/.git_template
 [core]
   editor = vim
   excludesfile = ~/.gitignore
