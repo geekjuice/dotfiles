@@ -80,6 +80,9 @@ vnoremap K :m '<-2<CR>gv=gv
 " Screw Ex Mode
 nnoremap Q <Nop>
 
+" Force Highlight on search
+nnoremap / :set hlsearch<CR>/
+
 " Get off my lawn
 nnoremap <Left> :echoe "Use h"<CR>
 nnoremap <Right> :echoe "Use l"<CR>

@@ -56,7 +56,7 @@ alias cf="coffee"
 alias gp="gulp"
 alias nd="node"
 alias bw="bower"
-alias cfl="coffeelint -f ~/.coffeelint.json"
+alias cfl="coffeelint -q -f ~/.coffeelint.json **/*.coffee"
 
 # NPM
 alias nod="npm outdated --depth=0"

@@ -16,7 +16,7 @@
 [diff]
   tool = vimdiff
 [difftool]
-  prompt = true
+  prompt = false
 [rerere]
   enabled = 1
 [heroku]
