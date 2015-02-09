@@ -1,54 +1,84 @@
-# Update brew
-update
-
-# Tap that
-tap homebrew/dupes
-
-# Install brews
-install apple-gcc42
-install cmake
-install ctags
-install ffmpeg
-install gawk
-install gfortran
-install git
-install git-cal
-install go
-install graphicsmagick
-install heroku-toolbelt
-install htop-osx
-install hub
-install imagemagick
-install jsl
-install lame
-install libyaml
-install macvim
-install memcached
-install mercurial
-install mongodb
-install openssl
-install postgresql
-install python
-install qt
-install rbenv
-install rbenv-gem-rehash
-install reattach-to-user-namespace
-install redis
-install ruby-build
-install the_silver_searcher
-install tmux
-install trash
-install tree
-install unison
-install unrar
-install vim
-install watch
-install wget
-install z
-install zsh
-
-# Cleanup
-cleanup
-
-# Doctor
-doctor
+ack
+archey
+autoconf
+automake
+bison
+brew-cask
+bsdmake
+cmake
+couchdb
+ctags
+dirmngr
+elasticsearch
+erlang
+flow
+freetype
+gdbm
+gettext
+git
+git-cal
+gnu-getopt
+gnupg
+gnupg2
+go
+gpg-agent
+gradle
+heroku-toolbelt
+htop-osx
+httpie
+hub
+icu4c
+ifstat
+imagemagick
+jpeg
+jq
+libassuan
+libevent
+libgcrypt
+libgpg-error
+libksba
+libmemcached
+libpng
+libtiff
+libtool
+libusb
+libusb-compat
+libyaml
+lighttpd
+makedepend
+maven
+memcached
+mercurial
+mongodb
+mysql
+nspr
+openssl
+ossp-uuid
+pass
+pcre
+pinentry
+pkg-config
+postgresql
+proctools
+protobuf241
+pth
+pwgen
+rainbarf
+rbenv
+readline
+reattach-to-user-namespace
+rename
+ruby193
+scons
+speedtest_cli
+spidermonkey
+the_silver_searcher
+tmux
+tree
+unixodbc
+vim
+watch
+wget
+wxmac
+xz
+z

@@ -331,6 +331,12 @@ let g:goyo_callbacks = [ function('s:goyo_before'), function('s:goyo_after') ]
 
 
 "======================================
+"   Hacker News
+"======================================
+nnoremap <leader>hn :HackerNews<cr>
+
+
+"======================================
 "   SYNTAX/FILETYPE/HIGHLIGHT
 "======================================
 " Auto save last session on close

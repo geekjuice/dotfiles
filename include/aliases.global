@@ -20,6 +20,7 @@ alias fancy="source $SCRIPT/fancy_symbols.sh"
 # Change Dir
 alias dev="cd $DEV"
 alias dot="cd $DOT"
+alias gogo="cd $HOME/.go/src/github.com"
 
 # Commands
 alias v="$VISUAL"
