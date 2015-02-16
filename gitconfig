@@ -1,25 +1,26 @@
 [user]
-  name = Nick Hwang
-  email = nhwang@hubspot.com
+	name = Nick Hwang
+	email = nhwang@hubspot.com
 [push]
-  default = upstream
+	default = upstream
 [color]
-  ui = auto
-# [init]
-#   templatedir = ~/.git_template
+	ui = auto
+; [init]
+;   templatedir = ~/.git_template
 [core]
-  editor = vim
-  excludesfile = ~/.gitignore
-  autocrlf = input
+	editor = vim
+	excludesfile = ~/.gitignore
+	autocrlf = input
 [merge]
-  tool = vimdiff
+	tool = vimdiff
 [diff]
-  tool = vimdiff
+	tool = vimdiff
 [difftool]
-  prompt = false
+	prompt = false
 [rerere]
-  enabled = 1
+	enabled = 1
 [heroku]
-  account = personal
+	account = personal
 [hub]
-  host = git.hubteam.com
+	host = git.hubteam.com
+	host = github.com

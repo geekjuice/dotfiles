@@ -1,6 +1,10 @@
 ##############################
 # GIT
 ##############################
+# Environments
+alias gh="GITHUB_HOST=github.com git"
+
+# Commands
 git() { hub $@ } # Fixed autocomplete issue
 alias g="git"
 alias gaa="git add -A && git status -s"
