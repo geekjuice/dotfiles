@@ -1,0 +1,89 @@
+#!/usr/bin/env coffee
+
+###
+Integrate Test Runner
+
+Usage: ./lhopital [ENV] [PATTERN]
+###
+
+fs   = require('fs')
+path = require('path')
+
+{ exec, spawn }  = require('child_process')
+
+VALIDATIONS =
+  filename: /test/i
+  spec: /hubspot[.]integrate[.]TestBuilder/
+
+specs = {}
+
+[ENV, PATTERN, REST...] = process.argv[2...]
+
+PROD = /PROD/i.test(ENV)
+
+# Git root
+getProjectRoot = (callback) ->
+  exec 'git rev-parse --show-toplevel', (err, stdout, stderr) ->
+    throw err if err
+    callback(stdout.trim())
+
+
+# Directory walker
+walk = (cwd) ->
+  fs.readdir cwd, (err, files) ->
+    throw err if err
+    if 'static' in files
+      specs[path.basename(cwd)] ?= []
+    for file in files
+      filepath = path.join(cwd, file)
+      typeCheck(filepath)
+
+
+# Filetype checker
+typeCheck = (filepath) ->
+  fs.stat filepath, (err, stats) ->
+    throw err if err
+    if stats.isDirectory()
+      walk(filepath)
+    else if stats.isFile()
+      specCheck(filepath)
+
+
+# Spec checker
+specCheck = (filepath) ->
+  unless VALIDATIONS.filename.test(filepath)
+    return
+
+  if PATTERN
+    return unless (new RegExp PATTERN, 'ig').test(filepath)
+
+  fs.readFile filepath, (err, data) ->
+    throw err if err
+    if VALIDATIONS.spec.test data.toString()
+      for project of specs when ~filepath.indexOf(project)
+        spec = sanitizePath(filepath, project)
+        console.log "Running integrate test for #{spec}..."
+        specs[project].push(spec)
+        derivate(spec)
+
+
+# Path sanitizer
+sanitizePath = (filepath, project) ->
+  spec = filepath.substring(filepath.indexOf(project))
+  spec.substring(0, spec.lastIndexOf('.')).replace(/\//g, '.')
+
+
+# Make integrate URL
+derivate = (spec) ->
+  URLROOT = "http://local.hubspot#{if PROD then '' else 'qa'}.com/integrate/test"
+  url = "#{URLROOT}/#{spec}"
+  integrate(url)
+
+
+# Integrate
+integrate = (url) ->
+  CHROME = "/Applications/Google Chrome.app"
+  spawn 'open', ['-a', CHROME, url]
+
+
+getProjectRoot(walk)
