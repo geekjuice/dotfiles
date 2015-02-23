@@ -16,9 +16,10 @@
 [diff]
 	tool = vimdiff
 [difftool]
-	prompt = false
+	prompt = true
 [rerere]
-	enabled = 1
+	enabled = true
+	autoupdate = true
 [heroku]
 	account = personal
 [hub]
