@@ -331,7 +331,7 @@ let g:goyo_callbacks = [ function('s:goyo_before'), function('s:goyo_after') ]
 
 
 "======================================
-"   Hacker News
+"   HACKER NEWS
 "======================================
 nnoremap <leader>hn :HackerNews<cr>
 
