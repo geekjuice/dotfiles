@@ -25,3 +25,9 @@
 [hub]
 	host = git.hubteam.com
 	host = github.com
+[filter "hawser"]
+	clean = git hawser clean %f
+	smudge = git hawser smudge %f
+	required = true
+[fetch]
+	prune = true

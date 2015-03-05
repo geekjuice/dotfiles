@@ -34,6 +34,9 @@ alias gsh="git stash"
 alias gsp="git stash pop"
 alias gsl="git stash list"
 
+# Suffix alias
+alias -g NP="--no-prompt"
+
 # GIT SUBMODULE ALIAS
 alias gsi="git submodule init"
 alias gsa="git submodule add"
