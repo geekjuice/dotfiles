@@ -17,8 +17,7 @@ set encoding=utf-8
 "======================================
 "   COLORSCHEME
 "======================================
-let g:molokai_original = 1
-colorscheme molokai
+colorscheme monokai
 
 
 "======================================
