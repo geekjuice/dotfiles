@@ -331,6 +331,12 @@ let g:goyo_callbacks = [ function('s:goyo_before'), function('s:goyo_after') ]
 
 
 "======================================
+"   JAVASCRIPT SYNTAX
+"======================================
+let g:jsx_ext_required = 0
+
+
+"======================================
 "   HACKER NEWS
 "======================================
 nnoremap <leader>hn :HackerNews<cr>
