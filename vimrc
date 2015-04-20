@@ -96,6 +96,11 @@ nmap <C-h> <C-w><Left>
 nmap <c-[> :tabprevious<cr>
 nmap <c-]> :tabnext<cr>
 
+" Highlight group under cursor
+map <leader>[] :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> trans<'
+\ . synIDattr(synID(line("."),col("."),0),"name") . "> lo<"
+\ . synIDattr(synIDtrans(synID(line("."),col("."),1)),"name") . ">"<CR>
+
 
 
 "======================================
@@ -287,7 +292,7 @@ nnoremap <leader>g :GitGutterLineHighlightsToggle<cr>
 "   SYNTASTIC
 "======================================
 let g:syntastic_check_on_open=1         "Check on open
-let g:syntastic_javascript_checkers = ['jsl']
+let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_java_checkers = ['checkstyle']
 let g:syntastic_coffee_coffeelint_args = "--file ~/.coffeelint.json"
 
