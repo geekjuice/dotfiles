@@ -291,10 +291,10 @@ nnoremap <leader>g :GitGutterLineHighlightsToggle<cr>
 "======================================
 "   SYNTASTIC
 "======================================
-let g:syntastic_check_on_open=1         "Check on open
+let g:syntastic_check_on_open = 1       "Check on open
 let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_java_checkers = ['checkstyle']
-let g:syntastic_coffee_coffeelint_args = "--file ~/.coffeelint.json"
+let g:syntastic_coffee_coffeelint_args = '--file ~/.coffeelint.json'
 
 " Syntastic Toggle
 nnoremap <leader>e :SyntasticToggleMode<cr>
