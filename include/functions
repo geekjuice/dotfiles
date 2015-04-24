@@ -11,9 +11,7 @@ upgrade_nvm() {
     if [[ -d $NVM_DIR ]]; then
         cd $NVM_DIR
         local UPDATED="*"
-        git pull --rebase upstream master| grep -q "up to date." && UPDATED=""
-        [[ "$UPDATED" = "*" ]] && echo "NVM updated." || echo "NVM up to date."
-        cd - >/dev/null
+        git pull origin master
     fi
 }
 

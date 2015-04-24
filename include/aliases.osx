@@ -14,7 +14,7 @@ alias d2d='unison dev'
 alias ag="ag --smart-case"
 
 # DIR
-alias vol="cd /Volumes"
+alias drives="cd /Volumes"
 alias desk="cd /Users/Geekjuice/Desktop"
 alias dls="cd $HOME/Downloads"
 alias tdl="cd $HOME/Torrent\ Downloads"
@@ -27,12 +27,30 @@ alias bud="brew update && brew outdated"
 alias buc="brew upgrade && brew cleanup"
 alias bucc="buc && brewcleaner run $DOT/brew_whitelist.json"
 
+# System Commands
+vol() {
+    local GET_VOLUME_CMD="osascript -e 'output volume of (get volume settings)'"
+    local CURRENT_VOLUME=$(eval $GET_VOLUME_CMD)
+    local VOLUME=$CURRENT_VOLUME
 
-##############################
-# SYSTEM
-##############################
-alias ethmac="sudo ifconfig en0 | grep ether"
-alias wifimac="sudo ifconfig en1 | grep ether"
-alias fastmc="defaults write com.apple.dock expose-animation-duration -float 0.15 && killall Dock"
-alias itermplist="cp ~/Library/Preferences/com.googlecode.iterm2.plist $DOT/terminal/flatvisor.iterm"
-alias nukegems='gem list | cut -d " " -f1 | xargs gem uninstall -Iax'
+    if [[ -z $1 ]]; then
+        echo "Volume set at $VOLUME%"
+        return
+    fi
+
+    if [[ -z $1 || ! $1 =~ ^[0-9]+\|up\|down$ ]]; then
+        echo "Usage: vol [0-100|up|down]"
+        return
+    fi
+
+    case $1 in
+        "up") VOLUME=$((CURRENT_VOLUME+5)) ;;
+        "down") VOLUME=$((CURRENT_VOLUME-5)) ;;
+        *) VOLUME=$1 ;;
+    esac
+
+    VOLUME=$(($VOLUME<100?$VOLUME:100))
+
+    osascript -e "set volume output volume $VOLUME"
+    echo "Volume set at $VOLUME%"
+}
