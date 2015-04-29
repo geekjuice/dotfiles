@@ -347,6 +347,17 @@ nnoremap <leader>hn :HackerNews<cr>
 
 
 "======================================
+"   JSDoc
+"======================================
+nnoremap <leader>// :JsDoc<cr>
+
+let g:jsdoc_default_mapping = 0
+let g:jsdoc_allow_input_prompt = 0
+let g:jsdoc_underscore_private = 0
+let g:jsdoc_allow_shorthand = 1
+
+
+"======================================
 "   SYNTAX/FILETYPE/HIGHLIGHT
 "======================================
 " Auto save last session on close
