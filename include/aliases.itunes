@@ -33,6 +33,9 @@ start_itunes_tunnel() {
     printf "${_g}Starting ${_b}iTunes ${_g}tunnel ${_o}...\n"
     rm -f $PIDfile
     (
+        ssh $1 'open /Applications/iTunes.app' >/dev/null 2>&1 &
+    )
+    (
         dns-sd -P "Geekjuice" _daap._tcp local 3689 localhost.local. 127.0.0.1 "Geek" >/dev/null 2>&1 &
         logPID $PIDfile
     )

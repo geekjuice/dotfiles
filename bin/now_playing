@@ -7,7 +7,7 @@ tell_app_to(){
     echo $(osascript -e "$cmd" 2>/dev/null)
 }
 
-apps=("iTunes" "Rdio")
+apps=("iTunes" "Spotify" "Rdio")
 
 if [[ $(uname) = *Darwin* ]]; then
     for app in "${apps[@]}"; do

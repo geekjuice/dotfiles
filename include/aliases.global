@@ -66,6 +66,7 @@ alias nls="npmlist"
 alias hi="hicat"
 alias itunes="musigmachi iTunes"
 alias rdio="musigmachi Rdio"
+alias spotify="musigmachi Spotify"
 
 # Python
 alias static="python -m SimpleHTTPServer"
