@@ -5,13 +5,39 @@ let g:vimtmp = "~/.dotfiles/vim/tmp/"
 
 
 "======================================
-"   PATHOGEN
+"   PLUGINS
 "======================================
-let g:pathogen_disabled=[]
-execute pathogen#infect()
-syntax on
-filetype plugin indent on
-set encoding=utf-8
+call plug#begin('~/.vim/plugged')
+
+Plug 'airblade/vim-gitgutter'
+Plug 'christoomey/vim-tmux-navigator'
+Plug 'digitaltoad/vim-jade'
+Plug 'geekjuice/vim-picoline'
+Plug 'geekjuice/vim-spec'
+Plug 'jgdavey/tslime.vim'
+Plug 'junegunn/goyo.vim'
+Plug 'kchmck/vim-coffee-script'
+Plug 'kien/ctrlp.vim'
+Plug 'scrooloose/nerdcommenter'
+Plug 'scrooloose/nerdtree'
+Plug 'scrooloose/syntastic'
+Plug 'tpope/vim-eunuch'
+Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-sensible'
+Plug 'tpope/vim-surround'
+Plug 'rking/ag.vim'
+Plug 'majutsushi/tagbar'
+Plug 'othree/html5.vim'
+Plug 'mtscout6/vim-cjsx'
+Plug 'ryanss/vim-hackernews'
+Plug 'tpope/vim-haml'
+Plug 'mxw/vim-jsx'
+Plug 'pangloss/vim-javascript'
+Plug 'Townk/vim-autoclose'
+Plug 'heavenshell/vim-jsdoc'
+Plug 'terryma/vim-multiple-cursors'
+
+call plug#end()
 
 
 "======================================
@@ -106,7 +132,11 @@ map <leader>[] :echo "hi<" . synIDattr(synID(line("."),col("."),1),"name") . '> 
 "======================================
 "   SETTINGS
 "======================================
+syntax on
+filetype plugin indent on
+
 set nocompatible                        "user vim over vi settings
+set encoding=utf-8                      "utf8 encoding
 set list listchars=tab:»·,trail:·       "tab and space chars (optional eol:¬)
 set laststatus=2                        "always display status line
 set fillchars=vert:\|,fold:-            "fill chars for status line
