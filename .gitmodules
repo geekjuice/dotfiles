@@ -79,6 +79,3 @@
 [submodule "vim/bundle/vim-multiple-cursors"]
 	path = vim/bundle/vim-multiple-cursors
 	url = git@github.com:terryma/vim-multiple-cursors.git
-[submodule ".antigen"]
-	path = .antigen
-	url = git@github.com:zsh-users/antigen.git
