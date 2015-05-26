@@ -1,53 +1,64 @@
 ##########################################
-# OH-MY-ZSH SETUP
+# DIRECTORY
 ##########################################
-# Path to your oh-my-zsh configuration.
-ZSH=$HOME/.oh-my-zsh
 DOT=$HOME/.dotfiles
 
+##########################################
+# ANTIGEN
+##########################################
+source $DOT/.antigen/antigen.zsh
+
+antigen use oh-my-zsh
+antigen bundle git
+antigen bundle battery
+antigen bundle bower
+antigen bundle brew
+antigen bundle node
+antigen bundle npm
+antigen bundle nvm
+antigen bundle tmux
+antigen bundle zsh-users/zsh-syntax-highlighting
+antigen apply
+
+##########################################
+# OH-MY-ZSH SETUP
+##########################################
 # Disable auto title names
 DISABLE_AUTO_TITLE=true
 
 # Display red dots while waiting for completion
 COMPLETION_WAITING_DOTS="true"
 
-# Plugins
-plugins=(battery bower brew gem npm nvm zsh-syntax-highlighting)
-
-# Start zsh
-source $ZSH/oh-my-zsh.sh
-
-
 ##########################################
 # ZSH SETTINGS
 ##########################################
-# vi mode
+# Vi mode
 bindkey -v
 bindkey "^F" vi-cmd-mode
 bindkey jj vi-cmd-mode
 
-# edit command in editor
+# Edit command in editor
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey -M vicmd v edit-command-line
 
-# use incremental search
+# Use incremental search
 bindkey "^R" history-incremental-search-backward
 
-# handy keybindings
+# Handy keybindings
 bindkey "^P" history-search-backward
 bindkey "^Y" accept-and-hold
 bindkey "^N" insert-last-word
 bindkey -s "^S" "^[Isudo ^[A" # "s" for "sudo"
 bindkey -s "^T" "^[Itx ^[A"   # "t" for "tmux/transmit"
 
-# expand functions in the prompt
+# Expand functions in the prompt
 setopt prompt_subst
 
-# ignore duplicate history entries
+# Ignore duplicate history entries
 setopt histignorealldups
 
-# automatically pushd
+# Automatically pushd
 setopt auto_pushd
 export dirstacksize=5
 
@@ -56,7 +67,7 @@ setopt EXTENDED_GLOB
 
 
 ##########################################
-# INCLUDES
+# INCLUDE
 ##########################################
 [ -e "$DOT/aliases" ] && source "$DOT/aliases"
 
@@ -84,17 +95,17 @@ export PATH=$HOME/Library/Haskell/bin:$DOT/bin:$HOME/.rbenv/bin:$PATH
 export PATH="$HOME/.jenv/bin:$PATH"
 eval "$(jenv init -)"
 
-# RBENV
+# Rbenv
 eval "$(rbenv init -)"
 
-# GO
+# Go
 export GOPATH=$HOME/.go
 export PATH=$PATH:$GOPATH/bin
 
-# NVM
+# Nvm
 [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
 
-# CLEAN UP
+# Clean up path
 [ -e "$DOT/script/cleanup_path.sh" ] && source "$DOT/script/cleanup_path.sh"
 
 

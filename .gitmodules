@@ -46,12 +46,6 @@
 [submodule "vim/bundle/vim-surround"]
 	path = vim/bundle/vim-surround
 	url = https://github.com/tpope/vim-surround.git
-[submodule "zsh-plugins/zsh-syntax-highlighting"]
-	path = zsh-plugins/zsh-syntax-highlighting
-	url = https://github.com/zsh-users/zsh-syntax-highlighting.git
-[submodule "terminal/flat-terminal"]
-	path = terminal/flat-terminal
-	url = https://github.com/ahmetsulek/flat-terminal.git
 [submodule "vim/bundle/ag.vim"]
 	path = vim/bundle/ag.vim
 	url = https://github.com/rking/ag.vim.git
@@ -85,3 +79,6 @@
 [submodule "vim/bundle/vim-multiple-cursors"]
 	path = vim/bundle/vim-multiple-cursors
 	url = git@github.com:terryma/vim-multiple-cursors.git
+[submodule ".antigen"]
+	path = .antigen
+	url = git@github.com:zsh-users/antigen.git
