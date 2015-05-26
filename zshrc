@@ -1,12 +1,7 @@
 ##########################################
-# DIRECTORY
-##########################################
-DOT=$HOME/.dotfiles
-
-##########################################
 # ANTIGEN
 ##########################################
-source $DOT/.antigen/antigen.zsh
+source $HOME/.antigen/antigen.zsh
 
 antigen use oh-my-zsh
 antigen bundle git
