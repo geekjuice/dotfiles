@@ -50,7 +50,6 @@ muttdir=$HOME/.mutt
 
 # Handpicked Files
 files=(agignore coffeelint.json eslintrc gemrc ghci gitconfig gitignore git_template hushlogin htoprc muttrc rspec tmux.conf vimrc vim zshrc)
-plugins=(battery-plus zsh-syntax-highlighting)
 [[ "$SHELL" = *bash* ]] && files+=(profile)
 
 # OS Message
@@ -79,13 +78,6 @@ if [[ ! -d $muttdir ]]; then
     touch $muttdir/certificates
 fi
 
-# symlink zsh plugins
-if [[ -d $HOME/.oh-my-zsh ]]; then
-    mkdir -p $ohmyplugs
-    for plugin in ${plugins[@]}; do
-        linker $plugin $dir/zsh-plugins $ohmyplugs 0 $1
-    done
-fi
 
 # notify finish
 printf "${green}\n\nDotfiles symlinked!${reset}\n"
