@@ -299,6 +299,9 @@ let g:syntastic_coffee_coffeelint_args = '--file ~/.coffeelint.json'
 " Syntastic Toggle
 nnoremap <leader>e :SyntasticToggleMode<cr>
 
+" Eslint (Should output to quickfix)
+nnoremap <leader>jl :!eslint %<cr>
+
 
 "======================================
 "   NERD{TREE|COMMENTER}
@@ -320,13 +323,13 @@ nnoremap <leader>z :Goyo<cr>
 
 " Before/After callbacks
 function! s:goyo_before()
-  silent !tmux set status off
+  " silent !tmux set status off
   set noshowmode
   set noshowcmd
 endfunction
 
 function! s:goyo_after()
-  silent !tmux set status on
+  " silent !tmux set status on
   set showmode
   set showcmd
 endfunction
@@ -365,6 +368,9 @@ let g:multi_cursor_next_key = '<C-n>'
 let g:multi_cursor_prev_key = '<C-p>'
 let g:multi_cursor_skip_key = '<C-x>'
 let g:multi_cursor_quit_key = '<C-c>'
+let g:multi_cursor_exit_from_visual_mode = 0
+let g:multi_cursor_exit_from_insert_mode = 0
+
 
 
 "======================================
