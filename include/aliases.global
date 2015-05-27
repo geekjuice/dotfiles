@@ -81,6 +81,7 @@ if [[ "$SHELL" = *zsh* ]]; then
     alias -g K='| awkrc'
     alias -g C='| colout'
     alias -g V="| vim -c 'set paste' -c 'write! /tmp/scratch' -c 'set nopaste' -"
+    alias -g F='| fpp'
 fi
 
 
