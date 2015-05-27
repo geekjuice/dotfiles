@@ -33,6 +33,7 @@ vendor/bundler_gems
 *.sw[nop]
 Session.vim
 vim/.netrwhist
+vim/plugged
 
 ### Local Dev Files
 .env*
