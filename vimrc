@@ -283,23 +283,6 @@ nnoremap <leader>tl :call RunLastSpec()<CR>
 let g:tagbar_autofocus = 1
 let g:tagbar_left = 0
 
-" CoffeeTags
-if executable('coffeetags')
-  let g:tagbar_type_coffee = {
-        \ 'ctagsbin' : 'coffeetags',
-        \ 'ctagsargs' : '',
-        \ 'kinds' : [
-        \ 'f:functions',
-        \ 'o:object',
-        \ ],
-        \ 'sro' : ".",
-        \ 'kind2scope' : {
-        \ 'f' : 'object',
-        \ 'o' : 'object',
-        \ }
-        \ }
-endif
-
 " Index ctags and open tagbar
 nnoremap <Leader>ct :!ctags -R .<CR>
 nnoremap <leader>] :TagbarToggle<CR><c-w>=
@@ -324,7 +307,7 @@ nnoremap <leader>g :GitGutterLineHighlightsToggle<cr>
 let g:syntastic_check_on_open = 1       "Check on open
 let g:syntastic_javascript_checkers = ['eslint']
 let g:syntastic_java_checkers = ['checkstyle']
-let g:syntastic_coffee_coffeelint_args = '--file ~/.coffeelint.json'
+let g:syntastic_coffee_coffeelint_args = '--file ~/.coffeelintrc'
 
 " Syntastic Toggle
 nnoremap <leader>e :SyntasticToggleMode<cr>

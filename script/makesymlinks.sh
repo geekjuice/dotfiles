@@ -49,7 +49,7 @@ unisondir=$HOME/.unison
 muttdir=$HOME/.mutt
 
 # Handpicked Files
-files=(agignore coffeelint.json eslintrc gemrc ghci gitconfig gitignore git_template hushlogin htoprc muttrc rspec tmux.conf vimrc vim zshrc)
+files=(agignore coffeelintrc eslintrc gemrc ghci gitconfig gitignore git_template hushlogin htoprc muttrc rspec tmux.conf vimrc vim zshrc)
 [[ "$SHELL" = *bash* ]] && files+=(profile)
 
 # OS Message
