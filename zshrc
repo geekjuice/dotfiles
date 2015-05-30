@@ -106,7 +106,7 @@ export PATH=$PATH:$GOPATH/bin
 [[ -s $HOME/.nvm/nvm.sh ]] && . $HOME/.nvm/nvm.sh
 
 # Clean up path
-[ -e "$DOT/script/cleanup_path.sh" ] && source "$DOT/script/cleanup_path.sh"
+[ -e $DOT/script/cleanup_path.sh ] && source $DOT/script/cleanup_path.sh
 
 
 ##########################################
@@ -120,11 +120,11 @@ fi
 ##########################################
 # HUBSPOT
 ##########################################
-source ~/.hsrc
+[[ -s $HOME/.hsrc ]] && source $HOME/.hsrc
 
 
 ##########################################
 # Initiate TMUX
 ##########################################
-[[ -z "$TMUX" ]] && $SCRIPT/start_tmux.sh hubspot
+[[ -z "$TMUX" ]] && $SCRIPT/start_tmux.sh nick
 
