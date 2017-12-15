@@ -1,0 +1,15 @@
+.git
+.vscode
+.DS_Store
+node_modules
+
+__ignore__
+*.__ignore__.*
+
+_templates
+
+.bin
+
+*.local.*
+
+.envrc*

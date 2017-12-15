@@ -1,0 +1,42 @@
+[
+  {
+    "key": "ctrl+h",
+    "command": "workbench.action.focusLeftGroup"
+  },
+  {
+    "key": "ctrl+j",
+    "command": "workbench.action.focusAboveGroup"
+  },
+  {
+    "key": "ctrl+k",
+    "command": "workbench.action.focusBelowGroup"
+  },
+  {
+    "key": "ctrl+l",
+    "command": "workbench.action.focusRightGroup"
+  },
+  {
+    "key": "ctrl+w shift+h",
+    "command": "workbench.action.moveActiveEditorGroupLeft"
+  },
+  {
+    "key": "ctrl+w shift+j",
+    "command": "workbench.action.moveActiveEditorGroupDown"
+  },
+  {
+    "key": "ctrl+w shift+k",
+    "command": "workbench.action.moveActiveEditorGroupUp"
+  },
+  {
+    "key": "ctrl+w shift+l",
+    "command": "workbench.action.moveActiveEditorGroupRight"
+  },
+  {
+    "key": "ctrl+p",
+    "command": "workbench.action.quickOpen"
+  },
+  {
+    "key": "ctrl+;",
+    "command": "workbench.action.previousEditorInGroup"
+  }
+]

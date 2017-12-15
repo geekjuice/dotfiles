@@ -1,0 +1,46 @@
+#!/usr/bin/env node
+
+/*
+ * TODO:
+ *   - exit process on invalid password
+ *   - try to just set the session key
+ *   - or log the instructions to set
+ */
+
+const { spawn } = require('child_process');
+
+const { argv: [,, arg] } = process;
+
+const unlocked$ = /Your vault is now unlocked!/;
+const instruction$ = /(export BW_SESSION="(.+)")/;
+
+const bw = spawn('bw', ['unlock'], {
+  stdio: ['inherit', 'pipe', 'pipe'],
+});
+
+const pbcopy = spawn('pbcopy');
+
+bw.stdout.on('data', data => {
+  const output = data.toString();
+  if (unlocked$.test(output)) {
+    const result = output.split('\n').find(line => {
+      return instruction$.test(line);
+    });
+    const [, instruction] = result.match(instruction$);
+
+    pbcopy.stdin.write(instruction);
+    pbcopy.stdin.end();
+
+    if (arg === 'script') {
+      process.stdout.write(instruction);
+    }
+  } else {
+    process.stdout.write(output);
+    process.exit(1);
+  }
+});
+
+bw.stderr.on('data', data => {
+  const output = data.toString();
+  process.stderr.write(output);
+});

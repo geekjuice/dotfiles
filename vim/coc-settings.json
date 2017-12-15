@@ -1,0 +1,6 @@
+{
+  "diagnostic.displayByAle": true,
+  "diagnostic.refreshOnInsertMode": true,
+  "suggest.maxCompleteItemCount": 20,
+  "javascript.suggestionActions.enabled": false
+}

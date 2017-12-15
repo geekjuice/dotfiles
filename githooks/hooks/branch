@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+
+MERGING=$(git rev-parse -q --verify MERGE_HEAD)
+REBASING=$(git rev-parse -q --verify REBASE_HEAD)
+REVERTING=$(git rev-parse -q --verify REVERT_HEAD)
+
+PREFIXES="(feature|bugfix|improvement|hotfix|chore)"
+PATTERN="^$PREFIXES\/[a-z\d]+([-/_.][a-z\d]+)?$"
+
+if [[ -z "$MERGING" ]] || [[ -z "$REBASING" ]] || [[ -z "$REVERTING" ]]; then
+  return
+fi
+
+if [[ ! "$BRANCH" =~ $PATTERN ]]; then
+  echo "please prefix branch with one of $PREFIXES"
+  exit 1
+fi

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [[ ! -x "$(command -v tmux)" ]]; then
+  echo 'tmux not installed'
+  exit 1
+fi
+
+PERCENTAGE="$1"
+
+NUMBER_PATTERN='^[0-9]+$'
+if [[ ! $PERCENTAGE =~ $NUMBER_PATTERN ]]; then
+  echo "'$PERCENTAGE' is not a positive integer"
+  exit 1
+fi
+
+if [[ $PERCENTAGE -gt 100 ]]; then
+  echo "'$PERCENTAGE' should be between 0 and 100"
+  exit 1
+fi
+
+WINDOW_WIDTH=$(tmux display-message -p "#{window_width}")
+RESIZED_WIDTH=$(($WINDOW_WIDTH * $PERCENTAGE / 100))
+
+tmux resize-pane -x $RESIZED_WIDTH

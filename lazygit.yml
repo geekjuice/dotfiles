@@ -1,0 +1,17 @@
+confirmOnQuit: false
+gui:
+  mouseEvents: false
+  scrollHeight: 5
+  scrollPastBottom: false
+  theme:
+    activeBorderColor:
+      - magenta
+      - bold
+keybinding:
+  universal:
+    quit-alt1: '<c-\>'
+    return: '<c-c>'
+  commits:
+    moveDownCommit: '}'
+    moveUpCommit: '{'
+reporting: "off"

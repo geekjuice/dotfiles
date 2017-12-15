@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+. "$(dirname "$0")/hooks/email"
+. "$(dirname "$0")/hooks/branch"
+. "$(dirname "$0")/hooks/local"

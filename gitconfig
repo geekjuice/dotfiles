@@ -1,0 +1,52 @@
+[user]
+  name = Nicholas Hwang
+  email = github@undefined.engineer
+[core]
+  editor = vim
+  excludesfile = ~/.gitignore
+  hooksPath = ~/.githooks
+  ignorecase = false
+[color]
+  ui = auto
+[status]
+  showUntrackedFiles = all
+[push]
+  default = simple
+  followTags = true
+[pull]
+  rebase = true
+[fetch]
+  prune = true
+[merge]
+  ff = only
+  tool = vimdiff
+[mergetool]
+  keepBackup = false
+  keepTemporaries = false
+  writeToTemp = true
+[diff]
+  tool = vimdiff
+  conflictstyle = diff3
+[difftool]
+  prompt = true
+[mergetool]
+  prompt = true
+[log]
+  abbrevCommit = true
+  decorate = auto
+  follow = true
+[commit]
+  verbose = true
+[rerere]
+  autoupdate = true
+  enabled = true
+[alias]
+  personal = config user.email "github@undefined.engineer"
+  appcues = config user.email "nick.hwang@appcues.com"
+  graph = log --graph --all --oneline
+  wip = push --force --no-verify
+[pager]
+  diff = diff-so-fancy | less --tabs=1,5 -RFX
+  show = diff-so-fancy | less --tabs=1,5 -RFX
+[init]
+  defaultBranch = main
