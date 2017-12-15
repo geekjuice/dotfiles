@@ -1,0 +1,15 @@
+\set QUIET 1
+
+\pset null '[NULL]'
+
+\set PROMPT1 '%n@%/%R%# '
+\set PROMPT2 '[more] %R > '
+
+\timing
+
+\x auto
+\set VERBOSITY verbose
+\set HISTCONTROL ignoredups
+\set COMP_KEYWORD_CASE upper
+
+\unset QUIET

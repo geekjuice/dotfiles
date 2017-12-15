@@ -1,0 +1,14 @@
+confirmOnQuit: false
+gui:
+  mouseEvents: false
+  scrollHeight: 5
+  scrollPastBottom: false
+  theme:
+    activeBorderColor:
+      - magenta
+      - bold
+keybinding:
+  universal:
+    return: '<c-c>'
+reporting: "off"
+startuppopupversion: 1

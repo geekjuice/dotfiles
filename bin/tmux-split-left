@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+if [[ ! -x "$(command -v tmux)" ]]; then
+  echo 'tmux not installed'
+  exit 1
+fi
+
+tmux split-window -h -c "#{pane_current_path}"
+
+tmux swap-pane -U
+
+. "$(dirname "$0")/tmux-resize" 30

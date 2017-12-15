@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+
+APPCUES="nick.hwang@appcues.com"
+PERSONAL="hello@undefined.engineer"
+
+ORIGIN=$(git remote -v)
+EMAIL=$(git config --local --get user.email)
+
+if [[ "$ORIGIN" == *":appcues/"* ]]; then
+  if [[ "$EMAIL" != "$APPCUES" ]]; then
+    echo "changing email to $APPCUES..."
+    git appcues
+  fi
+else
+  if [[ "$EMAIL" != "$PERSONAL" ]]; then
+    echo "changing email to $PERSONAL..."
+    git personal
+  fi
+fi

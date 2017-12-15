@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+GIT_ROOT=$(git rev-parse --show-toplevel)
+
+HOOK_NAME=$(basename "$0")
+LOCAL_HOOK="$GIT_ROOT/.git/hooks/$HOOK_NAME"
+
+if [[ -f "$LOCAL_HOOK" ]]; then
+  "$LOCAL_HOOK" "$@"
+fi

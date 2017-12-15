@@ -1,0 +1,174 @@
+#!/usr/bin/env bash
+
+VERCEL_DIR="${HOME}/.now"
+ACCOUNTS_DIR="${HOME}/.vlm"
+AUTH_JSON="${VERCEL_DIR}/auth.json"
+NVM_SCRIPT="${NVM_DIR}/nvm.sh"
+
+accounts=
+
+vlm_precondition() {
+    if [[ ! -d "${VERCEL_DIR}" ]]; then
+        echo "  no vercel configurations found."
+        echo ""
+    fi
+
+    if [[ ! -d "${ACCOUNTS_DIR}" ]]; then
+        mkdir "${ACCOUNTS_DIR}"
+    fi
+}
+
+vlm_ensure_vercel() {
+    if [[ ! -x "$(command -v vercel)" ]]; then
+        if [[ -f "$NVM_SCRIPT" ]]; then
+            source "$NVM_SCRIPT"
+        fi
+    fi
+
+    if [[ ! -x "$(command -v vercel)" ]]; then
+        echo "  vercel not found."
+        exit 1
+    fi
+}
+
+vlm_help() {
+    echo "  vercel login manager"
+    echo ""
+    echo "  usage: vlm [command]"
+    echo ""
+    echo "  commands:"
+    echo "    list                            list accounts"
+    echo "    add       [account] [email?]    add account"
+    echo "    remove    [account]             remove account"
+    echo "    use       [account]             use account"
+    echo "    current                         show current account"
+    echo "    help                            show help"
+    exit 1
+}
+
+vlm_unknown() {
+    if [[ -z "$1" ]]; then
+        echo "  zzz..."
+    else 
+        echo "  $1?..."
+    fi
+    echo ""
+}
+
+vlm_required() {
+    if [[ -z "$1" ]]; then
+        echo "  please provide ${2:-an account}..."
+        echo ""
+        vlm_help
+    fi
+}
+
+vlm_accounts() {
+    accounts=($(ls ${ACCOUNTS_DIR}))
+
+    if [[ ! "${accounts}" ]]; then
+        echo "  no vercel accounts found."
+        exit 1
+    fi
+}
+
+vlm_account() {
+    vlm_required "$1"
+    vlm_accounts
+
+    if [[ ! " ${accounts[@]} " =~ " $1 " ]]; then
+        echo "  no account named [$1] found."
+        exit 1
+    fi
+}
+
+vlm_list() {
+    vlm_accounts
+
+    echo "  accounts"
+    echo ""
+    for i in "${!accounts[@]}"; do
+        echo "  $(($i + 1))) ${accounts[$i]}"
+    done
+}
+
+vlm_use() {
+    vlm_account "$1"
+
+    ln -sf "${ACCOUNTS_DIR}/$1" "${AUTH_JSON}"
+    echo "  using account [$1]"
+}
+
+vlm_add() {
+    vlm_required "$1"
+    vlm_ensure_vercel
+
+    vercel login "$2"
+
+    if [[ "$?" -ne 0 ]]; then
+        exit "$?"
+    fi
+
+    cp -f "${AUTH_JSON}" "${ACCOUNTS_DIR}/$1" 
+    ln -sf "${ACCOUNTS_DIR}/$1" "${AUTH_JSON}"
+    echo "  added [$1] to list of accounts"
+}
+
+vlm_remove() {
+    vlm_account "$1"
+
+    rm "${ACCOUNTS_DIR}/$1"
+    echo "  removed [$1] from list of accounts"
+}
+
+vlm_current() {
+    vlm_accounts
+
+    current=$(readlink "${AUTH_JSON}")
+
+    if [[ -z "${current}" ]]; then
+        vlm_ensure_vercel
+        vercel whoami
+    else
+        echo "  currently using [$(basename ${current})]"
+    fi
+}
+
+vlm_cli() {
+    echo ""
+
+    vlm_precondition
+
+    case $1 in
+        "list")
+            vlm_list
+            ;;
+
+        "add")
+            vlm_add "$2" "$3"
+            ;;
+
+        "remove")
+            vlm_remove "$2"
+            ;;
+
+        "use")
+            vlm_use "$2"
+            ;;
+
+        "current")
+            vlm_current
+            ;;
+
+        "help")
+            vlm_help
+            ;;
+
+        *)
+            vlm_unknown "$1"
+            vlm_help
+            ;;
+    esac
+}
+
+vlm_cli "$@"
