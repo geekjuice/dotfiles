@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+shopt -s nocasematch
+
+STATUS=$(playerctl status 2>&1)
+
+if [[ "$STATUS" == "no player found" ]]; then
+  echo ""
+else
+  FORMAT="{{ artist }} - {{ title }}"
+  RESULT=$(playerctl metadata --format "$FORMAT")
+
+  if [[ "$STATUS" == "playing" ]]; then
+    RESULT="♫ $RESULT"
+  fi
+
+  echo $RESULT
+fi

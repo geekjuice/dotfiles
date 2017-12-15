@@ -1,0 +1,60 @@
+* {
+  BLACK: #282a36;
+  WHITE: #f1f1f0;
+
+  spacing: 0;
+  background-color: @BLACK;
+  font: "Hack-Regular 10";
+}
+
+mainbox {
+  children: [inputbar, message, sidebar, listview];
+  spacing: 20;
+  padding: 40 0;
+  border: 1;
+  border-color: @WHITE;
+}
+
+inputbar {
+  padding: 0 30;
+  children: [prompt, textbox-prompt-colon, entry, case-indicator];
+}
+
+prompt {
+  text-color: @WHITE;
+}
+
+textbox-prompt-colon {
+  expand: false;
+  str: " ❯";
+  margin: 0 10 0 0;
+  text-color: @WHITE;
+}
+
+entry {
+  text-color: @WHITE;
+}
+
+case-indicator {
+  text-color: @WHITE;
+}
+
+listview {
+  margin: 0 30;
+}
+
+element {
+  padding: 5;
+  highlight: bold underline;
+}
+
+element normal,
+element alternate {
+  background-color: @BLACK;
+  text-color: @WHITE;
+}
+
+element selected {
+  background-color: @WHITE;
+  text-color: @BLACK;
+}

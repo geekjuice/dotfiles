@@ -1,0 +1,19 @@
+# globals
+command=/usr/lib/i3blocks/$BLOCK_NAME
+separator_block_width=20
+markup=none
+
+# player
+[player]
+command=~/.config/i3blocks/player
+interval=5
+
+# date
+[date]
+command=date '+%Y-%m-%d'
+interval=5
+
+# Date Time
+[time]
+command=date '+%H:%M '
+interval=1

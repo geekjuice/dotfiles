@@ -10,7 +10,7 @@ Plug 'geekjuice/vim-studio'
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim'
 Plug 'mhinz/vim-grepper'
-Plug 'neoclide/coc.nvim', { 'do': './install.sh nightly' }
+" Plug 'neoclide/coc.nvim', { 'do': './install.sh nightly' }
 Plug 'prettier/vim-prettier'
 Plug 'rakr/vim-one'
 Plug 'ryanoasis/vim-devicons'
@@ -113,7 +113,7 @@ nnoremap <leader>pu :PlugUpgrade<cr>:PlugUpdate<cr>
 " settings
 syntax on
 filetype plugin indent on
-set rtp+=/usr/local/opt/fzf
+set rtp+=/usr/share/fzf
 
 set cole=0                              "concealing characters
 set complete=.,t                        "keep tab complete within file
