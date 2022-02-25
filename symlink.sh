@@ -1,10 +1,12 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
+
+setopt +o nomatch
 
 DOTFILES_DIR="$HOME/.dotfiles"
-TMP_DIR="$DOTFILES_DIR/.tmp"
 CONFIG_DIR="$HOME/.config"
 MACOS_DIR="Library/Application Support"
-LOCAL_ETC="/usr/local/etc"
+
+TMP_DIR="$DOTFILES_DIR/.tmp"
 
 resolve() {
   if [[ "$OUTPUT" =~ ^/ ]]; then
@@ -16,6 +18,7 @@ resolve() {
 
 declare -A OUTPUTS=(
   # dotfiles
+  ["asdfrc"]=".asdfrc"
   ["gitconfig"]=".gitconfig"
   ["gitignore"]=".gitignore"
   ["githooks"]=".githooks"
@@ -32,29 +35,26 @@ declare -A OUTPUTS=(
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
 
-  # nvm
-  ["default-packages"]="$NVM_DIR/default-packages"
+  # npm
+  ["default-npm-packages"]="$HOME/.default-npm-packages"
 
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
-  ["starship.toml"]="$CONFIG_DIR/starship.toml"
   ["rc.conf"]="$CONFIG_DIR/ranger/rc.conf"
+  ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
 
   # settings
-  ["nginx.conf"]="$LOCAL_ETC/nginx/nginx.conf"
   ["settings.json"]="$MACOS_DIR/Code/User/settings.json"
   ["keybindings.json"]="$MACOS_DIR/Code/User/keybindings.json"
   ["lazydocker.yml"]="$MACOS_DIR/lazydocker/config.yml"
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
-  ["lazynpm.yml"]="$MACOS_DIR/lazynpm/config.yml"
 )
 
 echo "clearing previously cached..."
 rm -rf $TMP_DIR/*
 
-for INPUT in "${!OUTPUTS[@]}"
+for INPUT OUTPUT in "${(@kv)OUTPUTS}"
 do
-  OUTPUT=${OUTPUTS[$INPUT]}
   SOURCE="$DOTFILES_DIR/$INPUT"
   DESTINATION=$(resolve "$OUTPUT")
   echo "symlinking $SOURCE to $DESTINATION"

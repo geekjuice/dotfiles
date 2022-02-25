@@ -41,8 +41,8 @@
   autoupdate = true
   enabled = true
 [alias]
-  personal = config user.email "github@undefined.engineer"
-  appcues = config user.email "nick.hwang@appcues.com"
+  personal = config user.email "git@undefined.engineer"
+  hubble = config user.email "nick@hubble.team"
   graph = log --graph --all --oneline
   wip = push --force --no-verify
 [pager]
@@ -50,3 +50,9 @@
   show = diff-so-fancy | less --tabs=1,5 -RFX
 [init]
   defaultBranch = main
+[credential "https://github.com"]
+  helper =
+  helper = !$(brew --prefix)/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+  helper =
+  helper = !$(brew --prefix)/bin/gh auth git-credential

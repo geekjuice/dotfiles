@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-APPCUES="nick.hwang@appcues.com"
-PERSONAL="hello@undefined.engineer"
+HUBBLE="nick@hubble.team"
+PERSONAL="git@undefined.engineer"
 
-ORIGIN=$(git remote -v)
+ORIGIN=$(git remote get-url --all origin)
 EMAIL=$(git config --local --get user.email)
 
-if [[ "$ORIGIN" == *":appcues/"* ]]; then
-  if [[ "$EMAIL" != "$APPCUES" ]]; then
-    echo "changing email to $APPCUES..."
-    git appcues
+if [[ "$ORIGIN" == *"hubble-team/"* ]]; then
+  if [[ "$EMAIL" != "$HUBBLE" ]]; then
+    echo "changing email to $HUBBLE..."
+    git hubble
   fi
 else
   if [[ "$EMAIL" != "$PERSONAL" ]]; then

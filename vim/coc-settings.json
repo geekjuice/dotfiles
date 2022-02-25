@@ -1,6 +1,10 @@
 {
-  "diagnostic.displayByAle": true,
-  "diagnostic.refreshOnInsertMode": true,
-  "suggest.maxCompleteItemCount": 20,
-  "javascript.suggestionActions.enabled": false
+  "diagnostic.displayByAle": false,
+  "list.normalMappings": {
+    "<C-c>": "do:exit"
+  },
+  "list.insertMappings": {
+    "<C-c>": "do:exit"
+  },
+  "suggest.noselect": true
 }

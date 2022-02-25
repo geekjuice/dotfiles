@@ -1,3 +1,3 @@
-export DIRENV_LOG_FORMAT=
+  export DIRENV_LOG_FORMAT=
 
-eval "$(direnv hook zsh)"
+  eval "$(direnv hook zsh)"

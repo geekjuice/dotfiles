@@ -1,6 +1,6 @@
-export FZF_PLUGIN_DIR="/usr/local/opt/fzf"
+export FZF_PLUGIN_DIR="$BREW_PREFIX/opt/fzf"
 
-# Setup fzf
+# Setup
 # ---------
 if [[ ! "$PATH" == *$FZF_PLUGIN_DIR/bin* ]]; then
   export PATH="$PATH:$FZF_PLUGIN_DIR/bin"

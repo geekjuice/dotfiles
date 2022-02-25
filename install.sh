@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env zsh
 
 DOTFILES_DIR="$HOME/.dotfiles"
 TPM_DIR="$HOME/.tmux/plugins/tpm"
@@ -14,102 +14,62 @@ echo "Symlinking dotfiles..."
 source $DOTFILES_DIR/symlink.sh
 
 echo "Installing homebrew..."
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+eval "$(brew shellenv)"
 
 echo "Installing core cask packages..."
 brew install --cask \
   alfred \
   bitwarden \
-  chromedriver \
   dash \
-  docker \
   google-chrome \
   hammerspoon \
+  httpie \
   iterm2 \
-  mkcert \
-  ngrok \
-  now \
-  skitch \
+  notion \
+  proxyman \
+  shottr \
   slack \
   spotify \
   syncthing \
-  visual-studio-code \
-
-echo "Installing optional cask packages..."
-brew install --cask \
-  adoptopenjdk \
-  beekeeper-studio \
-  charles \
-  discord \
-  emacs \
-  figma \
-  firefox \
-  http-toolkit \
-  insomnia \
-  keybase \
-  mongodb-compass \
-  numi \
-  openemu \
-  proxyman \
-  virtualbox \
+  tailscale \
+  temurin \
 
 echo "Installing core homebrew packages..."
 brew install \
+  asdf \
   bash \
   bat \
   coreutils \
   diff-so-fancy \
   direnv \
-  exa \
   fd \
   fzf \
+  gh \
   git \
   gnu-sed \
-  httpie \
   htop \
   jq \
+  mkcert \
   ranger \
   ripgrep \
-  rsync \
   tmux \
+  viddy \
   vim \
   watch \
-  z \
+  zoxide \
+  zplug \
   zsh \
-
-echo "Installing optional homebrew packages..."
-brew install \
-  asdf \
-  deno \
-  glances \
-  golang \
-  hyperfine \
-  imagemagick \
-  ncdu \
-  neofetch \
-  nginx \
-  pastel \
-  postgresql \
-  redis \
-  scc \
-  starship \
-  stow \
-  thefuck \
 
 echo "Installing custom homebrew packages..."
 brew install \
-  caskroom/fonts/font-hack \
   cjbassi/gotop/gotop \
-  github/gh/gh \
+  cloudflare/cloudflare/cloudflared \
+  homebrew/cask-fonts/font-hack \
   homebrew/cask-fonts/font-hack-nerd-font \
-  jesseduffield/horcrux/horcrux \
   jesseduffield/lazydocker/lazydocker \
   jesseduffield/lazygit/lazygit \
-  jesseduffield/lazynpm/lazynpm \
-  jondot/tap/hygen \
-  mongodb/brew/mongodb-community \
-  Rigellute/tap/spotify-tui \
-  xwmx/taps/nb \
+
 
 echo "Installing tmux packages..."
 [[ -d $TPM_DIR ]] && rm -rf $TPM_DIR
@@ -118,18 +78,10 @@ tmux new-session -d -s installing
 $TPM_DIR/bin/install_plugins
 tmux kill-session -t installing
 
-echo "Installing antibody..."
-curl -sfL git.io/antibody | sh -s - -b /usr/local/bin
-
 echo "Installing nord iterm theme..."
 curl -OSL https://raw.githubusercontent.com/arcticicestudio/nord-iterm2/master/src/xml/Nord.itermcolors
 open Nord.itermcolors
 rm -rf Nord.itermcolors
-
-echo "Installing embark iterm theme..."
-curl -OSL https://raw.githubusercontent.com/embark-theme/iterm/master/colors/Embark.itermcolors
-open Embark.itermcolors
-rm -rf Embark.itermcolors
 
 echo "Installing powerline fonts..."
 git clone https://github.com/powerline/fonts.git
@@ -153,9 +105,6 @@ code --install-extension robbowen.synthwave-vscode
 code --install-extension vscode-icons-team.vscode-icons
 code --install-extension vscodevim.vim
 
-echo "Installing rust toolchain installer..."
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-
 echo "Generating SSL certificate localhost..."
 mkcert -install
 mkcert \
@@ -163,12 +112,17 @@ mkcert \
   -key-file localssl/localhost.key \
   localhost
 
-
-echo "Set desktop wallpaper..."
-osascript -e "tell application \"Finder\" to set desktop picture to POSIX file \"$DOTFILES_DIR/wallpaper.jpg\""
-
 echo "Manual installs..."
 echo "  - Port Manager - https://portmanager.app/"
-echo "  - Affinity Designer- https://affinity.serif.com/en-us/designer/"
+
+echo "To enable terminal Touch ID..."
+echo "Run 'sudo vim /etc/pam.d/sudo'"
+echo "And the following to the top"
+echo "auth sufficient pam_tid.so"
+echo
+echo "And for iTerm2, set 'Prefs -> Advanced -> Allow sessions to survive logging out and back in' to 'no'"
+
+echo "Slack Nord theme..."
+echo "  - #2E3440,#3B4252,#88C0D0,#2E3440,#3B4252,#D8DEE9,#A3BE8C,#81A1C1"
 
 echo "All done!"

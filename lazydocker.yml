@@ -11,4 +11,3 @@ keybinding:
   universal:
     return: '<c-c>'
 reporting: "off"
-startuppopupversion: 1

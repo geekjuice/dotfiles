@@ -1,5 +1,3 @@
-# cloudflare
-
 flushdnsservers() {
   sudo killall -HUP mDNSResponder
 }

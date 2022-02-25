@@ -1,7 +1,14 @@
 export EDITOR="vim"
-export NVM_LAZY_LOAD=true
 
-export DOTFILES_DIR="$HOME/.dotfiles"
+export DOTFILES_DIR="${HOME}/.dotfiles"
+
+if [[ "$(uname -p)" == "arm" ]]; then
+  export BREW_PREFIX="/opt/homebrew"
+else
+  export BREW_PREFIX="/usr/local"
+fi
+
+eval "$(${BREW_PREFIX}/bin/brew shellenv)"
 
 bindkey -v
 bindkey "jj" vi-cmd-mode
@@ -13,18 +20,24 @@ fpath=($fpath $DOTFILES_DIR/completions)
 zstyle ":completion:*" matcher-list "m:{a-z}={A-Z}"
 autoload -U compinit && compinit
 
-source <(antibody init)
+export ZPLUG_HOME="${BREW_PREFIX}/opt/zplug"
+source $ZPLUG_HOME/init.zsh
 
-antibody bundle lukechilds/zsh-nvm
-antibody bundle mattberther/zsh-pyenv
-antibody bundle mafredri/zsh-async
-antibody bundle sindresorhus/pure
-antibody bundle zsh-users/zsh-completions
-antibody bundle zsh-users/zsh-syntax-highlighting
-antibody bundle blimmer/zsh-aws-vault
+zplug "mafredri/zsh-async"
+zplug "sindresorhus/pure"
+zplug "zsh-users/zsh-completions"
+zplug "zsh-users/zsh-syntax-highlighting"
 
-for plugin in $DOTFILES_DIR/plugins/*; do
-  source "$plugin"
+if ! zplug check; then
+  zplug install
+fi
+
+zplug load
+
+for plugin in ${DOTFILES_DIR}/plugins/*; do
+  if [[ -f "${plugin}" ]]; then
+    source "${plugin}"
+  fi
 done
 
 typeset -U PATH

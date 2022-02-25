@@ -1,4 +1,4 @@
-export LOCALSBINPATH="/usr/local/sbin"
+export LOCALSBINPATH="$BREW_PREFIX/sbin"
 if [[ ! "$PATH" == *${LOCALSBINPATH}* ]]; then
   export PATH="$PATH:${LOCALSBINPATH}"
 fi

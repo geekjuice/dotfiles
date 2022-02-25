@@ -2,24 +2,21 @@
 call plug#begin('$HOME/.vim/plugged')
 
 Plug 'airblade/vim-gitgutter'
-Plug 'ajh17/VimCompletesMe'
 Plug 'ap/vim-css-color'
 Plug 'arcticicestudio/nord-vim'
 Plug 'christoomey/vim-tmux-navigator'
 Plug 'ctrlpvim/ctrlp.vim'
 Plug 'dense-analysis/ale'
-Plug 'diepm/vim-rest-console'
 Plug 'embark-theme/vim', { 'as': 'embark' }
 Plug 'junegunn/fzf.vim'
 Plug 'junegunn/goyo.vim', { 'on': 'Goyo' }
 Plug 'junegunn/vim-peekaboo'
 Plug 'machakann/vim-sandwich'
 Plug 'mhinz/vim-grepper'
+Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'preservim/nerdcommenter'
 Plug 'preservim/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-Plug 'preservim/vimux'
 Plug 'prettier/vim-prettier'
-Plug 'rizzatti/dash.vim'
 Plug 'ryanoasis/vim-devicons'
 Plug 'sheerun/vim-polyglot'
 Plug 'simnalamburt/vim-mundo', { 'on': 'MundoToggle' }
@@ -27,11 +24,11 @@ Plug 'stefandtw/quickfix-reflector.vim'
 Plug 'thaerkh/vim-workspace'
 Plug 'tmsvg/pear-tree'
 Plug 'tpope/vim-abolish'
+Plug 'tpope/vim-dispatch'
 Plug 'tpope/vim-eunuch'
 Plug 'tpope/vim-fugitive'
 Plug 'tpope/vim-projectionist'
 Plug 'tpope/vim-sensible'
-Plug 'tpope/vim-sleuth'
 Plug 'tpope/vim-unimpaired'
 Plug 'vim-airline/vim-airline'
 
@@ -58,6 +55,7 @@ vnoremap ; :
 
 " leader commands
 let mapleader = " "
+nnoremap <Space> <Nop>
 
 " read/write
 nnoremap <leader>q <esc>:q
@@ -137,7 +135,7 @@ nnoremap <leader>pu :PlugUpgrade<cr>:PlugUpdate<cr>
 " settings
 syntax on
 filetype plugin indent on
-set rtp+=/usr/local/opt/fzf
+let &rtp.=',' . expand('$BREW_PREFIX') . '/opt/fzf'
 
 set cole=0                              "concealing characters
 set complete=.,t                        "keep tab complete within file
@@ -168,7 +166,8 @@ set synmaxcol=250                       "prevent syntax on long lines
 set t_ut=                               "screen refresh issue with Tmux
 set textwidth=80                        "Text width 80 for formatting
 set ttyfast                             "faster screen refresh(?)
-set updatetime=100                      "update time
+set updatetime=250                      "update time
+set signcolumn=yes                      "always show signcolumn
 
 " tmp file settings
 set noswapfile
@@ -219,7 +218,7 @@ endfunction
 let g:workspace_undodir = s:tmpdir . '.undodir'
 let g:workspace_session_directory = s:tmpdir . 'sessions'
 let g:workspace_session_disable_on_args = 1
-let g:workspace_autocreate = 1
+let g:workspace_autocreate = 0
 let g:workspace_autosave = 0
 let g:workspace_autosave_ignore = ['gitcommit', 'Mundo', 'nerdtree', 'qf']
 
@@ -275,6 +274,7 @@ let g:NERDTreeIgnore=['node_modules[[dir]]']
 let g:NERDTreeQuitOnOpen = 1
 let g:NERDTreeShowHidden = 1
 let g:NERDSpaceDelims = 1
+let g:NERDTreeMinimalMenu = 1
 
 nnoremap <leader>o :NERDTreeToggle<cr><c-w>=
 nnoremap <leader>i :NERDTreeFocus<cr><c-w>=
@@ -286,8 +286,8 @@ let g:fzf_action = {
   \ 'ctrl-t': 'tab split',
   \ 'ctrl-s': 'split',
   \ 'ctrl-v': 'vsplit' }
-let g:fzf_layout = { 'down': '25%' }
-let g:fzf_preview_window = ''
+let g:fzf_layout = { 'window': { 'width': 0.9, 'height': 0.9 } }
+let g:fzf_preview_window = ['right,50%', 'ctrl-/']
 
 nnoremap <c-\><c-f> :FzfFiles<space>
 nnoremap <c-\><c-o> :FzfFiles<cr>
@@ -295,6 +295,8 @@ nnoremap <c-\><c-i> :FzfBLines<cr>
 nnoremap <c-\><c-r> :FzfRg<space>
 
 " ale
+let g:ale_enabled = 0
+let g:ale_disable_lsp = 1
 let g:ale_linters_explicit = 0
 let g:ale_lint_on_text_changed = 'normal'
 let g:ale_lint_delay = 1000
@@ -325,7 +327,7 @@ let g:prettier#config#config_precedence = 'prefer-file'
 
 nnoremap <leader>pp :call ToggleAutoPrettier()<cr>
 function! ToggleAutoPrettier(...)
-  let l:filetypes = '*.js,*.jsx,*.json,*.ts,*.tsx,*.css,*.scss,*.graphql,*.md,*.mdx,*.yml,*.yaml'
+  let l:filetypes = '*.js,*.mjs,*.jsx,*.json,*.ts,*.tsx,*.css,*.scss,*.graphql,*.md,*.mdx,*.yml,*.yaml'
   let l:autocmd = 'autocmd BufWritePre ' . l:filetypes . ' Prettier'
 
   if g:prettier#onsave
@@ -365,21 +367,93 @@ nnoremap <leader>u :MundoToggle<cr>
 let g:pear_tree_repeatable_expand = 0
 let g:pear_tree_map_special_keys = 0
 
-" dash
-nmap <silent> <leader>d <Plug>DashSearch
-
 " peekaboo
 let g:peekaboo_window = "vertical botright 64new"
+let g:peekaboo_delay = 500
 
 " projectionist
 nnoremap <leader>aa :A<cr>
 nnoremap <leader>as :AS<cr>
 nnoremap <leader>av :AV<cr>
 
-" vimux
-nnoremap <leader>vp :VimuxPromptCommand<CR>
-nnoremap <leader>vl :VimuxRunLastCommand<CR>
-nnoremap <leader>vx :VimuxInterruptRunner<CR>
+" coc
+let g:coc_global_extensions = [
+  \ 'coc-css',
+  \ 'coc-eslint',
+  \ 'coc-html',
+  \ 'coc-json',
+  \ 'coc-tsserver'
+  \ ]
+
+nmap <silent> [g <Plug>(coc-diagnostic-prev)
+nmap <silent> ]g <Plug>(coc-diagnostic-next)
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+
+nmap <silent> gm :call CocAction('jumpDefinition' ,'split')<cr>
+nmap <silent> gn :call CocAction('jumpDefinition' ,'vsplit')<cr>
+
+nmap <silent><nowait> <c-@><c-r> <Plug>(coc-rename)
+nmap <silent><nowait> <c-@><c-f> <Plug>(coc-refactor)
+nmap <silent><nowait> <c-@><c-x> <Plug>(coc-codeaction)
+nmap <silent><nowait> <c-@><c-d> :<c-u>CocList diagnostics<cr>
+nmap <silent><nowait> <c-@><c-e> :<c-u>CocList extensions<cr>
+nmap <silent><nowait> <c-@><c-c> :<c-u>CocList commands<cr>
+nmap <silent><nowait> <c-@><c-o> :<c-u>CocList outline<cr>
+nmap <silent><nowait> <c-@><c-s> :<c-u>CocList -I symbols<cr>
+nmap <silent><nowait> <c-@><c-@> :<c-u>CocListResume<CR>
+
+inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<cr>"
+
+function! ShowDocumentation(key, action)
+  call popup_clear()
+  if CocHasProvider('hover')
+    call CocActionAsync(a:action)
+  else
+    call feedkeys(a:key, 'in')
+  endif
+endfunction
+
+nnoremap <silent> K :call ShowDocumentation('K', 'definitionHover')<cr>
+
+autocmd CursorHold * silent call CocActionAsync('highlight')
+
+function! CheckBackspace() abort
+  let col = col('.') - 1
+  return !col || getline('.')[col - 1]  =~# '\s'
+endfunction
+
+inoremap <silent><expr> <Tab>
+  \ coc#pum#visible() ? coc#pum#next(1) :
+  \ CheckBackspace() ? "\<Tab>" :
+  \ coc#refresh()
+
+" dispatch
+let g:dispatch_no_maps = 0
+
+nnoremap <leader>ds :Dispatch<space>
+
+let g:dispatch_eslint = "-compiler=eslint npm exec eslint -- -f compact"
+nnoremap <expr> <leader>dla ":Dispatch " . g:dispatch_eslint . " .<CR>"
+nnoremap <expr> <leader>dle ":Dispatch " . g:dispatch_eslint . " --quiet .<CR>"
+
+" skeleton files
+let s:skeletons_dir='$HOME/.vim/skeletons/'
+let s:skeletons = {
+  \ '*.sh': 'bash.sh',
+  \ }
+
+function! GenerateSkeletons(skeletons)
+  for pattern in keys(a:skeletons)
+    let l:filepath = s:skeletons_dir . a:skeletons[pattern]
+    let l:autocmd = 'autocmd BufNewFile ' . pattern . ' 0r ' . l:filepath
+    execute l:autocmd
+  endfor
+endfunction
+
+call GenerateSkeletons(s:skeletons)
 
 " set color depending on terminal color support
 if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gnome-terminal"

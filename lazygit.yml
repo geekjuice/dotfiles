@@ -9,7 +9,6 @@ gui:
       - bold
 keybinding:
   universal:
-    quit-alt1: '<c-\>'
     return: '<c-c>'
   commits:
     moveDownCommit: '}'
