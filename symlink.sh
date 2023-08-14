@@ -31,6 +31,7 @@ declare -A OUTPUTS=(
   ["ripgreprc"]=".ripgreprc"
   ["tmux.conf"]=".tmux.conf"
   ["tmuxline.conf"]=".tmuxline.conf"
+  ["tools-versions"]=".tools-versions"
   ["vim"]=".vim"
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
@@ -44,10 +45,11 @@ declare -A OUTPUTS=(
   ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
 
   # settings
-  ["settings.json"]="$MACOS_DIR/Code/User/settings.json"
-  ["keybindings.json"]="$MACOS_DIR/Code/User/keybindings.json"
   ["lazydocker.yml"]="$MACOS_DIR/lazydocker/config.yml"
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
+
+  # templates
+  ["tmuxp"]="$HOME/.tmuxp"
 )
 
 echo "clearing previously cached..."
