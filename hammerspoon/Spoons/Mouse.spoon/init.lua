@@ -1,6 +1,5 @@
 -- mouse
-
-local spoon = {}
+local utils = require 'utils'
 
 local hyper = {'fn', 'ctrl'}
 
@@ -10,18 +9,23 @@ local maps = {
   [4]='right',
 }
 
+local spoon = {}
+
 function spoon:init()
   local handlers = hs.eventtap.event.types.otherMouseDown
-  local register = hs.eventtap.new({handlers}, function(e)
+  register = hs.eventtap.new({handlers}, function(e)
     local button = e:getProperty(
       hs.eventtap.event.properties['mouseEventButtonNumber']
     )
     if (maps[button]) then
       hs.eventtap.keyStroke(hyper, maps[button], 1000)
+      return true
     end
   end)
 
   register:start()
+
 end
 
 return spoon
+
