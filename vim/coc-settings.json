@@ -1,5 +1,8 @@
 {
+  "coc.preferences.formatOnSave": true,
+  "css.validate": false,
   "diagnostic.displayByAle": false,
+  "list.floatPreview": true,
   "list.normalMappings": {
     "<C-c>": "do:exit"
   },
