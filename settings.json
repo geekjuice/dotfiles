@@ -1,17 +1,32 @@
 {
-  "debug.node.autoAttach": "on",
+  "cSpell.diagnosticLevel": "Hint",
 
+  "editor.codeActionsOnSave": {
+    "source.addMissingImports.ts": "explicit",
+    "source.fixAll.eslint": "explicit",
+    "source.fixAll.stylelint": "explicit",
+    "source.fixAll.ts": "never",
+    "source.organizeImports": "never",
+    "source.removeUnused.ts": "never",
+    "source.removeUnusedImports": "explicit",
+    "source.sortImports": "never"
+  },
   "editor.cursorBlinking": "phase",
-  "editor.cursorSmoothCaretAnimation": true,
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorSurroundingLines": 999,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.fontSize": 11,
   "editor.formatOnSave": true,
-  "editor.minimap.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.minimap.enabled": false,
   "editor.minimap.renderCharacters": false,
   "editor.minimap.showSlider": "always",
+  "editor.renderWhitespace": "trailing",
   "editor.smoothScrolling": true,
   "editor.tabSize": 2,
 
+  "eslint.lintTask.enable": true,
   "eslint.validate": [
     "javascript",
     "javascriptreact",
@@ -20,19 +35,37 @@
   ],
 
   "files.exclude": {
+    "*.map": true,
     "**/.DS_Store": true,
     "**/.git": true,
     "**/.hg": true,
     "**/.svn": true,
     "**/CVS": true,
+    "**/dist": true,
     "**/tsclib": true,
     "node_modules/": true
   },
 
+  "github.copilot.enable": {
+    "*": false,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  },
+
+  "search.exclude": {
+    "**/.yarn": true,
+    "**/yarn.lock": true
+  },
+  "search.seedOnFocus": true,
+  "search.seedWithNearestWord": true,
+
+  "sync.gist": "089c1a1604775e9b53ab8734bbc6cb15",
+
+  "typescript.tsserver.maxTsServerMemory": 6144,
   "typescript.updateImportsOnFileMove.enabled": "always",
 
   "vim.leader": "<space>",
-  "vim.useCtrlKeys": true,
   "vim.normalModeKeyBindingsNonRecursive": [
     {
       "before": [";"],
@@ -69,8 +102,47 @@
     {
       "before": ["<leader>", "'"],
       "commands": ["workbench.action.nextEditorInGroup"]
+    },
+    {
+      "before": ["<leader>", "o"],
+      "commands": ["workbench.view.explorer"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["editor.action.showDefinitionPreviewHover"]
+    },
+    {
+      "before": ["g", "D"],
+      "commands": ["editor.action.revealDefinitionAside"]
+    },
+    {
+      "before": ["g", "p", "d"],
+      "commands": ["editor.action.peekDefinition"]
+    },
+    {
+      "before": ["g", "i"],
+      "commands": ["editor.action.goToImplementation"]
+    },
+    {
+      "before": ["g", "p", "i"],
+      "commands": ["editor.action.peekImplementation"]
+    },
+    {
+      "before": ["g", "q"],
+      "commands": ["editor.action.quickFix"]
+    },
+    {
+      "before": ["g", "r"],
+      "commands": ["editor.action.referenceSearch.trigger"]
+    },
+    {
+      "before": ["g", "p", "t"],
+      "commands": ["editor.action.peekTypeDefinition"]
     }
   ],
+  "vim.smartRelativeLine": true,
+  "vim.textwidth": 100,
+  "vim.useCtrlKeys": true,
   "vim.visualModeKeyBindingsNonRecursive": [
     {
       "before": ["<leader>", "c", "c"],
@@ -86,9 +158,23 @@
     }
   ],
 
+  "vscode-pets.petSize": "small",
+  "vscode-pets.theme": "forest",
+
+  "workbench.colorCustomizations": {
+    "editorHint.foreground": "#ff0000"
+  },
   "workbench.colorTheme": "Nord",
   "workbench.editor.enablePreviewFromQuickOpen": false,
-  "workbench.editor.showTabs": false,
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.settings.enableNaturalLanguageSearch": false
+  "workbench.iconTheme": "vscode-icons",
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
+  "workbench.editor.showTabs": "single",
+  "githubPullRequests.fileListLayout": "flat",
+  "githubPullRequests.pullBranch": "never",
+  "gitlens.views.scm.grouped.views": {
+    "searchAndCompare": true,
+    "repositories": true
+  }
 }
