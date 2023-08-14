@@ -31,6 +31,7 @@ declare -A OUTPUTS=(
   ["ripgreprc"]=".ripgreprc"
   ["tmux.conf"]=".tmux.conf"
   ["tmuxline.conf"]=".tmuxline.conf"
+  ["tools-versions"]=".tools-versions"
   ["vim"]=".vim"
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
