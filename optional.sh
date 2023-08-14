@@ -11,50 +11,62 @@ fi
 
 echo "Installing optional cask packages..."
 brew install --cask \
-  arc \
+  alfred \
+  bartender \
   beekeeper-studio \
+  boop \
+  charle \
+  claude-code \
+  dash \
   discord \
-  docker \
   emacs \
-  figma \
   firefox \
+  folx \
+  ghostty \
+  http-toolkit \
   insomnia \
   mongodb-compass \
   numi \
   openemu \
+  shottr \
   virtualbox \
-  visual-studio-code \
+  zed \
 
 echo "Installing optional homebrew packages..."
 brew install \
   bottom \
   croc \
   entr \
-  exa \
-  git-delta \
   golang \
   hyperfine \
+  icloudpd \
   imagemagick \
+  lnav \
   moreutils \
   navi \
   ncdu \
   neofetch \
   nginx \
   pastel \
-  rsync \
+  pipx \
   scc \
   sd \
+  shortcat \
   starship \
   stow \
-  tldr \
+  tlrc \
+  worktrunk \
   xplr \
 
 echo "Installing optional custom homebrew packages..."
 brew install \
+  cjbassi/gotop/gotop \
+  cloudflare/cloudflare/cloudflared \
   jesseduffield/horcrux/horcrux \
   jesseduffield/lazydocker/lazydocker \
   jesseduffield/lazynpm/lazynpm \
   mongodb/brew/mongodb-community \
+  TomAnthony/brews/itermocil \
   xwmx/taps/nb \
 
 echo "Installing embark iterm theme..."
@@ -64,6 +76,10 @@ rm -rf Embark.itermcolors
 
 echo "Installing rust toolchain installer..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+echo "Installing pipx packages..."
+pipx ensurepath
+pipx install terminaltexteffects
 
 echo "Optional manual installs..."
 echo "  - Affinity Designer- https://affinity.serif.com/en-us/designer/"
