@@ -1,4 +1,8 @@
+# Personal
 vim/black
 vim/plugged
 vim/.netrwhist
 node_modules
+
+# Work
+plugins/ashby.zsh

@@ -1,6 +1,6 @@
 [user]
   name = Nicholas Hwang
-  email = github@undefined.engineer
+  email = git@undefined.engineer
 [core]
   editor = vim
   excludesfile = ~/.gitignore
@@ -43,6 +43,7 @@
 [alias]
   personal = config user.email "git@undefined.engineer"
   hubble = config user.email "nick@hubble.team"
+  ashby = config user.email "nick.hwang@ashbyhq.com"
   graph = log --graph --all --oneline
   wip = push --force --no-verify
 [pager]

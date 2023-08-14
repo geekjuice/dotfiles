@@ -19,21 +19,28 @@ eval "$(brew shellenv)"
 
 echo "Installing core cask packages..."
 brew install --cask \
-  alfred \
+  arc \
   bitwarden \
-  dash \
+  cleanshot \
+  clop \
+  docker \
+  figma \
+  font-hack-nerd-font \
   google-chrome \
   hammerspoon \
   httpie \
   iterm2 \
-  notion \
+  jordanbaird-ice \
+  meetingbar \
   proxyman \
+  raycast \
   shottr \
   slack \
   spotify \
   syncthing \
   tailscale \
   temurin \
+  visual-studio-code \
 
 echo "Installing core homebrew packages..."
 brew install \
@@ -41,19 +48,26 @@ brew install \
   bash \
   bat \
   coreutils \
-  diff-so-fancy \
   direnv \
+  eza \
   fd \
+  flyctl \
+  fx \
   fzf \
   gh \
   git \
+  git-delta \
   gnu-sed \
   htop \
   jq \
   mkcert \
+  neovim \
+  pam-reattach \
   ranger \
   ripgrep \
+  rsync \
   tmux \
+  tmuxp \
   viddy \
   vim \
   watch \
@@ -63,12 +77,8 @@ brew install \
 
 echo "Installing custom homebrew packages..."
 brew install \
-  cjbassi/gotop/gotop \
-  cloudflare/cloudflare/cloudflared \
-  homebrew/cask-fonts/font-hack \
-  homebrew/cask-fonts/font-hack-nerd-font \
-  jesseduffield/lazydocker/lazydocker \
   jesseduffield/lazygit/lazygit \
+  TomAnthony/brews/itermocil \
 
 
 echo "Installing tmux packages..."
@@ -113,11 +123,13 @@ mkcert \
   localhost
 
 echo "Manual installs..."
-echo "  - Port Manager - https://portmanager.app/"
+echo "  - Port Manager  - https://portmanager.app/"
+echo "  - Amphetamine   - https://apps.apple.com/us/app/amphetamine/id937984704"
 
 echo "To enable terminal Touch ID..."
-echo "Run 'sudo vim /etc/pam.d/sudo'"
-echo "And the following to the top"
+echo "Run 'sudo vim /etc/pam.d/sudo_local'"
+echo "And the following lines to the top"
+echo "auth optional /opt/homebrew/lib/pam/pam_reattach.so"
 echo "auth sufficient pam_tid.so"
 echo
 echo "And for iTerm2, set 'Prefs -> Advanced -> Allow sessions to survive logging out and back in' to 'no'"
