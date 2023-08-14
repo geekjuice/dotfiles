@@ -2,7 +2,7 @@
   "debug.node.autoAttach": "on",
 
   "editor.cursorBlinking": "phase",
-  "editor.cursorSmoothCaretAnimation": true,
+  "editor.cursorSmoothCaretAnimation": "on",
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.fontSize": 11,
   "editor.formatOnSave": true,
@@ -88,7 +88,8 @@
 
   "workbench.colorTheme": "Nord",
   "workbench.editor.enablePreviewFromQuickOpen": false,
-  "workbench.editor.showTabs": false,
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.settings.enableNaturalLanguageSearch": false
+  "workbench.editor.showTabs": "single",
+  "workbench.iconTheme": "vscode-icons",
+  "workbench.settings.enableNaturalLanguageSearch": false,
+  "bracketPairColorizer.depreciation-notice": false
 }
