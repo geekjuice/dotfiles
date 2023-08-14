@@ -1,7 +1,6 @@
 -- spoons
 local spoons = {
-  'Caffeine',
-  'Grid',
+  'Apps',
   'Mouse',
   'Vim',
   'Work'

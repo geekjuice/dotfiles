@@ -19,41 +19,55 @@ eval "$(brew shellenv)"
 
 echo "Installing core cask packages..."
 brew install --cask \
-  alfred \
+  arc \
   bitwarden \
-  dash \
+  cleanshot \
+  clop \
+  docker \
+  figma \
+  font-hack-nerd-font \
   google-chrome \
   hammerspoon \
   httpie \
   iterm2 \
-  notion \
+  jordanbaird-ice \
+  meetingbar \
   proxyman \
-  shottr \
+  raycast \
   slack \
   spotify \
   syncthing \
   tailscale \
   temurin \
+  visual-studio-code \
 
 echo "Installing core homebrew packages..."
 brew install \
   asdf \
+  ast-grep \
   bash \
   bat \
   coreutils \
-  diff-so-fancy \
   direnv \
+  eza \
   fd \
+  flyctl \
+  fx \
   fzf \
   gh \
   git \
+  git-delta \
   gnu-sed \
   htop \
   jq \
   mkcert \
+  neovim \
+  pam-reattach \
   ranger \
   ripgrep \
+  rsync \
   tmux \
+  tmuxp \
   viddy \
   vim \
   watch \
@@ -63,13 +77,7 @@ brew install \
 
 echo "Installing custom homebrew packages..."
 brew install \
-  cjbassi/gotop/gotop \
-  cloudflare/cloudflare/cloudflared \
-  homebrew/cask-fonts/font-hack \
-  homebrew/cask-fonts/font-hack-nerd-font \
-  jesseduffield/lazydocker/lazydocker \
   jesseduffield/lazygit/lazygit \
-
 
 echo "Installing tmux packages..."
 [[ -d $TPM_DIR ]] && rm -rf $TPM_DIR
@@ -91,20 +99,6 @@ rm -rf fonts
 echo "Installing vim plugins..."
 vim -e +PlugInstall +qall
 
-echo "Installing vscode extensions..."
-code --install-extension arcticicestudio.nord-visual-studio-code
-code --install-extension coenraads.bracket-pair-colorizer
-code --install-extension dbaeumer.vscode-eslint
-code --install-extension eamodio.gitlens
-code --install-extension esbenp.prettier-vscode
-code --install-extension jebbs.plantuml
-code --install-extension msjsdiag.debugger-for-chrome
-code --install-extension PKief.material-icon-theme
-code --install-extension pnp.polacode
-code --install-extension robbowen.synthwave-vscode
-code --install-extension vscode-icons-team.vscode-icons
-code --install-extension vscodevim.vim
-
 echo "Generating SSL certificate localhost..."
 mkcert -install
 mkcert \
@@ -113,16 +107,14 @@ mkcert \
   localhost
 
 echo "Manual installs..."
-echo "  - Port Manager - https://portmanager.app/"
+echo "  - Amphetamine   - https://apps.apple.com/us/app/amphetamine/id937984704"
 
 echo "To enable terminal Touch ID..."
-echo "Run 'sudo vim /etc/pam.d/sudo'"
-echo "And the following to the top"
+echo "Run 'sudo vim /etc/pam.d/sudo_local'"
+echo "And the following lines to the top"
+echo "auth optional /opt/homebrew/lib/pam/pam_reattach.so"
 echo "auth sufficient pam_tid.so"
 echo
 echo "And for iTerm2, set 'Prefs -> Advanced -> Allow sessions to survive logging out and back in' to 'no'"
-
-echo "Slack Nord theme..."
-echo "  - #2E3440,#3B4252,#88C0D0,#2E3440,#3B4252,#D8DEE9,#A3BE8C,#81A1C1"
 
 echo "All done!"
