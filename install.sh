@@ -26,14 +26,17 @@ brew install --cask \
   hammerspoon \
   httpie \
   iterm2 \
+  meetingbar \
   notion \
   proxyman \
+  raycast \
   shottr \
   slack \
   spotify \
   syncthing \
   tailscale \
   temurin \
+  watchman \
 
 echo "Installing core homebrew packages..."
 brew install \
@@ -44,6 +47,7 @@ brew install \
   diff-so-fancy \
   direnv \
   fd \
+  fx \
   fzf \
   gh \
   git \
@@ -53,6 +57,7 @@ brew install \
   mkcert \
   ranger \
   ripgrep \
+  rsync \
   tmux \
   viddy \
   vim \
@@ -113,7 +118,8 @@ mkcert \
   localhost
 
 echo "Manual installs..."
-echo "  - Port Manager - https://portmanager.app/"
+echo "  - Port Manager  - https://portmanager.app/"
+echo "  - Amphetamine   - https://apps.apple.com/us/app/amphetamine/id937984704"
 
 echo "To enable terminal Touch ID..."
 echo "Run 'sudo vim /etc/pam.d/sudo'"

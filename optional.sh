@@ -13,17 +13,22 @@ echo "Installing optional cask packages..."
 brew install --cask \
   arc \
   beekeeper-studio \
+  boop \
+  charle \
   discord \
   docker \
   emacs \
   figma \
   firefox \
+  folx \
+  http-toolkit \
   insomnia \
   mongodb-compass \
   numi \
   openemu \
   virtualbox \
   visual-studio-code \
+  zed \
 
 echo "Installing optional homebrew packages..."
 brew install \
@@ -41,9 +46,11 @@ brew install \
   neofetch \
   nginx \
   pastel \
+  pipx \
   rsync \
   scc \
   sd \
+  shortcat \
   starship \
   stow \
   tldr \
@@ -64,6 +71,10 @@ rm -rf Embark.itermcolors
 
 echo "Installing rust toolchain installer..."
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+
+echo "Installing pipx packages..."
+pipx ensurepath
+pipx install terminaltexteffects
 
 echo "Optional manual installs..."
 echo "  - Affinity Designer- https://affinity.serif.com/en-us/designer/"
