@@ -1,0 +1,9 @@
+session_name: hubble
+start_directory: ~/dev/hubble
+windows:
+  - window_name: $
+    window_index: 0
+    layout: even-horizontal
+    panes:
+      - cd web && pnpm dev
+      - cd api && pnpm dev

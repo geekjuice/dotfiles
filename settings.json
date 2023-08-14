@@ -1,14 +1,22 @@
 {
-  "debug.node.autoAttach": "on",
-
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit",
+    "source.removeUnusedImports": "explicit",
+    "source.sortImports": "explicit"
+  },
   "editor.cursorBlinking": "phase",
-  "editor.cursorSmoothCaretAnimation": true,
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorSurroundingLines": 999,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.fontSize": 11,
   "editor.formatOnSave": true,
-  "editor.minimap.enabled": true,
+  "editor.guides.bracketPairs": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.minimap.enabled": false,
   "editor.minimap.renderCharacters": false,
   "editor.minimap.showSlider": "always",
+  "editor.renderWhitespace": "trailing",
   "editor.smoothScrolling": true,
   "editor.tabSize": 2,
 
@@ -28,6 +36,8 @@
     "**/tsclib": true,
     "node_modules/": true
   },
+
+  "telemetry.telemetryLevel": "off",
 
   "typescript.updateImportsOnFileMove.enabled": "always",
 
@@ -69,8 +79,50 @@
     {
       "before": ["<leader>", "'"],
       "commands": ["workbench.action.nextEditorInGroup"]
+    },
+    {
+      "before": ["<leader>", "o"],
+      "commands": ["workbench.view.explorer"]
+    },
+    {
+      "before": ["K"],
+      "commands": ["editor.action.showDefinitionPreviewHover"]
+    },
+    {
+      "before": ["<leader>", "g", "n"],
+      "commands": ["editor.action.revealDefinitionAside"]
+    },
+    {
+      "before": ["g", "D"],
+      "commands": ["editor.action.revealDefinitionAside"]
+    },
+    {
+      "before": ["g", "p", "d"],
+      "commands": ["editor.action.peekDefinition"]
+    },
+    {
+      "before": ["g", "i"],
+      "commands": ["editor.action.goToImplementation"]
+    },
+    {
+      "before": ["g", "p", "i"],
+      "commands": ["editor.action.peekImplementation"]
+    },
+    {
+      "before": ["g", "q"],
+      "commands": ["editor.action.quickFix"]
+    },
+    {
+      "before": ["g", "r"],
+      "commands": ["editor.action.referenceSearch.trigger"]
+    },
+    {
+      "before": ["g", "p", "t"],
+      "commands": ["editor.action.peekTypeDefinition"]
     }
   ],
+  "vim.smartRelativeLine": true,
+  "vim.textwidth": 100,
   "vim.visualModeKeyBindingsNonRecursive": [
     {
       "before": ["<leader>", "c", "c"],
@@ -86,9 +138,10 @@
     }
   ],
 
+  "vscode-pets.petSize": "small",
+  "vscode-pets.theme": "forest",
+
   "workbench.colorTheme": "Nord",
   "workbench.editor.enablePreviewFromQuickOpen": false,
-  "workbench.editor.showTabs": false,
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.settings.enableNaturalLanguageSearch": false
+  "workbench.iconTheme": "vscode-icons"
 }
