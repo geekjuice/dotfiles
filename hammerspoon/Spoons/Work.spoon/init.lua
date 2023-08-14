@@ -2,10 +2,10 @@
 
 local utils = require 'utils'
 
-local hotkey = {{'ctrl', 'alt'}, '9'}
+local hotkey = {{'ctrl', 'alt'}, '0'}
 
 local reset = 'empty'
-local cloudflare = '8.8.8.8'
+local cloudflare = '1.1.1.1'
 
 local function dirname()
   local str = debug.getinfo(2, 'S').source:sub(2)
@@ -25,9 +25,11 @@ function spoon:init()
     if working then
       menubar:setIcon(icons .. '/work@2x.png')
       hs.execute('networksetup -setdnsservers Wi-Fi ' .. cloudflare)
+      hs.execute('networksetup -setdnsservers Ethernet ' .. cloudflare)
     else
       menubar:setIcon(icons .. '/home@2x.png')
       hs.execute('networksetup -setdnsservers Wi-Fi ' .. reset)
+      hs.execute('networksetup -setdnsservers Ethernet ' .. reset)
     end
   end
 
