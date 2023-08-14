@@ -1,0 +1,12 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "node /Users/nickhwang/.claude/hud/omc-hud.mjs"
+  },
+  "enabledPlugins": {
+    "oh-my-claudecode@omc": true,
+    "worktrunk@worktrunk": true,
+    "github@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true
+  }
+}

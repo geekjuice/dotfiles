@@ -1,13 +1,19 @@
 [user]
   name = Nicholas Hwang
-  email = github@undefined.engineer
+  email = git@undefined.engineer
 [core]
   editor = vim
   excludesfile = ~/.gitignore
   hooksPath = ~/.githooks
   ignorecase = false
+  pager = delta
 [color]
   ui = auto
+[interactive]
+  diffFilter = delta --color-only
+[delta]
+  navigate = true
+  dark = true
 [status]
   showUntrackedFiles = all
 [push]
@@ -20,6 +26,7 @@
 [merge]
   ff = only
   tool = vimdiff
+  conflictStyle = zdiff3
 [mergetool]
   keepBackup = false
   keepTemporaries = false
@@ -43,11 +50,9 @@
 [alias]
   personal = config user.email "git@undefined.engineer"
   hubble = config user.email "nick@hubble.team"
+  ashby = config user.email "nick.hwang@ashbyhq.com"
   graph = log --graph --all --oneline
   wip = push --force --no-verify
-[pager]
-  diff = diff-so-fancy | less --tabs=1,5 -RFX
-  show = diff-so-fancy | less --tabs=1,5 -RFX
 [init]
   defaultBranch = main
 [credential "https://github.com"]

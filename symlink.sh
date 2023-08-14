@@ -31,6 +31,7 @@ declare -A OUTPUTS=(
   ["ripgreprc"]=".ripgreprc"
   ["tmux.conf"]=".tmux.conf"
   ["tmuxline.conf"]=".tmuxline.conf"
+  ["tools-versions"]=".tools-versions"
   ["vim"]=".vim"
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
@@ -38,16 +39,23 @@ declare -A OUTPUTS=(
   # npm
   ["default-npm-packages"]="$HOME/.default-npm-packages"
 
+  # claude
+  ["claude.json"]="$HOME/.claude/settings.json"
+
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
   ["rc.conf"]="$CONFIG_DIR/ranger/rc.conf"
   ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
+  ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
 
   # settings
-  ["settings.json"]="$MACOS_DIR/Code/User/settings.json"
-  ["keybindings.json"]="$MACOS_DIR/Code/User/keybindings.json"
   ["lazydocker.yml"]="$MACOS_DIR/lazydocker/config.yml"
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
+  ["ghostty"]="$MACOS_DIR/com.mitchellh.ghostty/config"
+
+  # templates
+  ["tmuxp"]="$HOME/.tmuxp"
+
 )
 
 echo "clearing previously cached..."

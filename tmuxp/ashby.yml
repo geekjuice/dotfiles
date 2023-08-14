@@ -1,0 +1,16 @@
+session_name: ashby
+windows:
+  - window_name: $
+    window_index: 0
+    layout: tiled
+    shell_command_before:
+      - ashby
+    environment:
+      OPEN_BROWSER: "0"
+    panes:
+      - ashby-shared
+      - ashby-frontend
+      - ashby-api
+      - ashby-task-worker-no-scheduler
+      - ashby-consumer
+      - ashby-operations

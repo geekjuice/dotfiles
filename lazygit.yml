@@ -1,6 +1,21 @@
 confirmOnQuit: false
+customCommands:
+  - key: "<c-y>"
+    command: "gh pr create"
+    context: "global"
+    output: terminal
+  - key: "<c-u>"
+    command: "gh pr status"
+    context: "global"
+    output: log
+git:
+  pagers:
+    - colorArg: always
+      pager: delta --dark --paging=never
 gui:
+  commandLogSize: 16
   mouseEvents: false
+  nerdFontsVersion: "3"
   scrollHeight: 5
   scrollPastBottom: false
   theme:
@@ -9,8 +24,8 @@ gui:
       - bold
 keybinding:
   universal:
-    return: '<c-c>'
+    return: "<c-c>"
   commits:
-    moveDownCommit: '}'
-    moveUpCommit: '{'
+    moveDownCommit: "}"
+    moveUpCommit: "{"
 reporting: "off"

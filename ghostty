@@ -1,0 +1,17 @@
+font-family = Hack Nerd Font Mono
+font-size = 11
+
+adjust-cell-height = 20%
+
+initial-window = false
+
+keybind = global:cmd+`=toggle_quick_terminal
+
+quick-terminal-animation-duration = 0
+quick-terminal-autohide = false
+quick-terminal-position = top
+quick-terminal-screen = macos-menu-bar
+quick-terminal-size = 100%
+quick-terminal-space-behavior = remain
+
+macos-non-native-fullscreen = true

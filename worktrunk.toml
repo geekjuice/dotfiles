@@ -1,0 +1,9 @@
+skip-shell-integration-prompt = true
+
+worktree-path = "~/worktrees/{{ repo }}/{{ branch | sanitize }}"
+skip-commit-generation-prompt = true
+
+[post-start]
+copy = "wt step copy-ignored"
+
+[projects]

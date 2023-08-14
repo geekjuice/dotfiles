@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 HUBBLE="nick@hubble.team"
+ASHBY="nick.hwang@ashbyhq.com"
 PERSONAL="git@undefined.engineer"
 
 ORIGIN=$(git remote get-url --all origin)
@@ -10,6 +11,11 @@ if [[ "$ORIGIN" == *"hubble-team/"* ]]; then
   if [[ "$EMAIL" != "$HUBBLE" ]]; then
     echo "changing email to $HUBBLE..."
     git hubble
+  fi
+elif [[ "$ORIGIN" == *"ashbyhq/"* ]]; then
+  if [[ "$EMAIL" != "$ASHBY" ]]; then
+    echo "changing email to $ASHBY..."
+    git ashby
   fi
 else
   if [[ "$EMAIL" != "$PERSONAL" ]]; then
