@@ -1,0 +1,14 @@
+session_name: ashby
+windows:
+  - window_name: $
+    window_index: 0
+    layout: tiled
+    shell_command_before:
+      - ashby
+    panes:
+      - ashby-shared
+      - ashby-frontend
+      - ashby-api
+      - ashby-task-worker
+      - ashby-consumer
+      - ashby-operations
