@@ -44,6 +44,7 @@ brew install \
   diff-so-fancy \
   direnv \
   fd \
+  fx \
   fzf \
   gh \
   git \
@@ -53,6 +54,7 @@ brew install \
   mkcert \
   ranger \
   ripgrep \
+  rsync \
   tmux \
   viddy \
   vim \

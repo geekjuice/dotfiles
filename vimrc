@@ -16,7 +16,6 @@ Plug 'mhinz/vim-grepper'
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'preservim/nerdcommenter'
 Plug 'preservim/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
-Plug 'prettier/vim-prettier'
 Plug 'ryanoasis/vim-devicons'
 Plug 'sheerun/vim-polyglot'
 Plug 'simnalamburt/vim-mundo', { 'on': 'MundoToggle' }
@@ -214,6 +213,21 @@ function! JoinParagraphs()
   call winrestview(l:cursor)
 endfunction
 
+
+" quickfix
+function! ToggleQuickFix()
+  if getqflist({'winid' : 0}).winid
+    cclose
+  else
+    copen
+  endif
+endfunction
+
+command! -nargs=0 -bar ToggleQuickFix call ToggleQuickFix()
+nnoremap yoq :ToggleQuickFix<CR>
+
+autocmd FileType qf if (getwininfo(win_getid())[0].loclist != 1) | wincmd J | endif
+
 " workspace
 let g:workspace_undodir = s:tmpdir . '.undodir'
 let g:workspace_session_directory = s:tmpdir . 'sessions'
@@ -319,40 +333,6 @@ endfunction
 autocmd! User GoyoEnter nested call <SID>EnterGoyo()
 autocmd! User GoyoLeave nested call <SID>LeaveGoyo()
 
-" prettier
-let g:prettier#onsave = 0
-let g:prettier#autoformat = 0
-let g:prettier#quickfix_enabled = 0
-let g:prettier#config#config_precedence = 'prefer-file'
-
-nnoremap <leader>pp :call ToggleAutoPrettier()<cr>
-function! ToggleAutoPrettier(...)
-  let l:filetypes = '*.js,*.mjs,*.jsx,*.json,*.ts,*.tsx,*.css,*.scss,*.graphql,*.md,*.mdx,*.yml,*.yaml'
-  let l:autocmd = 'autocmd BufWritePre ' . l:filetypes . ' Prettier'
-
-  if g:prettier#onsave
-    let g:prettier#onsave = 0
-    augroup AutoPrettier
-      autocmd!
-    augroup END
-  else
-    let g:prettier#onsave = 1
-    augroup AutoPrettier
-      autocmd!
-      execute l:autocmd
-    augroup END
-  endif
-
-  if trim(get(a:000, 0)) !=? "start"
-    if g:prettier#onsave
-      echo "prettier enabled"
-    else
-      echo "prettier disabled"
-    endif
-  endif
-endfunction
-call ToggleAutoPrettier('start')
-
 " jq
 nnoremap <leader>jj :set ft=json<cr>:%!jq .<cr>
 
@@ -382,6 +362,7 @@ let g:coc_global_extensions = [
   \ 'coc-eslint',
   \ 'coc-html',
   \ 'coc-json',
+  \ 'coc-prettier',
   \ 'coc-tsserver'
   \ ]
 
@@ -396,14 +377,16 @@ nmap <silent> gm :call CocAction('jumpDefinition' ,'split')<cr>
 nmap <silent> gn :call CocAction('jumpDefinition' ,'vsplit')<cr>
 
 nmap <silent><nowait> <c-@><c-r> <Plug>(coc-rename)
-nmap <silent><nowait> <c-@><c-f> <Plug>(coc-refactor)
-nmap <silent><nowait> <c-@><c-x> <Plug>(coc-codeaction)
+nmap <silent><nowait> <c-@><c-u> <Plug>(coc-refactor)
+nmap <silent><nowait> <c-@><c-f> <Plug>(coc-fix-current)
+nmap <silent><nowait> <c-@><c-x> <Plug>(coc-codeaction-cursor)
+nmap <silent><nowait> <c-@><c-s> <Plug>(coc-codeaction-source)
 nmap <silent><nowait> <c-@><c-d> :<c-u>CocList diagnostics<cr>
 nmap <silent><nowait> <c-@><c-e> :<c-u>CocList extensions<cr>
 nmap <silent><nowait> <c-@><c-c> :<c-u>CocList commands<cr>
-nmap <silent><nowait> <c-@><c-o> :<c-u>CocList outline<cr>
-nmap <silent><nowait> <c-@><c-s> :<c-u>CocList -I symbols<cr>
 nmap <silent><nowait> <c-@><c-@> :<c-u>CocListResume<CR>
+
+command! -nargs=0 Prettier :CocCommand prettier.forceFormatDocument
 
 inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<cr>"
 

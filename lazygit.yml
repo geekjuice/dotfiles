@@ -1,6 +1,8 @@
 confirmOnQuit: false
 gui:
+  commandLogSize: 16
   mouseEvents: false
+  nerdFontsVersion: "3"
   scrollHeight: 5
   scrollPastBottom: false
   theme:
@@ -9,8 +11,8 @@ gui:
       - bold
 keybinding:
   universal:
-    return: '<c-c>'
+    return: "<c-c>"
   commits:
-    moveDownCommit: '}'
-    moveUpCommit: '{'
+    moveDownCommit: "}"
+    moveUpCommit: "{"
 reporting: "off"

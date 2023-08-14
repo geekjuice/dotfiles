@@ -13,11 +13,14 @@ echo "Installing optional cask packages..."
 brew install --cask \
   arc \
   beekeeper-studio \
+  boop \
+  charle \
   discord \
   docker \
   emacs \
   figma \
   firefox \
+  http-toolkit \
   insomnia \
   mongodb-compass \
   numi \

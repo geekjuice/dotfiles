@@ -1,4 +1,6 @@
 {
+  "coc.preferences.formatOnSave": true,
+  "css.validate": false,
   "diagnostic.displayByAle": false,
   "list.normalMappings": {
     "<C-c>": "do:exit"
