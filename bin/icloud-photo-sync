@@ -145,7 +145,7 @@ main() {
   CMD=(
     icloudpd
     --directory "${DIRECTORY}"
-    --created-after "${CREATED_AFTER}"
+    --skip-created-before "${CREATED_AFTER}"
   )
 
   if [[ ${#ICLOUDPD_ARGS[@]} -gt 0 ]]; then
