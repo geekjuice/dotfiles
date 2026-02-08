@@ -11,5 +11,5 @@ for _, spoon in pairs(spoons) do
 end
 
 -- auto-reload
-local spoons = os.getenv('HOME') .. '/.hammerspoon'
-hs.pathwatcher.new(spoons, hs.reload):start()
+local configDir = os.getenv('HOME') .. '/.hammerspoon'
+hs.pathwatcher.new(configDir, hs.reload):start()

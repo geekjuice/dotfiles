@@ -31,7 +31,7 @@ declare -A OUTPUTS=(
   ["ripgreprc"]=".ripgreprc"
   ["tmux.conf"]=".tmux.conf"
   ["tmuxline.conf"]=".tmuxline.conf"
-  ["tools-versions"]=".tools-versions"
+  ["tool-versions"]=".tool-versions"
   ["vim"]=".vim"
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
@@ -49,7 +49,6 @@ declare -A OUTPUTS=(
   ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
 
   # settings
-  ["lazydocker.yml"]="$MACOS_DIR/lazydocker/config.yml"
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
 
   # templates

@@ -7,7 +7,7 @@ getdnsservers() {
 }
 
 setdnsservers() {
-  networksetup -setdnsservers Wi-Fi $@
+  networksetup -setdnsservers Wi-Fi "$@"
 }
 
 dnsmessage() {
