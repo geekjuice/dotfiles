@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "${TRACE-0}" == "1" ]]; then
+  set -o xtrace
+fi
+
+if [[ "${1-}" =~ ^(-h|--help)$ ]]; then
+  echo '
+  ❯ icloud-photo-sync [options] [-- icloudpd-options]
+
+  Incrementally sync iCloud photos by detecting the last downloaded
+  photo date and re-running icloudpd with a buffered start date.
+
+  The month buffer accounts for photos whose metadata date is earlier
+  than when they were saved to iCloud (e.g. photos shared by others).
+
+  options:
+    -d, --directory DIR     icloudpd download directory (required)
+    -b, --buffer MONTHS     month buffer before last date (default: 1)
+    -n, --dry-run           print icloudpd command without executing
+    -h, --help              print this help message
+
+  All arguments after -- are passed directly to icloudpd.
+
+  examples:
+    icloud-photo-sync -d ~/Photos/iCloud -- -u user@icloud.com
+    icloud-photo-sync -d ~/Photos/iCloud -b 2 -- -u user@icloud.com --until-found 3
+  '
+  exit
+fi
+
+if [[ ! -x "$(command -v icloudpd)" ]]; then
+  echo "icloudpd not installed (brew install icloudpd)"
+  exit 1
+fi
+
+BUFFER_MONTHS=1
+DRY_RUN=false
+DIRECTORY=""
+ICLOUDPD_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    -d|--directory)
+      DIRECTORY="${2}"
+      shift 2
+      ;;
+    -b|--buffer)
+      BUFFER_MONTHS="${2}"
+      shift 2
+      ;;
+    -n|--dry-run)
+      DRY_RUN=true
+      shift
+      ;;
+    --)
+      shift
+      ICLOUDPD_ARGS=("$@")
+      break
+      ;;
+    *)
+      echo "Unknown option: ${1}"
+      exit 1
+      ;;
+  esac
+done
+
+if [[ -z "${DIRECTORY}" ]]; then
+  echo "Error: --directory is required"
+  exit 1
+fi
+
+if [[ ! -d "${DIRECTORY}" ]]; then
+  echo "Error: '${DIRECTORY}' is not a directory"
+  exit 1
+fi
+
+# Find the latest date from the icloudpd folder structure.
+# Supports YYYY/MM/DD (default) and YYYY/MM patterns.
+find_latest_date() {
+  local dir="${1}"
+  local latest=""
+
+  # Look for YYYY/MM/DD directory patterns
+  while IFS= read -r path; do
+    if [[ "${path}" =~ ([0-9]{4})/([0-9]{2})/([0-9]{2})$ ]]; then
+      local date_str="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/${BASH_REMATCH[3]}"
+      if [[ -z "${latest}" || "${date_str}" > "${latest}" ]]; then
+        latest="${date_str}"
+      fi
+    fi
+  done < <(find "${dir}" -type d 2>/dev/null)
+
+  # Fallback to YYYY/MM if no day-level folders found
+  if [[ -z "${latest}" ]]; then
+    while IFS= read -r path; do
+      if [[ "${path}" =~ ([0-9]{4})/([0-9]{2})$ ]]; then
+        local date_str="${BASH_REMATCH[1]}/${BASH_REMATCH[2]}/01"
+        if [[ -z "${latest}" || "${date_str}" > "${latest}" ]]; then
+          latest="${date_str}"
+        fi
+      fi
+    done < <(find "${dir}" -type d 2>/dev/null)
+  fi
+
+  echo "${latest}"
+}
+
+# Subtract months from a YYYY/MM/DD date string.
+# Works on both macOS (BSD date) and Linux (GNU date).
+subtract_months() {
+  local date_str="${1}"
+  local months="${2}"
+
+  if [[ "$(uname -s)" == "Darwin" ]]; then
+    date -j -v-"${months}"m -f "%Y/%m/%d" "${date_str}" "+%Y-%m-%d"
+  else
+    local iso_date="${date_str//\//-}"
+    date -d "${iso_date} - ${months} month" "+%Y-%m-%d"
+  fi
+}
+
+main() {
+  echo "Scanning '${DIRECTORY}' for latest photo date..."
+
+  LATEST_DATE=$(find_latest_date "${DIRECTORY}")
+
+  if [[ -z "${LATEST_DATE}" ]]; then
+    echo "No date-based folders found in '${DIRECTORY}'."
+    echo "Expected folder structure: YYYY/MM/DD (icloudpd default)"
+    echo ""
+    echo "Run icloudpd directly for the initial download."
+    exit 1
+  fi
+
+  echo "Latest photo date: ${LATEST_DATE}"
+
+  CREATED_AFTER=$(subtract_months "${LATEST_DATE}" "${BUFFER_MONTHS}")
+  echo "Syncing from: ${CREATED_AFTER} (${BUFFER_MONTHS} month buffer)"
+
+  CMD=(
+    icloudpd
+    --directory "${DIRECTORY}"
+    --created-after "${CREATED_AFTER}"
+  )
+
+  if [[ ${#ICLOUDPD_ARGS[@]} -gt 0 ]]; then
+    CMD+=("${ICLOUDPD_ARGS[@]}")
+  fi
+
+  echo ""
+  echo "$ ${CMD[*]}"
+
+  if [[ "${DRY_RUN}" == true ]]; then
+    echo "(dry run — command not executed)"
+    exit
+  fi
+
+  echo ""
+  exec "${CMD[@]}"
+}
+
+main "$@"
