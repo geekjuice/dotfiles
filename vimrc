@@ -143,7 +143,6 @@ filetype plugin indent on
 let &rtp.=',' . expand('$BREW_PREFIX') . '/opt/fzf'
 
 set cole=0                              "concealing characters
-set complete=.,t                        "keep tab complete within file
 set concealcursor=nvic                  "conceal modes
 set cursorline                          "highlight current cursor line
 set encoding=utf-8                      "utf8 encoding
@@ -176,10 +175,6 @@ set signcolumn=yes                      "always show signcolumn
 
 " tmp file settings
 set noswapfile
-set nobackup
-set nowritebackup
-
-" backup settings
 set backup
 set backupdir=/var/tmp,/tmp
 set directory=/var/tmp,/tmp
@@ -451,7 +446,7 @@ if $TERM == "xterm-256color" || $TERM == "screen-256color" || $COLORTERM == "gno
   set t_Co=256
 endif
 
-" use true color is avaialble
+" use true color if available
 if has("termguicolors")
   let &t_8f = "\<Esc>[38;2;%lu;%lu;%lum"
   let &t_8b = "\<Esc>[48;2;%lu;%lu;%lum"

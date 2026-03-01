@@ -9,7 +9,7 @@ REVERTING=$(git rev-parse -q --verify REVERT_HEAD)
 PREFIXES="(feature|bugfix|improvement|hotfix|chore)"
 PATTERN="^$PREFIXES\/[a-z\d]+([-/_.][a-z\d]+)?$"
 
-if [[ -z "$MERGING" ]] || [[ -z "$REBASING" ]] || [[ -z "$REVERTING" ]]; then
+if [[ -n "$MERGING" ]] || [[ -n "$REBASING" ]] || [[ -n "$REVERTING" ]]; then
   return
 fi
 

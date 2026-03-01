@@ -15,7 +15,7 @@ brew install --cask \
   bartender \
   beekeeper-studio \
   boop \
-  charle \
+  charles \
   claude-code \
   dash \
   discord \
