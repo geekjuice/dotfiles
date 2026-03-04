@@ -40,21 +40,26 @@ declare -A OUTPUTS=(
   ["default-npm-packages"]="$HOME/.default-npm-packages"
 
   # claude
-  ["claude.json"]="$HOME/.claude/settings.json"
+  ["claude/CLAUDE.md"]="$HOME/.claude/CLAUDE.md"
+  ["claude/keybindings.json"]="$HOME/.claude/keybindings.json"
+  ["claude/settings.json"]="$HOME/.claude/settings.json"
 
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
   ["rc.conf"]="$CONFIG_DIR/ranger/rc.conf"
   ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
   ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
+  ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"
 
   # settings
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
   ["ghostty"]="$MACOS_DIR/com.mitchellh.ghostty/config"
 
+  # agents
+  ["agents"]="$HOME/.agents"
+
   # templates
   ["tmuxp"]="$HOME/.tmuxp"
-
 )
 
 echo "clearing previously cached..."

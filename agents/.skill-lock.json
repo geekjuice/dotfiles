@@ -1,0 +1,46 @@
+{
+  "version": 3,
+  "skills": {
+    "dex": {
+      "source": "dcramer/dex",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dcramer/dex.git",
+      "skillPath": "plugins/dex/skills/dex/SKILL.md",
+      "skillFolderHash": "3ab3ddd273331aa9cfd2535da5cbbf66c0fb93e6",
+      "installedAt": "2026-03-08T17:41:38.788Z",
+      "updatedAt": "2026-03-08T17:50:09.429Z"
+    },
+    "dex-plan": {
+      "source": "dcramer/dex",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dcramer/dex.git",
+      "skillPath": "plugins/dex/skills/dex-plan/SKILL.md",
+      "skillFolderHash": "598d87b643bbbf5329d6cf4139d26d443f078d05",
+      "installedAt": "2026-03-08T17:41:39.087Z",
+      "updatedAt": "2026-03-08T17:41:39.087Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "c2f31172b6f256272305a5e6e7228b258446899f",
+      "installedAt": "2026-03-08T17:42:07.965Z",
+      "updatedAt": "2026-03-08T17:42:07.965Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "cline",
+    "codex",
+    "cursor",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-cli",
+    "opencode",
+    "claude-code"
+  ]
+}

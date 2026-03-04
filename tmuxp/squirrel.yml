@@ -1,0 +1,15 @@
+session_name: squirrel
+windows:
+  - window_name: squirrel
+    layout: main-vertical
+    options:
+      main-pane-width: "50%"
+    shell_command_before:
+      - ashby && cd ../purple-squirrel
+    panes:
+      - shell_command:
+          - cmd: clawed
+            enter: false
+      - shell_command:
+          - cmd: clawed
+            enter: false
