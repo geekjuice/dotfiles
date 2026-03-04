@@ -2,6 +2,7 @@ alias txn="tmux new -s nick"
 alias txp="tmuxp load -a nick"
 alias txh="tmuxp load -a hubble"
 alias txa="tmuxp load -a ashby"
+alias txc="tmuxp load -a claude"
 
 function txk() {
   if [[ ! $1 =~ "^[0-9]+$" ]]; then

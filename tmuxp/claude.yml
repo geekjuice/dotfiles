@@ -1,0 +1,18 @@
+session_name: claude
+windows:
+  - window_name: claude
+    layout: tiled
+    start_directory: $PWD
+    panes:
+      - shell_command:
+          - cmd: clawed
+            enter: false
+      - shell_command:
+          - cmd: clawed
+            enter: false
+      - shell_command:
+          - cmd: clawed
+            enter: false
+      - shell_command:
+          - cmd: clawed
+            enter: false

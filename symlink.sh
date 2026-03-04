@@ -40,7 +40,9 @@ declare -A OUTPUTS=(
   ["default-npm-packages"]="$HOME/.default-npm-packages"
 
   # claude
-  ["claude.json"]="$HOME/.claude/settings.json"
+  ["claude/CLAUDE.md"]="$HOME/.claude/CLAUDE.md"
+  ["claude/keybindings.json"]="$HOME/.claude/keybindings.json"
+  ["claude/settings.json"]="$HOME/.claude/settings.json"
 
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
@@ -54,7 +56,6 @@ declare -A OUTPUTS=(
 
   # templates
   ["tmuxp"]="$HOME/.tmuxp"
-
 )
 
 echo "clearing previously cached..."
