@@ -17,6 +17,7 @@ brew install --cask \
   boop \
   charles \
   claude-code \
+  conductor \
   dash \
   discord \
   emacs \

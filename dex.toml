@@ -1,0 +1,3 @@
+[storage.file]
+mode = "centralized"
+path = "~/dev/.dex"
