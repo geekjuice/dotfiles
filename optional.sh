@@ -9,8 +9,67 @@ if [[ $(uname -s) != "Darwin" ]]; then
   exit 1
 fi
 
-echo "Installing optional packages from Brewfile.optional..."
-brew bundle --file=$DOTFILES_DIR/Brewfile.optional
+echo "Installing optional cask packages..."
+brew install --cask \
+  alfred \
+  bartender \
+  beekeeper-studio \
+  boop \
+  charles \
+  claude-code \
+  conductor \
+  dash \
+  discord \
+  emacs \
+  firefox \
+  folx \
+  ghostty \
+  http-toolkit \
+  insomnia \
+  mongodb-compass \
+  numi \
+  openemu \
+  shottr \
+  virtualbox \
+  yaak \
+  zed \
+
+echo "Installing optional homebrew packages..."
+brew install \
+  bottom \
+  croc \
+  entr \
+  golang \
+  hyperfine \
+  icloudpd \
+  imagemagick \
+  lnav \
+  moreutils \
+  navi \
+  ncdu \
+  neofetch \
+  nginx \
+  pastel \
+  pipx \
+  scc \
+  sd \
+  shortcat \
+  starship \
+  stow \
+  tlrc \
+  worktrunk \
+  xplr \
+
+echo "Installing optional custom homebrew packages..."
+brew install \
+  cjbassi/gotop/gotop \
+  cloudflare/cloudflare/cloudflared \
+  jesseduffield/horcrux/horcrux \
+  jesseduffield/lazydocker/lazydocker \
+  jesseduffield/lazynpm/lazynpm \
+  mongodb/brew/mongodb-community \
+  TomAnthony/brews/itermocil \
+  xwmx/taps/nb \
 
 echo "Installing embark iterm theme..."
 curl -OSL https://raw.githubusercontent.com/embark-theme/iterm/master/colors/Embark.itermcolors
