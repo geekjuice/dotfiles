@@ -1,5 +1,3 @@
-export GH_FORCE_TTY="1"
-
 alias git-churn="git log --format=format: --name-only | grep -v '^$' | sort | uniq -c | sort -rg"
 
 git-trust() {

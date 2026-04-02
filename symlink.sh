@@ -49,7 +49,7 @@ declare -A OUTPUTS=(
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
   ["yazi"]="$CONFIG_DIR/yazi"
-  ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
+  ["nvim"]="$CONFIG_DIR/nvim"
   ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
   ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"
 
