@@ -18,21 +18,17 @@ bindkey -M vicmd 'v' edit-command-line
 
 fpath=($fpath $DOTFILES_DIR/completions)
 zstyle ":completion:*" matcher-list "m:{a-z}={A-Z}"
-autoload -U compinit && compinit
 
-export ZPLUG_HOME="${BREW_PREFIX}/opt/zplug"
-source $ZPLUG_HOME/init.zsh
-
-zplug "mafredri/zsh-async"
-zplug "sindresorhus/pure"
-zplug "zsh-users/zsh-completions"
-zplug "zsh-users/zsh-syntax-highlighting"
-
-if ! zplug check; then
-  zplug install
+export ZIM_HOME="${HOME}/.zim"
+if [[ ! -e ${ZIM_HOME}/zimfw.zsh ]]; then
+  curl -fsSL --create-dirs -o ${ZIM_HOME}/zimfw.zsh \
+    https://github.com/zimfw/zimfw/releases/latest/download/zimfw.zsh
 fi
-
-zplug load
+if [[ ! ${ZIM_HOME}/init.zsh -nt ${ZDOTDIR:-${HOME}}/.zimrc ]]; then
+  source ${ZIM_HOME}/zimfw.zsh init -q
+  source ${ZIM_HOME}/zimfw.zsh install -q
+fi
+source ${ZIM_HOME}/init.zsh
 
 for plugin in ${DOTFILES_DIR}/plugins/*; do
   if [[ -f "${plugin}" ]]; then

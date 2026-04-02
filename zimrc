@@ -1,0 +1,15 @@
+# zimfw modules
+zmodule environment
+zmodule input
+zmodule completion
+
+# prompt
+zmodule mafredri/zsh-async --source async.zsh
+zmodule sindresorhus/pure
+
+# completions and suggestions
+zmodule zsh-users/zsh-completions --fpath src
+zmodule zsh-users/zsh-autosuggestions
+
+# must be last
+zmodule zsh-users/zsh-syntax-highlighting

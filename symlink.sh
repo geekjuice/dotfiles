@@ -18,7 +18,7 @@ resolve() {
 
 declare -A OUTPUTS=(
   # dotfiles
-  ["asdfrc"]=".asdfrc"
+  ["editorconfig"]=".editorconfig"
   ["gitconfig"]=".gitconfig"
   ["gitignore"]=".gitignore"
   ["githooks"]=".githooks"
@@ -35,6 +35,7 @@ declare -A OUTPUTS=(
   ["vim"]=".vim"
   ["vimrc"]=".vimrc"
   ["zshrc"]=".zshrc"
+  ["zimrc"]=".zimrc"
 
   # npm
   ["default-npm-packages"]="$HOME/.default-npm-packages"
@@ -47,7 +48,7 @@ declare -A OUTPUTS=(
 
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
-  ["rc.conf"]="$CONFIG_DIR/ranger/rc.conf"
+  ["yazi"]="$CONFIG_DIR/yazi"
   ["init.lua"]="$CONFIG_DIR/nvim/init.lua"
   ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
   ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"

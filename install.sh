@@ -17,67 +17,8 @@ echo "Installing homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 eval "$(brew shellenv)"
 
-echo "Installing core cask packages..."
-brew install --cask \
-  arc \
-  bitwarden \
-  cleanshot \
-  clop \
-  docker \
-  figma \
-  font-hack-nerd-font \
-  google-chrome \
-  hammerspoon \
-  httpie \
-  iterm2 \
-  jordanbaird-ice \
-  meetingbar \
-  proxyman \
-  raycast \
-  slack \
-  spotify \
-  syncthing \
-  tailscale \
-  temurin \
-  visual-studio-code \
-
-echo "Installing core homebrew packages..."
-brew install \
-  asdf \
-  ast-grep \
-  bash \
-  bat \
-  coreutils \
-  direnv \
-  eza \
-  fd \
-  flyctl \
-  fx \
-  fzf \
-  gh \
-  git \
-  git-delta \
-  gnu-sed \
-  htop \
-  jq \
-  mkcert \
-  neovim \
-  pam-reattach \
-  ranger \
-  ripgrep \
-  rsync \
-  tmux \
-  tmuxp \
-  viddy \
-  vim \
-  watch \
-  zoxide \
-  zplug \
-  zsh \
-
-echo "Installing custom homebrew packages..."
-brew install \
-  jesseduffield/lazygit/lazygit \
+echo "Installing core packages from Brewfile..."
+brew bundle --file=$DOTFILES_DIR/Brewfile
 
 echo "Installing tmux packages..."
 [[ -d $TPM_DIR ]] && rm -rf $TPM_DIR

@@ -32,10 +32,13 @@
   keepTemporaries = false
   writeToTemp = true
 [diff]
-  tool = vimdiff
+  tool = difftastic
   conflictstyle = diff3
+  external = difft
 [difftool]
   prompt = true
+[difftool "difftastic"]
+  cmd = difft "$LOCAL" "$REMOTE"
 [mergetool]
   prompt = true
 [log]
