@@ -52,6 +52,7 @@ declare -A OUTPUTS=(
   ["nvim"]="$CONFIG_DIR/nvim"
   ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
   ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"
+  ["mise.toml"]="$CONFIG_DIR/mise/config.toml"
 
   # settings
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"

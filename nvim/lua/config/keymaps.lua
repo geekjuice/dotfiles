@@ -27,8 +27,10 @@ map("n", "<leader>w", "<cmd>w<cr><cmd>echo 'file saved'<cr>")
 map("n", "<leader>e", "<cmd>noa w<cr><cmd>echo 'file saved without formatting'<cr>")
 
 -- Splits
-map("n", "<leader>n", "<cmd>vnew<cr>")
-map("n", "<leader>m", "<cmd>new<cr>")
+map("n", "<leader>n", "<cmd>vsplit<cr>")
+map("n", "<leader>N", "<cmd>vnew<cr>")
+map("n", "<leader>m", "<cmd>split<cr>")
+map("n", "<leader>M", "<cmd>new<cr>")
 map("n", "<leader>w=", "<C-w>=")
 
 -- Tabs
