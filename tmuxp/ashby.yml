@@ -5,6 +5,7 @@ windows:
     layout: tiled
     shell_command_before:
       - ashby
+      - nvm use
     environment:
       OPEN_BROWSER: "0"
     panes:
