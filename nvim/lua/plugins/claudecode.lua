@@ -27,6 +27,6 @@ return {
     { "<leader>cc", "<cmd>ClaudeCode<cr>", desc = "Toggle Claude Code" },
     { "<leader>cC", "<cmd>ClaudeCode --dangerously-skip-permissions<cr>", desc = "Toggle Claude Code (danger mode)" },
     { "<leader>cs", "<cmd>ClaudeCodeSend<cr>", mode = "v", desc = "Send selection to Claude" },
-    { "<leader>ca", ":ClaudeCodeAdd ", desc = "Add file to Claude context" },
+    { "<leader>ca", ":ClaudeCodeAdd %", desc = "Add file to Claude context" },
   },
 }
