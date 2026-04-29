@@ -24,7 +24,7 @@ cask "spotify"
 cask "syncthing-app"
 cask "tailscale-app"
 cask "temurin"
-cask "visual-studio-code"
+cask "zed"
 
 # Core homebrew packages
 brew "bash"
