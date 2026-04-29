@@ -291,57 +291,6 @@ Announce major behavior activations to keep users informed: autopilot, ralph-loo
 
 When a skill name overlaps between OMC and other sources (e.g., `/code-review` exists in both OMC and a project-level skill), always prefer the `oh-my-claudecode:` version (e.g., `/oh-my-claudecode:code-review`).
 
-## Personal Conventions
-
-Code Style:
-- TypeScript strict mode. Prefer `type` over `interface` unless extending.
-- Functional React components with named exports. No default exports.
-- Prefer early returns over nested conditionals.
-- Use `const` by default. Destructure props and function params.
-- Colocate tests next to source files (`foo.test.ts` beside `foo.ts`).
-
-Naming:
-- camelCase for variables/functions, PascalCase for components/types, UPPER_SNAKE for constants.
-- Boolean variables/props prefixed with `is`, `has`, `should`, `can`.
-- Event handlers prefixed with `handle` (component) or `on` (prop).
-
-Tooling:
-- Always use existing project tools first. Check configs/dependencies before suggesting alternatives.
-- Package manager: use whatever the project uses (check lockfile). For new projects, prefer pnpm.
-- Linting: ESLint/Prettier if configured, otherwise Biome/oxlint/oxfmt.
-- Testing: Jest/Mocha if configured, otherwise vitest. Use React Testing Library for component tests.
-
-Git:
-- Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
-- Keep commits atomic — one logical change per commit.
-
-## Build & Test
-- Detect package manager from lockfile: pnpm-lock.yaml → pnpm, package-lock.json → npm.
-- Typecheck only changed files before committing: `tsc --noEmit path/to/changed.ts`. Full project typechecks can take minutes on large codebases.
-- Prefer running single test files over full suites: `pnpm vitest run path/to/file.test.ts`.
-- For React component tests, use @testing-library/react with user-event.
-
-## Forbidden Patterns
-- Never use `any` type — use `unknown` and narrow, or define a proper type.
-- Never add `@ts-ignore` or `@ts-expect-error` without a comment explaining why.
-- Never install new dependencies without asking first.
-- Never modify lockfiles directly.
-- Never use `var` — always `const` or `let`.
-- Never commit `.env` files or secrets.
-- Never use `git add .` or `git add -A` — add specific files by name.
-
-## Completion
-When finishing a task, state one of:
-- DONE — task complete, verified.
-- DONE_WITH_CONCERNS — complete but with noted risks or tradeoffs.
-- BLOCKED — cannot proceed, explain why.
-- NEEDS_CONTEXT — need more information to continue.
-
-## Voice
-- Be direct and concrete. No filler words.
-- Never use "delve", "crucial", "leverage", "utilize", "facilitate", "robust".
-- Don't narrate what you're about to do — just do it.
-
 ## Worktree Workflow
 
 For any non-trivial code change (bug fix, feature, refactor), default to working in a git worktree:
