@@ -1,0 +1,293 @@
+#!/usr/bin/env bash
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+if [[ "${TRACE-0}" == "1" ]]; then
+  set -o xtrace
+fi
+
+print_help() {
+  cat <<'HELP'
+
+  ❯ git pulse [subcommand] [options]
+
+  Daily-tuned codebase intel — recent-window versions of the queries from
+  "Git Commands Before Reading Code" (churn, bus factor, bugs, momentum,
+  firefighting), so you can orient yourself before opening the editor.
+
+  subcommands:
+    hot        Top files by commit count           (default: 1 week)
+    who        Contributors by commits with share  (default: 1 week)
+    bugs       Files in fix/bug/broken commits     (default: 1 month)
+    cadence    Commits per day (or --by week)      (default: 1 month)
+    fires      Reverts / hotfixes / rollbacks      (default: 1 month)
+    brief      Composite one-screen summary        (default subcommand)
+
+  common options:
+    --since <git-date>   any git-date (yesterday, 1.week, 2026-04-01)
+    -n <count>           rows to show (default: 10)
+    --branch <ref>       ref to inspect (default: HEAD)
+    --author <who>       filter by author; "me" resolves to git config user.email
+    --no-color           disable color even when stdout is a TTY
+    -h, --help           print this help
+
+  hot-only options:
+    --mine               shorthand for --author me
+
+  cadence-only options:
+    --by <day|week>      bucket size (default: day)
+
+  examples:
+    git pulse                            # brief summary
+    git pulse hot --since 1.week
+    git pulse hot --mine --since 1.month
+    git pulse who --since 2.weeks
+    git pulse bugs --since 6.months
+    git pulse cadence --since 6.months --by week
+    git pulse fires --since 1.year
+
+HELP
+}
+
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "git pulse: not inside a git repository" >&2
+  exit 1
+fi
+
+SUBCOMMAND=""
+SINCE=""
+COUNT=10
+BRANCH="HEAD"
+AUTHOR=""
+BY="day"
+USE_COLOR=auto
+MINE=false
+
+if [[ $# -gt 0 && ! "${1}" =~ ^- ]]; then
+  SUBCOMMAND="${1}"
+  shift
+fi
+
+if [[ "${SUBCOMMAND}" == "" || "${SUBCOMMAND}" == "-h" || "${SUBCOMMAND}" == "--help" ]]; then
+  if [[ "${1-}" =~ ^(-h|--help)$ ]]; then
+    print_help
+    exit
+  fi
+fi
+
+if [[ "${SUBCOMMAND-}" =~ ^(-h|--help)$ ]]; then
+  print_help
+  exit
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "${1}" in
+    --since)
+      SINCE="${2}"
+      shift 2
+      ;;
+    -n)
+      COUNT="${2}"
+      shift 2
+      ;;
+    --branch)
+      BRANCH="${2}"
+      shift 2
+      ;;
+    --author)
+      AUTHOR="${2}"
+      shift 2
+      ;;
+    --mine)
+      MINE=true
+      shift
+      ;;
+    --by)
+      BY="${2}"
+      shift 2
+      ;;
+    --no-color)
+      USE_COLOR=never
+      shift
+      ;;
+    -h|--help)
+      print_help
+      exit
+      ;;
+    *)
+      echo "git pulse: unknown option: ${1}" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [[ "${MINE}" == true && "${AUTHOR}" == "" ]]; then
+  AUTHOR=me
+fi
+
+if [[ "${AUTHOR}" == "me" ]]; then
+  AUTHOR="$(git config user.email || true)"
+  if [[ -z "${AUTHOR}" ]]; then
+    echo "git pulse: --author me requires git config user.email" >&2
+    exit 1
+  fi
+fi
+
+if [[ "${USE_COLOR}" == "auto" && -t 1 ]]; then
+  BOLD="$(tput bold 2>/dev/null || true)"
+  DIM="$(tput dim 2>/dev/null || true)"
+  RESET="$(tput sgr0 2>/dev/null || true)"
+else
+  BOLD=""
+  DIM=""
+  RESET=""
+fi
+
+git_log_args() {
+  local since="${1}"
+  local args=("--no-merges" "${BRANCH}")
+  if [[ -n "${since}" ]]; then
+    args+=("--since=${since}")
+  fi
+  if [[ -n "${AUTHOR}" ]]; then
+    args+=("--author=${AUTHOR}")
+  fi
+  printf '%s\n' "${args[@]}"
+}
+
+# Print "no matches" line for empty input on stdin; otherwise pass through.
+empty_or_passthrough() {
+  local label="${1}"
+  local first
+  IFS= read -r first || {
+    echo "  (no ${label} in window)"
+    return
+  }
+  printf '%s\n' "${first}"
+  cat
+}
+
+heading() {
+  printf '%s%s%s\n' "${BOLD}" "${1}" "${RESET}"
+}
+
+cmd_hot() {
+  local since="${SINCE:-1.week}"
+  mapfile -t LOG_ARGS < <(git_log_args "${since}")
+  git log "${LOG_ARGS[@]}" --name-only --pretty=format: \
+    | awk 'NF' \
+    | sort \
+    | uniq -c \
+    | sort -rn \
+    | awk -v n="${COUNT}" 'NR<=n {printf "%4d  %s\n", $1, substr($0, index($0,$2))}' \
+    | empty_or_passthrough "file changes"
+}
+
+cmd_who() {
+  local since="${SINCE:-1.week}"
+  mapfile -t LOG_ARGS < <(git_log_args "${since}")
+  local total
+  total="$(git log "${LOG_ARGS[@]}" --pretty=format:'%an' | awk 'END{print NR+0}')"
+  if [[ "${total}" == "0" ]]; then
+    echo "  (no commits in window)"
+    return
+  fi
+  git log "${LOG_ARGS[@]}" --pretty=format:'%an' \
+    | sort \
+    | uniq -c \
+    | sort -rn \
+    | awk -v n="${COUNT}" -v total="${total}" 'NR<=n {
+        count=$1
+        name=substr($0, index($0,$2))
+        printf "%4d  %5.1f%%  %s\n", count, (count/total)*100, name
+      }'
+}
+
+cmd_bugs() {
+  local since="${SINCE:-1.month}"
+  mapfile -t LOG_ARGS < <(git_log_args "${since}")
+  git log "${LOG_ARGS[@]}" \
+    --grep='fix\|bug\|broken' -i \
+    --name-only --pretty=format: \
+    | awk 'NF' \
+    | sort \
+    | uniq -c \
+    | sort -rn \
+    | awk -v n="${COUNT}" 'NR<=n {printf "%4d  %s\n", $1, substr($0, index($0,$2))}' \
+    | empty_or_passthrough "bug-touched files"
+}
+
+cmd_cadence() {
+  local since="${SINCE:-1.month}"
+  mapfile -t LOG_ARGS < <(git_log_args "${since}")
+  local fmt='%Y-%m-%d'
+  case "${BY}" in
+    day)
+      fmt='%Y-%m-%d'
+      ;;
+    week)
+      # ISO week: %G-W%V is portable across modern git versions.
+      fmt='%G-W%V'
+      ;;
+    *)
+      echo "git pulse cadence: --by must be 'day' or 'week'" >&2
+      exit 1
+      ;;
+  esac
+  git log "${LOG_ARGS[@]}" --date=format:"${fmt}" --pretty=format:'%ad' \
+    | sort \
+    | uniq -c \
+    | awk '{printf "%4d  %s\n", $1, $2}' \
+    | empty_or_passthrough "commits"
+}
+
+cmd_fires() {
+  local since="${SINCE:-1.month}"
+  mapfile -t LOG_ARGS < <(git_log_args "${since}")
+  git log "${LOG_ARGS[@]}" \
+    --grep='revert\|hotfix\|rollback' -i \
+    --pretty=format:'%h  %ad  %an  %s' --date=short \
+    | awk -v n="${COUNT}" 'NR<=n' \
+    | empty_or_passthrough "fires"
+}
+
+cmd_brief() {
+  local hot_since="${SINCE:-1.week}"
+  local who_since="${SINCE:-1.week}"
+  local fires_since="${SINCE:-1.month}"
+
+  heading "hot (since ${hot_since})"
+  COUNT=5 SINCE="${hot_since}" cmd_hot
+  echo
+
+  heading "who (since ${who_since})"
+  COUNT=3 SINCE="${who_since}" cmd_who
+  echo
+
+  heading "fires (since ${fires_since})"
+  COUNT=3 SINCE="${fires_since}" cmd_fires
+  echo
+
+  local today
+  today="$(date +%Y-%m-%d)"
+  local today_count
+  today_count="$(git log --no-merges "${BRANCH}" --since="${today} 00:00" --pretty=oneline 2>/dev/null | wc -l | tr -d ' ')"
+  heading "today (${today})"
+  printf '%4d  commits\n' "${today_count}"
+}
+
+case "${SUBCOMMAND:-brief}" in
+  hot)     cmd_hot ;;
+  who)     cmd_who ;;
+  bugs)    cmd_bugs ;;
+  cadence) cmd_cadence ;;
+  fires)   cmd_fires ;;
+  brief)   cmd_brief ;;
+  *)
+    echo "git pulse: unknown subcommand: ${SUBCOMMAND}" >&2
+    echo "run 'git pulse --help' for usage" >&2
+    exit 1
+    ;;
+esac
