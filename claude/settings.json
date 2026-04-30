@@ -16,30 +16,7 @@
     "frontend-design@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "code-simplifier@claude-plugins-official": true,
-    "playwright@claude-plugins-official": true,
-    "lua-lsp@claude-plugins-official": true
+    "playwright@claude-plugins-official": true
   },
-  "skipDangerousModePermissionPrompt": true,
-  "permissions": {
-    "deny": [
-      "Bash(rm -rf *)",
-      "Bash(git push --force*)",
-      "Bash(git push * --force*)",
-      "Bash(npm publish*)",
-      "Bash(pnpm publish*)"
-    ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "file=\"$(echo $CLAUDE_TOOL_INPUT | jq -r '.file_path')\"; if [[ \"$file\" == *.ts || \"$file\" == *.tsx || \"$file\" == *.js || \"$file\" == *.jsx ]]; then npx --yes biome check --write \"$file\" 2>/dev/null || npx --yes prettier --write \"$file\" 2>/dev/null; fi; exit 0"
-          }
-        ]
-      }
-    ]
-  }
+  "skipDangerousModePermissionPrompt": true
 }
