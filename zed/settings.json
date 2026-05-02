@@ -1,0 +1,81 @@
+// Zed settings
+//
+// For information on how to configure Zed, see the Zed
+// documentation: https://zed.dev/docs/configuring-zed
+//
+// To see all of Zed's default settings without changing your
+// custom settings, run `zed: open default settings` from the
+// command palette (cmd-shift-p / ctrl-shift-p)
+{
+  "proxy": "",
+  "agent": {
+    "dock": "right",
+    "button": true,
+    "show_turn_stats": true,
+    "play_sound_when_agent_done": "always",
+    "sidebar_side": "right",
+    "favorite_models": [],
+    "model_parameters": []
+  },
+  "project_panel": {
+    "diagnostic_badges": true,
+    "git_status_indicator": true,
+    "entry_spacing": "standard",
+    "default_width": 360.0,
+    "dock": "left"
+  },
+  "use_smartcase_search": true,
+  "which_key": {
+    "enabled": true
+  },
+  "telemetry": {
+    "diagnostics": false,
+    "metrics": false
+  },
+  "vim_mode": true,
+  "vim": {
+    "use_system_clipboard": "on_yank",
+    "toggle_relative_line_numbers": true
+  },
+  "terminal": {
+    "max_scroll_history_lines": 10000
+  },
+  "preview_tabs": {
+    "enable_preview_from_file_finder": false
+  },
+  "tab_bar": {
+    "show": false
+  },
+  "vertical_scroll_margin": 999.0,
+  "minimap": {
+    "show": "never",
+    "thumb": "always"
+  },
+  "cursor_blink": true,
+  "show_whitespaces": "trailing",
+  "tab_size": 2,
+  "agent_servers": {
+    "codex-acp": {
+      "type": "registry"
+    },
+    "cursor": {
+      "type": "registry"
+    },
+    "claude-acp": {
+      "type": "registry"
+    }
+  },
+  "base_keymap": "VSCode",
+  "icon_theme": {
+    "mode": "light",
+    "light": "Catppuccin Frappé",
+    "dark": "Catppuccin Mocha"
+  },
+  "ui_font_size": 16,
+  "buffer_font_size": 11.0,
+  "theme": {
+    "mode": "dark",
+    "light": "One Light",
+    "dark": "Catppuccin Frappé"
+  }
+}
