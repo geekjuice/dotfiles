@@ -1,0 +1,116 @@
+[
+  // ─── Global (all contexts) ─────────────────────────────────────────
+  {
+    "bindings": {
+      // File finder (Telescope find_files)
+      "ctrl-p": "file_finder::Toggle",
+      // Live grep (Telescope live_grep)
+      "ctrl-\\ ctrl-\\": "pane::DeploySearch",
+      // Buffer lines fuzzy find (Telescope current_buffer_fuzzy_find)
+      "ctrl-\\ ctrl-i": "outline::Toggle",
+      // Find files — same as ctrl-p
+      "ctrl-\\ ctrl-o": "file_finder::Toggle"
+    }
+  },
+
+  // ─── Vim normal mode ───────────────────────────────────────────────
+  {
+    "context": "VimControl && !menu",
+    "bindings": {
+      // ; → : (command palette as closest equivalent)
+      ";": "command_palette::Toggle",
+
+      // ── Splits & Panes (PRIORITY) ──
+      "space n": "pane::SplitRight",
+      "space m": "pane::SplitDown",
+      // ── Pane navigation (vim-tmux-navigator style) ──
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"],
+
+      // ── File / Buffer ──
+      "space ;": "pane::AlternateFile",
+      "space w": "workspace::Save",
+      "space e": ["workspace::Save", { "save_intent": "save" }],
+      "space q": "pane::CloseActiveItem",
+
+      // ── Tabs ──
+      "space t n": "workspace::NewFile",
+
+      // ── File tree (NvimTree) ──
+      "space o": "workspace::ToggleLeftDock",
+      "space i": "project_panel::ToggleFocus",
+      "space f f": "pane::RevealInProjectPanel",
+
+      // ── Search ──
+      "space \\": "search::SelectAllMatches",
+
+      // ── LSP ──
+      "[ g": "editor::GoToPrevDiagnostic",
+      "] g": "editor::GoToDiagnostic",
+      "g d": "editor::GoToDefinition",
+      "g y": "editor::GoToTypeDefinition",
+      "g i": "editor::GoToImplementation",
+      "g r": "editor::FindAllReferences",
+      "g m": "editor::GoToDefinitionSplit",
+      "g n": "editor::GoToDefinitionSplit",
+
+      // <C-Space> prefix — LSP actions
+      "ctrl-space ctrl-r": "editor::Rename",
+      "ctrl-space ctrl-x": "editor::ToggleCodeActions",
+      "ctrl-space ctrl-f": "editor::ToggleCodeActions",
+      "ctrl-space ctrl-d": "diagnostics::Deploy",
+      "ctrl-space ctrl-c": "outline::Toggle",
+      "ctrl-space ctrl-space": "file_finder::Toggle",
+
+      // ── Diagnostics (Trouble) ──
+      "space x x": "diagnostics::Deploy",
+      "space x q": "diagnostics::Deploy",
+
+      // ── Git ──
+      "space g h": "editor::ToggleGitBlame",
+
+      // ── Zen mode ──
+      "space z": "workspace::ToggleCenteredLayout",
+
+      // ── Misc ──
+      "shift-q": null,
+      "space v e": "zed::OpenSettings",
+
+      // ── Clipboard ──
+      "[ c f": "editor::CopyPath"
+    }
+  },
+
+  // ─── Vim visual mode — move lines ──────────────────────────────────
+  {
+    "context": "VimVisual && !menu",
+    "bindings": {
+      "ctrl-j": "editor::MoveLineDown",
+      "ctrl-k": "editor::MoveLineUp"
+    }
+  },
+
+  // ─── Project panel (file tree context) ─────────────────────────────
+  {
+    "context": "ProjectPanel",
+    "bindings": {
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+    }
+  },
+
+  // ─── Terminal panel ────────────────────────────────────────────────
+  {
+    "context": "Terminal",
+    "bindings": {
+      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
+      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
+      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
+      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+    }
+  }
+]

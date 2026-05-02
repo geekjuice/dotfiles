@@ -55,6 +55,10 @@ declare -A OUTPUTS=(
   ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"
   ["mise-config.toml"]="$CONFIG_DIR/mise/config.toml"
 
+  # zed
+  ["zed/settings.json"]="$CONFIG_DIR/zed/settings.json"
+  ["zed/keymap.json"]="$CONFIG_DIR/zed/keymap.json"
+
   # settings
   ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
   ["ghostty"]="$MACOS_DIR/com.mitchellh.ghostty/config"
