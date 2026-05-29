@@ -24,10 +24,10 @@
       "space n": "pane::SplitRight",
       "space m": "pane::SplitDown",
       // ── Pane navigation (vim-tmux-navigator style) ──
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"],
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown",
 
       // ── File / Buffer ──
       "space ;": "pane::AlternateFile",
@@ -47,7 +47,7 @@
       "space \\": "search::SelectAllMatches",
 
       // ── LSP ──
-      "[ g": "editor::GoToPrevDiagnostic",
+      "[ g": "editor::GoToPreviousDiagnostic",
       "] g": "editor::GoToDiagnostic",
       "g d": "editor::GoToDefinition",
       "g y": "editor::GoToTypeDefinition",
@@ -69,7 +69,7 @@
       "space x q": "diagnostics::Deploy",
 
       // ── Git ──
-      "space g h": "editor::ToggleGitBlame",
+      "space g h": "git::Blame",
 
       // ── Zen mode ──
       "space z": "workspace::ToggleCenteredLayout",
@@ -79,7 +79,7 @@
       "space v e": "zed::OpenSettings",
 
       // ── Clipboard ──
-      "[ c f": "editor::CopyPath"
+      "[ c f": "workspace::CopyPath"
     }
   },
 
@@ -96,10 +96,10 @@
   {
     "context": "ProjectPanel",
     "bindings": {
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown"
     }
   },
 
@@ -107,10 +107,10 @@
   {
     "context": "Terminal",
     "bindings": {
-      "ctrl-h": ["workspace::ActivatePaneInDirection", "Left"],
-      "ctrl-l": ["workspace::ActivatePaneInDirection", "Right"],
-      "ctrl-k": ["workspace::ActivatePaneInDirection", "Up"],
-      "ctrl-j": ["workspace::ActivatePaneInDirection", "Down"]
+      "ctrl-h": "workspace::ActivatePaneLeft",
+      "ctrl-l": "workspace::ActivatePaneRight",
+      "ctrl-k": "workspace::ActivatePaneUp",
+      "ctrl-j": "workspace::ActivatePaneDown"
     }
   }
 ]
