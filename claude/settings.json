@@ -12,7 +12,6 @@
       "Bash(pnpm publish*)"
     ]
   },
-  "model": "claude-opus-4-6[1m]",
   "hooks": {
     "PostToolUse": [
       {
@@ -41,6 +40,8 @@
     "playwright@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true
   },
+  "effortLevel": "xhigh",
   "skipDangerousModePermissionPrompt": true,
-  "editorMode": "vim"
+  "editorMode": "vim",
+  "tui": "fullscreen"
 }
