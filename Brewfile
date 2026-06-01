@@ -1,7 +1,7 @@
 # Core cask packages
 cask "arc"
 cask "bitwarden"
-cask "claude-code"
+cask "claude-code@latest"
 cask "cleanshot"
 cask "clop"
 cask "conductor"

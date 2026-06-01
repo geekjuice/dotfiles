@@ -7,6 +7,11 @@
 // custom settings, run `zed: open default settings` from the
 // command palette (cmd-shift-p / ctrl-shift-p)
 {
+  "preferred_line_length": 100,
+  "edit_predictions": {
+    "allow_data_collection": "no"
+  },
+  "disable_ai": false,
   "proxy": "",
   "agent": {
     "dock": "right",
@@ -59,6 +64,9 @@
       "type": "registry"
     },
     "cursor": {
+      "default_config_options": {
+        "model": "gpt-5.5[context=272k,reasoning=medium,fast=false]"
+      },
       "type": "registry"
     },
     "claude-acp": {
