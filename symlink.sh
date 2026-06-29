@@ -46,6 +46,7 @@ declare -A OUTPUTS=(
   ["claude/settings.json"]="$HOME/.claude/settings.json"
   ["claude/skills/pr"]="$HOME/.claude/skills/pr"
   ["claude/skills/review"]="$HOME/.claude/skills/review"
+  ["claude/skills/investifix"]="$HOME/.claude/skills/investifix"
 
   # configs
   ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
