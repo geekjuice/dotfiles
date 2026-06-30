@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, skeptic validators mid-flight, a consolidation panel that gates on a score), then implement the fix, simplify + de-slop it, commit, push, and open a PR. Invoke as `/investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (lightweight, few agents), `--score N` (gate threshold, default 95), `--here`/`--no-worktree` (work in the current worktree instead of creating a new one)."
+description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, skeptic validators mid-flight, a consolidation panel that gates on a score), then implement the fix, simplify + de-slop it, commit, push, and open a PR. Checkpoints every run to `.ignore/investigations/<slug>.md` (reviewed SHA + date + decision + PR), so recalls are cheap: unchanged → cached report; new commits → incremental re-investigation of just the delta; `--force` → fresh from scratch. Invoke as `/investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (lightweight, few agents), `--score N` (gate threshold, default 95), `--here`/`--no-worktree` (work in the current worktree instead of creating a new one), `--force`/`--fresh` (ignore any checkpoint and re-investigate from scratch)."
 ---
 
 # investifix — adversarial investigate-then-fix
@@ -17,9 +17,15 @@ Parse leading flags from the arguments before resolving the target:
 - `--quick` (alias `--light`) — lightweight mode: skip the multi-agent orchestration; one investigator + one skeptic, inline consolidation, single round. Phases 4–7 (fix → cleanup → PR) are unchanged. Use for small/obvious issues.
 - `--score N` — consolidation gate threshold as a percent (default `95`).
 - `--here` (alias `--no-worktree`) — implement the fix in the current worktree on the current branch; skip creating a new worktree in Phase 5. Everything else (investigation, cleanup, commit, push, PR) is unchanged.
+- `--force` (alias `--fresh`) — ignore any existing checkpoint and re-investigate from scratch, then overwrite the checkpoint. Use when the prior investigation was wrong or you want a clean pass.
 
-Default behavior (no flags): investigate to a >=95% score, then implement the fix (when one is
+Default behavior (no flags): resolve the checkpoint (§Phase 0.5) — cached, incremental, or full — then,
+when a full or incremental investigation runs, investigate to a >=95% score, implement the fix (when one is
 warranted), simplify + de-slop it, commit, push, and open a PR — no confirmation pause.
+
+You call `/investifix` often and forget you already ran it; a full adversarial investigation is expensive,
+so re-runs are cheap by design. That means the **first** investigation must be immaculate: verify hypotheses,
+report an honest score, and record the real decision — every later recall trusts the checkpoint.
 
 ---
 
@@ -30,8 +36,35 @@ warranted), simplify + de-slop it, commit, push, and open a PR — no confirmati
      `gh issue view <n> --json number,title,body,state,labels,assignees,url,comments`
      Capture the title, body, labels, and **all comments** — comments often hold the real repro and prior attempts.
    - If `gh` fails or there is no number (freeform input), treat `$ARGUMENTS` as the problem statement and say so. Do not block on a tracker.
-2. Write a scratch tracking file at `.omc/research/investifix-<target>.md` (create the dir if needed) seeded with the problem statement. Findings and the final report accumulate here.
-3. State the resolved target and the plan in one or two lines, then begin. Do not narrate further.
+2. Resolve the **slug** (used for both the scratch file and the durable checkpoint):
+   - GitHub issue → `issue-<number>` (e.g. `issue-108114`)
+   - Freeform → a short kebab title of the problem (e.g. `login-redirect-loop`)
+3. Write a scratch tracking file at `.omc/research/investifix-<slug>.md` (create the dir if needed) seeded with the problem statement. Findings accumulate here during the run; the durable, recall-checked report lands at `.ignore/investigations/<slug>.md` (§Phase 8).
+4. Capture the current HEAD SHA of the cwd (`git rev-parse HEAD`) — this is the state you're about to investigate and the dedup key for future recalls.
+5. State the resolved target and the plan in one or two lines, then begin. Do not narrate further.
+
+---
+
+## Phase 0.5 — Checkpoint recall (cheap re-runs)
+
+Before spending any agent time, decide whether this is really a new investigation. The checkpoint lives at `.ignore/investigations/<slug>.md`.
+
+1. **`--force` given** → **FULL** run. Skip the rest of Phase 0.5.
+2. **No checkpoint file** → **FULL** run (first time).
+3. **Checkpoint exists** — read its frontmatter (`sha`, `score`, `decision`, `pr`, `date`) and body. Also fetch cheap current signals: HEAD SHA (from Phase 0), and for a GitHub issue its `state` and any new comments (already pulled in Phase 0).
+   - **HEAD SHA == checkpoint `sha`** (repo unchanged since last investigation) → **CACHED**. Do not re-investigate. Print:
+     `> Cached investigation — unchanged since <date> (SHA <short-sha>), score <score>%, decision: <decision>[, PR <pr>]. Re-run with \`--force\` to investigate again.`
+     Then surface the stored report (and the PR link / issue state if present) and **stop**. Exceptions that mean "keep going instead of caching":
+     - the prior decision was `investigate-only` (from `--skip`) and this call has **no** `--skip` → the user now wants the fix: skip to Phase 4 using the cached root cause, no re-investigation.
+     - the prior decision was `under-threshold` → offer to continue; only re-investigate if the user asks (or `--force`).
+   - **HEAD SHA != checkpoint `sha`** and checkpoint `sha` is still an ancestor of HEAD (`git merge-base --is-ancestor <sha> HEAD`) → **INCREMENTAL**. Proceed to Phases 1–3 in incremental posture (below).
+   - **checkpoint `sha` unreachable** (rebase/force-push dropped it) → **FULL** run; note it in the report.
+
+**Incremental posture.** The delta since the checkpoint is `git diff <checkpoint_sha>..HEAD`. Before re-investigating:
+- If the delta plausibly **contains the fix** the prior report recommended (or the issue is now closed), verify quickly whether the root cause still reproduces. If it's resolved, report **resolved by <commits>**, refresh the checkpoint (decision `resolved`), and stop — don't re-run the full orchestration.
+- Otherwise re-investigate **scoped to the delta**: hand investigators the prior consolidated root cause + the delta diff, and ask them to (a) confirm the prior root cause still holds and (b) surface only *new* causes introduced by the delta. Reconcile with the prior report rather than re-deriving it from zero. Then continue to Phase 4.
+
+Announce the chosen path in one line (e.g. `Incremental: 2 new commits since 2026-07-01 checkpoint — re-checking root cause against the delta.`).
 
 ---
 
@@ -108,7 +141,9 @@ Write the consolidated report (root cause, key evidence for/against, score %, re
 
 ## Phase 4 — Decision
 
-- `--skip`, or the panel says **no code change is needed** → present the report and stop. Done.
+- `--skip` → present the report, **write the checkpoint** (§Phase 8, decision `investigate-only`), and stop.
+- The panel says **no code change is needed** → present the report, **write the checkpoint** (§Phase 8, decision `no-change-needed`), and stop.
+- The gate never reached threshold after 3 rounds → present the best finding, **write the checkpoint** (§Phase 8, decision `under-threshold`), and stop.
 - A code change **is** warranted → state the root cause, the proposed fix, and the files it will touch
   in one or two lines, then proceed straight to implementation. No confirmation pause.
 
@@ -148,12 +183,42 @@ Run both, scoped to the diff just produced:
    ```
 2. Push the branch: `git push -u origin HEAD`.
 3. Run the **`/pr`** skill to open the pull request (it handles draft mode, template, and `Relates to #<n>` from the branch name).
-4. Return the PR URL and a two-line summary: root cause + score, and what was changed.
+4. **Write the checkpoint** (§Phase 8, decision `fix-shipped`, with the PR URL).
+5. Return the PR URL and a two-line summary: root cause + score, and what was changed.
+
+---
+
+## Phase 8 — Write the checkpoint (always, except on the CACHED short-circuit)
+
+At whatever terminal point you reach (Phase 4 stop, a `resolved` incremental exit, or Phase 7 ship), persist the durable report so the next `/investifix <target>` is cheap.
+
+1. `mkdir -p .ignore/investigations` (and make sure `.ignore/` is git-ignored — add `.ignore/` to `.gitignore` or `.git/info/exclude` if it isn't already, so these artifacts never get committed).
+2. Write `.ignore/investigations/<slug>.md` (overwriting any prior checkpoint) with frontmatter + the consolidated report as the body:
+
+```markdown
+---
+target: "#108114"          # or "freeform: login-redirect-loop"
+slug: issue-108114
+sha: <full HEAD SHA that was investigated>   # the Phase 0 SHA — the dedup key
+score: 96                  # honest consolidation score
+decision: fix-shipped      # fix-shipped | no-change-needed | investigate-only | under-threshold | resolved
+pr: https://github.com/OWNER/REPO/pull/123   # present only when a PR was opened
+mode: full                 # full | incremental | quick
+date: 2026-07-06           # today's date
+---
+
+<the consolidated report: root cause, key evidence for/against, score %, recommended fix or
+"no code change needed", and — if shipped — what changed and the PR link>
+```
+
+`sha` must be the exact HEAD SHA you investigated (Phase 0) — it's what a future run compares against to pick CACHED vs INCREMENTAL. Use today's date for `date`. The checkpoint is written locally regardless of whether a PR was opened.
 
 ---
 
 ## Notes
 
+- **Cheap re-runs by design:** unchanged repo → cached report (no agents, no orchestration); new commits → incremental re-check of just the delta against the prior root cause; `--force` → fresh investigation. This is deliberate — the adversarial investigation is the expensive part and you re-run often.
+- Because later runs trust the checkpoint, the first investigation must be **thorough and honest**: verify hypotheses, refute the weak ones, and record the real score and decision so recalls don't churn.
 - Scale the agent count and validator depth to the issue: `--quick` is the floor (1 investigator + 1 skeptic); a normal bug needs ~3 investigators and single-vote validation; "audit this thoroughly" warrants the full 5 + 3-vote adversarial pass + a completeness check for missed modalities.
 - Investigation (Phases 1–3) is read-only and safe to re-run; nothing is mutated before Phase 5.
 - If the input is freeform (no tracker), Phase 7 still works — `/pr` derives references from the branch name, so name the branch with the issue number when there is one.

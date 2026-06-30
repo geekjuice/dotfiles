@@ -308,7 +308,7 @@ Naming:
 Tooling:
 - Always use existing project tools first. Check configs/dependencies before suggesting alternatives.
 - Package manager: use whatever the project uses (check lockfile). For new projects, prefer pnpm.
-- Linting: ESLint/Prettier if configured, otherwise Biome/oxlint/oxfmt.
+- Linting: ESLint/oxfmt if configured, otherwise Biome/oxlint/prettier.
 - Testing: Jest/Mocha if configured, otherwise vitest. Use React Testing Library for component tests.
 
 Git:
