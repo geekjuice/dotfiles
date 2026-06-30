@@ -16,65 +16,64 @@ resolve() {
   fi
 }
 
-declare -A OUTPUTS=(
+OUTPUTS=(
   # dotfiles
-  ["editorconfig"]=".editorconfig"
-  ["gitconfig"]=".gitconfig"
-  ["gitignore"]=".gitignore"
-  ["githooks"]=".githooks"
-  ["hammerspoon"]=".hammerspoon"
-  ["hushlogin"]=".hushlogin"
-  ["inputrc"]=".inputrc"
-  ["localssl"]=".localssl"
-  ["npmrc"]=".npmrc"
-  ["psqlrc"]=".psqlrc"
-  ["ripgreprc"]=".ripgreprc"
-  ["tmux.conf"]=".tmux.conf"
-  ["tmuxline.conf"]=".tmuxline.conf"
-  ["tool-versions"]=".tool-versions"
-  ["vim"]=".vim"
-  ["vimrc"]=".vimrc"
-  ["zshrc"]=".zshrc"
-  ["zimrc"]=".zimrc"
+  "hammerspoon" ".hammerspoon"
+  "editorconfig" ".editorconfig"
+  "gitconfig" ".gitconfig"
+  "gitignore" ".gitignore"
+  "githooks" ".githooks"
+  "hushlogin" ".hushlogin"
+  "inputrc" ".inputrc"
+  "localssl" ".localssl"
+  "npmrc" ".npmrc"
+  "psqlrc" ".psqlrc"
+  "ripgreprc" ".ripgreprc"
+  "tmux.conf" ".tmux.conf"
+  "tmuxline.conf" ".tmuxline.conf"
+  "tool-versions" ".tool-versions"
+  "vim" ".vim"
+  "vimrc" ".vimrc"
+  "zshrc" ".zshrc"
+  "zimrc" ".zimrc"
 
   # npm
-  ["default-npm-packages"]="$HOME/.default-npm-packages"
+  "default-npm-packages" "$HOME/.default-npm-packages"
 
   # claude
-  ["claude/CLAUDE.md"]="$HOME/.claude/CLAUDE.md"
-  ["claude/keybindings.json"]="$HOME/.claude/keybindings.json"
-  ["claude/settings.json"]="$HOME/.claude/settings.json"
-  ["claude/skills/pr"]="$HOME/.claude/skills/pr"
-  ["claude/skills/review"]="$HOME/.claude/skills/review"
-  ["claude/skills/investifix"]="$HOME/.claude/skills/investifix"
+  "claude/CLAUDE.md" "$HOME/.claude/CLAUDE.md"
+  "claude/keybindings.json" "$HOME/.claude/keybindings.json"
+  "claude/settings.json" "$HOME/.claude/settings.json"
 
   # configs
-  ["direnv.toml"]="$CONFIG_DIR/direnv/direnv.toml"
-  ["yazi"]="$CONFIG_DIR/yazi"
-  ["nvim"]="$CONFIG_DIR/nvim"
-  ["worktrunk.toml"]="$CONFIG_DIR/worktrunk/config.toml"
-  ["dex.toml"]="$CONFIG_DIR/dex/dex.toml"
-  ["mise-config.toml"]="$CONFIG_DIR/mise/config.toml"
+  "direnv.toml" "$CONFIG_DIR/direnv/direnv.toml"
+  "yazi" "$CONFIG_DIR/yazi"
+  "nvim" "$CONFIG_DIR/nvim"
+  "worktrunk.toml" "$CONFIG_DIR/worktrunk/config.toml"
+  "dex.toml" "$CONFIG_DIR/dex/dex.toml"
+  "mise-config.toml" "$CONFIG_DIR/mise/config.toml"
 
   # zed
-  ["zed/settings.json"]="$CONFIG_DIR/zed/settings.json"
-  ["zed/keymap.json"]="$CONFIG_DIR/zed/keymap.json"
+  "zed/settings.json" "$CONFIG_DIR/zed/settings.json"
+  "zed/keymap.json" "$CONFIG_DIR/zed/keymap.json"
 
   # settings
-  ["lazygit.yml"]="$MACOS_DIR/lazygit/config.yml"
-  ["ghostty"]="$MACOS_DIR/com.mitchellh.ghostty/config"
+  "lazygit.yml" "$MACOS_DIR/lazygit/config.yml"
+  "ghostty" "$MACOS_DIR/com.mitchellh.ghostty/config"
 
   # agents
-  ["agents"]="$HOME/.agents"
+  "agents" "$HOME/.agents"
+  "agents/skills" "$HOME/.claude/skills"
+  "agents/skills" "$HOME/.cursor/skills"
 
   # templates
-  ["tmuxp"]="$HOME/.tmuxp"
+  "tmuxp" "$HOME/.tmuxp"
 )
 
 echo "clearing previously cached..."
 rm -rf $TMP_DIR/*
 
-for INPUT OUTPUT in "${(@kv)OUTPUTS}"
+for INPUT OUTPUT in "${OUTPUTS[@]}"
 do
   SOURCE="$DOTFILES_DIR/$INPUT"
   DESTINATION=$(resolve "$OUTPUT")
