@@ -10,7 +10,7 @@ Review a branch's changes or a specific PR. Two modes:
 - **deep** (default) — multi-agent adversarial deep-dive. Independent review agents attack the diff through different lenses, verification agents confirm/refute each finding along the way, existing review comments on the PR are triaged, and a consolidation agent converges everything into one report.
 - **light** — fast single-pass review. No agent fan-out, no verification agents, no comment triage. Just a focused read of the diff.
 
-Every review is **checkpointed** to `.ignore/reviews/<slug>.md` with the reviewed SHA and date. Because you call `/review` often and a fresh deep review is expensive, re-runs are cheap by default: if nothing changed since the checkpoint you get the cached report back; if only some commits landed you get an **incremental** review of just the delta, reconciled against the prior findings. `--force` throws the checkpoint away and reviews from scratch.
+Every review is **checkpointed** to `.ignore/reviews/<slug>.md` with the reviewed SHA and date. Because you call `/review` often and a fresh deep review is expensive, re-runs are cheap by default: if nothing changed since the checkpoint you get the cached report back; if only some commits landed you get an **incremental** review of just the delta, reconciled against the prior findings. A cache hit still **always re-checks the PR for new comments** — if reviewers (human or bot) commented since the checkpoint, those are re-triaged and folded in even when the code is unchanged. `--force` throws the checkpoint away and reviews from scratch.
 
 > The first full review must be **immaculate and stable** — thorough enough that follow-ups only need to look at the delta. Do not cut corners on the initial pass; every later re-run trusts it.
 
@@ -21,6 +21,8 @@ Parse `args` for:
 - **Target** — a PR reference (`#107704`, `107704`, or a GitHub URL). If none, review the current branch.
 - **Mode** — `light` (or `--light`, `--quick`) selects light mode. Anything else (including no flag) is deep mode.
 - **`--force`** (or `--fresh`) — ignore any existing checkpoint and run a full review from scratch, then overwrite the checkpoint.
+- **`--reply`** — *automated reviewers only.* Post replies on the automated-reviewer threads (CodeRabbit, Lucille, etc.) triaged in §4. Never used on human comments, and never on your own initiative — this flag (or an explicit ask in the invocation) is required.
+- **`--resolve`** — *automated reviewers only.* Resolve the automated-reviewer threads that are addressed or triaged NOT_WORTH_ADDRESSING / ALREADY_HANDLED. Bot threads only; requires this flag (or an explicit ask). Combine with `--reply` to reply and then resolve.
 
 Examples:
 - `/review` → cached / incremental / full review of current branch (depending on checkpoint)
@@ -28,6 +30,7 @@ Examples:
 - `/review light` → light-mode review of current branch
 - `/review --force` → full deep review, ignoring any checkpoint
 - `/review light #107704 --force` → full light review of PR 107704, ignoring any checkpoint
+- `/review #107704 --reply --resolve` → deep review of PR 107704, then reply to and resolve the bot threads (CodeRabbit/Lucille); the report itself still stays in the terminal
 
 ---
 
@@ -48,10 +51,14 @@ Do this **first**, before spending any agent time.
 
 1. **`--force` given** → **FULL** review. Skip the rest of §0.
 2. **No checkpoint file exists** → **FULL** review (first time).
-3. **Checkpoint exists** — read its frontmatter (`sha`, `base`, `mode`, `date`):
-   - **Current head SHA == checkpoint `sha`** → **CACHED**. Nothing changed. Emit the stored report verbatim, prefixed with:
-     `> Cached review — unchanged since <date> (SHA <short-sha>). Re-run with \`--force\` for a fresh review.`
-     Then **stop**. No agents, no diffing beyond the SHA compare. This is the whole point — make the common case free.
+3. **Checkpoint exists** — read its frontmatter (`sha`, `base`, `mode`, `date`, `last_activity`):
+   - **Current head SHA == checkpoint `sha`** → the code is unchanged, but **PR activity may not be** — so always check the PR's current state before caching (never serve a stale report without first re-checking the latest PR):
+     - **Light mode, or no PR** → **CACHED**. Emit the stored report verbatim, prefixed with:
+       `> Cached review — unchanged since <date> (SHA <short-sha>). Re-run with \`--force\` for a fresh review.`
+       Then **stop**. No agents, no diffing beyond the SHA compare — the common-case free path.
+     - **Deep mode with a PR** → fetch the PR's current comments/threads (the §1 deep-mode queries) and compare against the checkpoint's `last_activity`:
+       - **No new comments** → **CACHED**, exactly as above.
+       - **New comments since the checkpoint** (any author — human or bot; new review comments, threads, or issue-level comments) → **COMMENT-DELTA**. The code didn't change, so skip the review agents (§3), but **re-triage the new/updated comments** (§4) and reconcile them into the stored report — a new comment may raise a real issue, resolve an open one, or change the verdict — then rewrite the checkpoint (§7, refreshing `last_activity`). Announce: `Cached code unchanged, but N new PR comment(s) since <date> — re-triaging comments only.` Do **not** re-review the unchanged code.
    - **Current head SHA != checkpoint `sha`** → **INCREMENTAL**, *if* the checkpoint `sha` is still reachable from the current head (verify: `git merge-base --is-ancestor <checkpoint_sha> HEAD` for a branch; for a PR, `gh api repos/{owner}/{repo}/compare/<checkpoint_sha>...<head_sha>` succeeding with `status` != `diverged`). Proceed to §1 in **incremental** posture.
    - **Checkpoint `sha` is unreachable** (force-push / rebase dropped the commit, or the compare diverged) → **FULL** review — the prior baseline no longer exists, so a clean pass is safer. Note this in the report changelog.
 
@@ -255,6 +262,10 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 - 1 HIGH or 3+ MEDIUM → **CONCERNS**
 - Otherwise → **APPROVE**
 
+### De-slop the prose before you emit it
+
+Do a quick cleanup pass over the report's wording before you show it (§6), store it (§7), or post it (§8), per the Voice rules in `~/.claude/CLAUDE.md`: cut wordiness and filler, break up em-dash and semicolon pileups, and warm up robotic, overly matter-of-fact phrasing. Keep every finding, severity, `file:line`, and verdict exactly as written. This pass touches tone and length, never facts.
+
 ---
 
 ## 7. Write the checkpoint (always, except on the CACHED short-circuit)
@@ -274,24 +285,32 @@ base_sha: <full base SHA>   # optional; helps detect base movement on re-run
 mode: deep                  # deep | light
 verdict: CONCERNS
 date: 2026-07-06            # today's date
+last_activity: 2026-07-06T14:22:00Z   # newest PR comment/review/thread timestamp triaged (deep + PR only); omit when there's no PR or no comments. A future cache hit compares against it to detect new comments on unchanged code.
 ---
 
 <the full report from §6>
 ```
 
-The `sha` is what a future run compares against to decide CACHED vs INCREMENTAL, so it must be the exact head SHA you reviewed. Use the current date for `date`.
+The `sha` is what a future run compares against to decide CACHED vs INCREMENTAL, so it must be the exact head SHA you reviewed. Use the current date for `date`. Set `last_activity` to the newest timestamp among the PR comments/reviews/threads you triaged — a future cache hit compares against it to catch new comments on unchanged code (omit it when there's no PR).
 
 ---
 
-## 8. Post results (conditional)
+## 8. Deliver results (terminal by default — never post to the issue/PR unprompted)
 
-- If a PR exists and the user confirms, post the report as a PR comment via `gh pr comment <number> --body "$(cat <<'EOF' … EOF)"`
-- Otherwise display the report in the terminal only
-- Posting to the PR is independent of the checkpoint — the checkpoint (§7) is always written locally regardless.
+**Hard default: display the report in the terminal only.** Do **not** post the review as an issue/PR comment, and do **not** offer, suggest, or ask whether to post it. The checkpoint (§7) is written locally regardless — that is the only thing this skill writes by default. Post the report to the PR **only** when the user explicitly asks for it in this invocation (e.g. "post this to the PR"); then use `gh pr comment <number> --body "$(cat <<'EOF' … EOF)"`.
+
+**Exception — automated reviewers (CodeRabbit, Lucille, etc.).** Replying to and resolving *automated-reviewer* threads is allowed, but still gated on the `--reply` / `--resolve` flags or an explicit ask — never done on your own initiative, and never on human comments:
+- `--reply` (or the user asking) → post replies on the automated-reviewer threads triaged in §4 (answer the bot, note what was addressed or why it's being skipped). Bot threads only.
+- `--resolve` (or the user asking) → resolve the automated-reviewer threads that are addressed or triaged NOT_WORTH_ADDRESSING / ALREADY_HANDLED, via the GraphQL `resolveReviewThread` mutation (thread node IDs come from the §1 `reviewThreads` query). Bot threads only.
+- With neither flag nor an explicit ask, leave every thread untouched — triage them in the report (§4) and stop there.
+
+Posting/replying/resolving is independent of the checkpoint — the checkpoint (§7) is always written locally regardless.
 
 ## Notes
 
 - Read-only on the codebase — this skill never modifies source, only reports findings. The one thing it writes is the checkpoint under `.ignore/reviews/`.
-- **Cheap re-runs by design:** unchanged → cached report (no agents); a few new commits → incremental review of just the delta; `--force` → full fresh review. This is deliberate — a full deep review is expensive and you re-run often.
+- **Never post to the issue/PR unprompted, and never suggest it.** The report stays in the terminal by default (§8). Post it as an issue/PR comment only when the user explicitly asks in this invocation. The sole exception is *automated-reviewer* threads (CodeRabbit, Lucille, etc.): with `--reply` / `--resolve` (or an explicit ask) you may reply to and resolve those bot threads — never human comments, and never on your own initiative.
+- **Cheap re-runs by design:** unchanged code + no new comments → cached report (no agents); unchanged code + new PR comments → comment-only re-triage; a few new commits → incremental review of just the delta; `--force` → full fresh review. A cache hit never skips the new-comment check — the latest PR state is always consulted. This is deliberate — a full deep review is expensive and you re-run often.
 - Because later runs trust the checkpoint, the first full review must be **thorough and stable**: verify findings, drop the plausible-but-wrong ones, and don't leave nits that will re-surface as churn.
 - Use **light** for small/quick changes; **deep** for anything risky, large, or security/architecture-touching.
+- **Human, concise prose:** before emitting, storing, or posting the report, de-slop its wording per the Voice rules in `~/.claude/CLAUDE.md`. Trim filler, avoid em-dash and semicolon pileups, keep the tone plainspoken. Facts, findings, and verdicts stay exact.

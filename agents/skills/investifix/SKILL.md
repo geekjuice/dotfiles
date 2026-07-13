@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, skeptic validators mid-flight, a consolidation panel that gates on a score), then implement the fix, simplify + de-slop it, commit, push, and open a PR. Checkpoints every run to `.ignore/investigations/<slug>.md` (reviewed SHA + date + decision + PR), so recalls are cheap: unchanged → cached report; new commits → incremental re-investigation of just the delta; `--force` → fresh from scratch. Invoke as `/investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (lightweight, few agents), `--score N` (gate threshold, default 95), `--here`/`--no-worktree` (work in the current worktree instead of creating a new one), `--force`/`--fresh` (ignore any checkpoint and re-investigate from scratch)."
+description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, skeptic validators mid-flight, a consolidation panel that gates on a score), then implement the fix, simplify + de-slop it, commit, push, and open a PR. Checkpoints every run to `.ignore/investigations/<slug>.md` (reviewed SHA + date + decision + PR), so recalls are cheap: unchanged → cached report; new commits → incremental re-investigation of just the delta; `--force` → fresh from scratch. Invoke as `/investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (lightweight, few agents), `--score N` (gate threshold, default 95), `--here`/`--no-worktree` (work in the current worktree instead of creating a new one), `--force`/`--fresh` (ignore any checkpoint and re-investigate from scratch), `--reply`/`--resolve` (reply to / resolve automated-reviewer threads on the PR this skill opens — bots like CodeRabbit/Lucille only, never the issue or human comments). By default this skill never posts a comment on the issue or PR and never suggests it."
 ---
 
 # investifix — adversarial investigate-then-fix
@@ -18,6 +18,8 @@ Parse leading flags from the arguments before resolving the target:
 - `--score N` — consolidation gate threshold as a percent (default `95`).
 - `--here` (alias `--no-worktree`) — implement the fix in the current worktree on the current branch; skip creating a new worktree in Phase 5. Everything else (investigation, cleanup, commit, push, PR) is unchanged.
 - `--force` (alias `--fresh`) — ignore any existing checkpoint and re-investigate from scratch, then overwrite the checkpoint. Use when the prior investigation was wrong or you want a clean pass.
+- `--reply` — *automated reviewers only.* Post replies on the automated-reviewer threads (CodeRabbit, Lucille, etc.) on the PR this skill opens. Never applies to the issue, and never to human comments. Without this flag (or an explicit ask), reply to nothing.
+- `--resolve` — *automated reviewers only.* Resolve the automated-reviewer threads on the opened PR once they're addressed. Bot threads only. Without this flag (or an explicit ask), resolve nothing.
 
 Default behavior (no flags): resolve the checkpoint (§Phase 0.5) — cached, incremental, or full — then,
 when a full or incremental investigation runs, investigate to a >=95% score, implement the fix (when one is
@@ -25,7 +27,9 @@ warranted), simplify + de-slop it, commit, push, and open a PR — no confirmati
 
 You call `/investifix` often and forget you already ran it; a full adversarial investigation is expensive,
 so re-runs are cheap by design. That means the **first** investigation must be immaculate: verify hypotheses,
-report an honest score, and record the real decision — every later recall trusts the checkpoint.
+report an honest score, and record the real decision — every later recall trusts the checkpoint. A recall still
+**always re-checks the issue's latest state** — new comments (human or bot) and a closed/reopened state are
+reconsidered even when the code hasn't changed.
 
 ---
 
@@ -51,10 +55,12 @@ Before spending any agent time, decide whether this is really a new investigatio
 
 1. **`--force` given** → **FULL** run. Skip the rest of Phase 0.5.
 2. **No checkpoint file** → **FULL** run (first time).
-3. **Checkpoint exists** — read its frontmatter (`sha`, `score`, `decision`, `pr`, `date`) and body. Also fetch cheap current signals: HEAD SHA (from Phase 0), and for a GitHub issue its `state` and any new comments (already pulled in Phase 0).
+3. **Checkpoint exists** — read its frontmatter (`sha`, `score`, `decision`, `pr`, `date`, `last_comment_at`) and body. Also fetch cheap current signals: HEAD SHA (from Phase 0), and for a GitHub issue its `state` and any new comments (already pulled in Phase 0).
    - **HEAD SHA == checkpoint `sha`** (repo unchanged since last investigation) → **CACHED**. Do not re-investigate. Print:
      `> Cached investigation — unchanged since <date> (SHA <short-sha>), score <score>%, decision: <decision>[, PR <pr>]. Re-run with \`--force\` to investigate again.`
-     Then surface the stored report (and the PR link / issue state if present) and **stop**. Exceptions that mean "keep going instead of caching":
+     Before surfacing the cached report, **always re-check the issue's latest state** (Phase 0 already pulled its current `state` and **all** comments): compare the comments against the checkpoint's `last_comment_at`, and the issue `state` against what the report assumed. Then surface the stored report (and the PR link / issue state if present) and **stop** — *unless* one of these "keep going instead of caching" exceptions fires:
+     - **new issue comments since the checkpoint** (any author — human or bot) → do **not** silently cache. A new comment may carry a fresh repro, a correction, or a human decision that changes the root cause or whether a fix is warranted. Read the new comments; if they materially affect the finding, reconsider — a **scoped** re-consolidation over the prior root cause + the new comments (escalate to a full re-investigation only if they overturn it) — then refresh the report and checkpoint (§Phase 8, updating `last_comment_at`). If they change nothing, note that and fall through to the cached report.
+     - **the issue is now closed / resolved** → verify the root cause no longer applies, report `resolved`, refresh the checkpoint (decision `resolved`), and stop.
      - the prior decision was `investigate-only` (from `--skip`) and this call has **no** `--skip` → the user now wants the fix: skip to Phase 4 using the cached root cause, no re-investigation.
      - the prior decision was `under-threshold` → offer to continue; only re-investigate if the user asks (or `--force`).
    - **HEAD SHA != checkpoint `sha`** and checkpoint `sha` is still an ancestor of HEAD (`git merge-base --is-ancestor <sha> HEAD`) → **INCREMENTAL**. Proceed to Phases 1–3 in incremental posture (below).
@@ -135,7 +141,10 @@ Never inflate the score to pass the gate — report the real number.
 > Loop the whole block while `score < threshold && round < 3`, feeding the panel's named gaps back in as the next round's hypotheses.
 
 Write the consolidated report (root cause, key evidence for/against, score %, recommended fix or
-"no code change needed") to the scratch file and show a tight summary to the user.
+"no code change needed") to the scratch file and show a tight summary to the user. Keep the report
+and summary human and concise: de-slop the prose per the Voice rules in `~/.claude/CLAUDE.md` (cut
+wordiness and filler, avoid em-dash and semicolon pileups, warm up robotic phrasing) without changing
+any finding, score, or file reference.
 
 ---
 
@@ -172,6 +181,8 @@ Run both, scoped to the diff just produced:
 
 ## Phase 7 — Ship
 
+Any human-facing text you write in this phase (the commit message, the PR body, the final summary) gets a quick de-slop pass first, per the Voice rules in `~/.claude/CLAUDE.md`: concise, human, no em-dash or semicolon pileups, no filler. Keep the facts exact.
+
 1. Commit atomically. Conventional commit, reference the issue, and add specific files by name —
    never `git add .`/`-A`, never commit secrets or `.env`:
    ```
@@ -205,21 +216,24 @@ decision: fix-shipped      # fix-shipped | no-change-needed | investigate-only |
 pr: https://github.com/OWNER/REPO/pull/123   # present only when a PR was opened
 mode: full                 # full | incremental | quick
 date: 2026-07-06           # today's date
+last_comment_at: 2026-07-06T14:22:00Z   # newest issue-comment timestamp seen (GitHub issue only); omit for freeform. A future cache hit compares against it to detect new comments on unchanged code.
 ---
 
 <the consolidated report: root cause, key evidence for/against, score %, recommended fix or
 "no code change needed", and — if shipped — what changed and the PR link>
 ```
 
-`sha` must be the exact HEAD SHA you investigated (Phase 0) — it's what a future run compares against to pick CACHED vs INCREMENTAL. Use today's date for `date`. The checkpoint is written locally regardless of whether a PR was opened.
+`sha` must be the exact HEAD SHA you investigated (Phase 0) — it's what a future run compares against to pick CACHED vs INCREMENTAL. Use today's date for `date`. Set `last_comment_at` to the newest issue-comment timestamp you saw, so a future cache hit can detect new comments even when the code is unchanged (omit for freeform issues with no tracker). The checkpoint is written locally regardless of whether a PR was opened.
 
 ---
 
 ## Notes
 
-- **Cheap re-runs by design:** unchanged repo → cached report (no agents, no orchestration); new commits → incremental re-check of just the delta against the prior root cause; `--force` → fresh investigation. This is deliberate — the adversarial investigation is the expensive part and you re-run often.
+- **Cheap re-runs by design:** unchanged repo + no new issue comments → cached report (no agents, no orchestration); new issue comments on an unchanged repo → reconsider just those comments against the prior root cause; new commits → incremental re-check of just the delta; `--force` → fresh investigation. A cache hit always re-checks the issue's latest state (new comments, closed/reopened) first — it never blindly serves a stale report. This is deliberate — the adversarial investigation is the expensive part and you re-run often.
 - Because later runs trust the checkpoint, the first investigation must be **thorough and honest**: verify hypotheses, refute the weak ones, and record the real score and decision so recalls don't churn.
 - Scale the agent count and validator depth to the issue: `--quick` is the floor (1 investigator + 1 skeptic); a normal bug needs ~3 investigators and single-vote validation; "audit this thoroughly" warrants the full 5 + 3-vote adversarial pass + a completeness check for missed modalities.
+- **Never comment on the issue or PR unprompted, and never suggest it.** This skill opens a PR (its whole purpose) and writes the local checkpoint, but it does **not** post the investigation report — or any other comment — on the GitHub issue or PR, and it never offers or asks to. Post an issue/PR comment only when the user explicitly asks in this invocation. The sole exception is *automated-reviewer* threads (CodeRabbit, Lucille, etc.) on the PR you opened: with `--reply` / `--resolve` (or an explicit ask) you may reply to and resolve those bot threads — never human comments, never the issue itself, and never on your own initiative.
 - Investigation (Phases 1–3) is read-only and safe to re-run; nothing is mutated before Phase 5.
 - If the input is freeform (no tracker), Phase 7 still works — `/pr` derives references from the branch name, so name the branch with the issue number when there is one.
 - Report the score honestly. A truthful 88% with a named evidence gap is more useful than a padded 96%.
+- **Human, concise prose:** de-slop everything you write for a person (report, summary, commit message, PR body, posted comments) per the Voice rules in `~/.claude/CLAUDE.md`. Trim filler, avoid em-dash and semicolon pileups, keep it plainspoken. This is separate from the code de-slop in Phase 6, and it never changes the facts.

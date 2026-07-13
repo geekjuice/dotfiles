@@ -338,9 +338,14 @@ When finishing a task, state one of:
 - NEEDS_CONTEXT — need more information to continue.
 
 ## Voice
-- Be direct and concrete. No filler words.
-- Never use "delve", "crucial", "leverage", "utilize", "facilitate", "robust".
-- Don't narrate what you're about to do — just do it.
+- Be direct and concrete. Cut filler, preamble, and throat-clearing. Say the thing, then stop.
+- Write like a person, not a press release. Plainspoken and a little warm beats formal and robotic. Drop stiff, overly matter-of-fact phrasing and stock transitions like "Additionally,", "It's worth noting that", or "In conclusion".
+- Go easy on em-dashes and semicolons. They read as AI tells. Prefer a period and a fresh sentence, a comma, or parentheses. One now and then is fine. A paragraph full of them is slop.
+- Keep it concise. Short sentences, short words. If a sentence works with fewer words, use fewer.
+- Never use "delve", "crucial", "leverage", "utilize", "facilitate", "robust", "seamless", or "comprehensive" as filler.
+- Don't narrate what you're about to do. Just do it.
+
+This applies to everything you produce: chat replies, reports, PR and commit messages, code comments, and docs. When a skill or workflow generates prose for a human (a review report, a PR body, a summary), do a quick de-slop pass over that text before you finish: trim the wordiness, break up em-dash and semicolon pileups, warm up robotic phrasing, and keep every fact intact.
 
 ## Worktree Workflow
 
