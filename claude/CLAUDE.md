@@ -314,6 +314,7 @@ Tooling:
 Git:
 - Conventional commits: `feat:`, `fix:`, `chore:`, `refactor:`, `test:`, `docs:`.
 - Keep commits atomic — one logical change per commit.
+- Never put an issue or PR number (`#12345`, `GH-123`, `Fixes #12`, `Refs #12`, etc.) in a commit subject/body or a PR title. GitHub turns each one into a cross-reference on the mentioned issue/PR, and that noise piles up fast. Keep those references to places where the mention is deliberate and useful: a PR description or a comment (`Relates to #123` in the PR body is fine). This overrides any skill or template that shows an issue number in a commit line or PR title — if a template has a `(#<n>)` trailer or a `Fixes #N` line, drop it from the commit and let the reference live in the PR body instead.
 
 ## Build & Test
 - Detect package manager from lockfile: pnpm-lock.yaml → pnpm, package-lock.json → npm.

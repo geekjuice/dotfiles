@@ -41,7 +41,8 @@
     "lua-lsp@claude-plugins-official": true
   },
   "effortLevel": "xhigh",
+  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "tui": "fullscreen"
+  "agentPushNotifEnabled": true
 }

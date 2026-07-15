@@ -33,19 +33,19 @@ Parse `$ARGUMENTS` into exactly one **source** and any number of **modifier flag
 - `--file <path>` / `--branch <name>` / `--text` — force FILE, GITREF, or literal TEXT, overriding the §2 table. `--file`/`--branch` take their own argument (the path/ref to force); `--text` takes none — it reinterprets the positional token(s) already in `$ARGUMENTS` as literal content to summarize verbatim. Use `--file` when a name is both a path and a git ref (GITREF wins by default); use `--text` when a word doubles as a SHA or filename. Precedence when more than one override is given: `--text` > `--file` > `--branch`; the highest-precedence override wins and the rest (with their arguments) are ignored. "Beats a positional token" applies only to `--file`/`--branch`, which override what the positional would otherwise resolve to — `--text` consumes the positional as its own content instead of discarding it, so `--text` with no positional token means nothing to summarize: stop. `--file`/`--branch` require a non-empty argument that runs to the next recognized flag or end of input (like `--focus`); treat an empty one as if the flag were absent. `--pr N` / `--issue N` (§2 rule 3) name a PR or issue explicitly.
 
 Examples:
-- `/summarize` → summarize the current session (TL;DR + detailed).
-- `/summarize #4821` → summarize PR or issue 4821 (resolved deterministically below).
-- `/summarize --simple` → one plain-language paragraph on where this session stands.
-- `/summarize #4821 --verbose --bullet` → detailed-only, as bullets, for 4821.
-- `/summarize HEAD~5..HEAD --changelog` → release-note bullets for the last 5 commits.
-- `/summarize src/auth/session.ts --focus "how is this called"` → file summary weighted to call sites.
-- `/summarize https://example.com/post --simple --copy` → ELI5 of the page, copied to clipboard.
+- `/nick:summarize` → summarize the current session (TL;DR + detailed).
+- `/nick:summarize #4821` → summarize PR or issue 4821 (resolved deterministically below).
+- `/nick:summarize --simple` → one plain-language paragraph on where this session stands.
+- `/nick:summarize #4821 --verbose --bullet` → detailed-only, as bullets, for 4821.
+- `/nick:summarize HEAD~5..HEAD --changelog` → release-note bullets for the last 5 commits.
+- `/nick:summarize src/auth/session.ts --focus "how is this called"` → file summary weighted to call sites.
+- `/nick:summarize https://example.com/post --simple --copy` → ELI5 of the page, copied to clipboard.
 
 ---
 
 ## 2. Resolve the source (deterministic)
 
-Walk this precedence table **top to bottom** and take the **first** match. The precedence order is fixed, so given the same repository/remote state, the same argument resolves the same way. Match keyword/token rules against the **whole trimmed argument**, not a substring — `session`/`this`/`chat`/`conversation` route to SESSION only when they *are* the entire argument, so `/summarize This design doc…` is TEXT, not the session. A `--file`/`--branch`/`--text` override (§1) short-circuits the table.
+Walk this precedence table **top to bottom** and take the **first** match. The precedence order is fixed, so given the same repository/remote state, the same argument resolves the same way. Match keyword/token rules against the **whole trimmed argument**, not a substring — `session`/`this`/`chat`/`conversation` route to SESSION only when they *are* the entire argument, so `/nick:summarize This design doc…` is TEXT, not the session. A `--file`/`--branch`/`--text` override (§1) short-circuits the table.
 
 1. **Explicit session** — the argument is exactly `session`, `this`, `chat`, or `conversation`, or **nothing was given** → **SESSION**.
 2. **GitHub URL** (host is `github.com` or a configured Enterprise host; otherwise → rule 7 WEB) — `/pull/` → **PR**; `/issues/` → **ISSUE**; `/commit/<sha>` or `/compare/<range>` → **GITREF**; `/blob/<ref>/<path>` → **FILE** (at `<ref>`); `/tree/<ref>/<path>` → **DIR** (at `<ref>`). The URL carries its own `owner/repo` — §3 gathers against it, never cwd. Parse by structure: strip any `?query`/`#fragment` first, then split the path, so `<path>`/`<ref>` never absorb query text. For a percent-encoded component, decode → validate → re-encode in that order before it reaches a `gh api` call (§3).
@@ -58,7 +58,7 @@ Walk this precedence table **top to bottom** and take the **first** match. The p
 
 **Name collisions.** When a name is both a valid ref and an existing path, GITREF (rule 5) wins; pass `--file <path>` to force the file. Note the shadowed interpretation in the announce line.
 
-**Fail loud, never silently.** A **single-token** argument (no internal whitespace) that "looks like" a path or ref — contains a `/`, starts with `./` or `~/`, ends in a recognizable code/doc extension (`.ts`, `.py`, `.md`, etc.), or is a bare 7–40-char hex SHA — must resolve or the run stops with `no such file/ref/number: <x>`; don't fall through to TEXT and "summarize" the literal string. A multi-word argument, or anything else that doesn't match rules 1-7, is TEXT (rule 8), not a failed lookup — so `/summarize The CI/CD pipeline broke` stays prose. Announce the resolved source in one line before gathering (e.g. `Summarizing PR #4821.`).
+**Fail loud, never silently.** A **single-token** argument (no internal whitespace) that "looks like" a path or ref — contains a `/`, starts with `./` or `~/`, ends in a recognizable code/doc extension (`.ts`, `.py`, `.md`, etc.), or is a bare 7–40-char hex SHA — must resolve or the run stops with `no such file/ref/number: <x>`; don't fall through to TEXT and "summarize" the literal string. A multi-word argument, or anything else that doesn't match rules 1-7, is TEXT (rule 8), not a failed lookup — so `/nick:summarize The CI/CD pipeline broke` stays prose. Announce the resolved source in one line before gathering (e.g. `Summarizing PR #4821.`).
 
 **Shell safety.** This gates every token parsed from `$ARGUMENTS` and dispatched to a command: a ref / SHA / range / number for `git rev-parse` / `git diff` / `git show` / `git log` / `git merge-base`, and the `owner` / `repo` / `path` / `ref` segments parsed from a GitHub URL for `gh …` / `gh api`. Validate each token once at extraction, regardless of which command later consumes it (including the `git show <ref>:<path>` local fallback). TEXT content never reaches a command and is exempt. Two rules:
 - **Never string-format a raw token into a command.** Pass each as a standalone argv argument. Guard against *option* injection too: place user tokens after a `--` (or `--end-of-options`) marker, and reject any token beginning with `-` — git and gh read a leading-hyphen ref like `--output=<path>` as their own flag no matter how it's quoted (an arbitrary-write primitive).
@@ -147,7 +147,7 @@ Match the source's own terms (function, file, feature names) rather than paraphr
 
 ## Notes
 
-- **Deliberately lightweight.** Unlike `/review` and `/investifix`, this skill doesn't checkpoint or run adversarial panels — a summary is cheap to regenerate and the source (a session, an open PR) changes constantly, so caching would mostly serve stale text. Determinism comes from the fixed source-resolution order (§2) and the fixed output skeleton (§4), not a stored artifact.
+- **Deliberately lightweight.** Unlike `/nick:review` and `/nick:investifix`, this skill doesn't checkpoint or run adversarial panels — a summary is cheap to regenerate and the source (a session, an open PR) changes constantly, so caching would mostly serve stale text. Determinism comes from the fixed source-resolution order (§2) and the fixed output skeleton (§4), not a stored artifact.
 - **Scale to the source, not the ceremony.** Never spend more agents than the size demands — §3 sets the threshold for when to map-reduce.
-- **`/summarize` with no arguments = "where are we?"** — the session recap is the default and the most-used mode. Make it genuinely useful: what was decided, what's done, what's next.
+- **`/nick:summarize` with no arguments = "where are we?"** — the session recap is the default and the most-used mode. Make it genuinely useful: what was decided, what's done, what's next.
 - **Honesty beats completeness.** A short summary that admits "the diff doesn't say why" beats a padded one that guesses. Report what the source supports.

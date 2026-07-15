@@ -10,7 +10,7 @@ Review a branch's changes or a specific PR. Two modes:
 - **deep** (default) — multi-agent adversarial deep-dive. Independent agents attack the diff through different lenses, verification agents confirm/refute each finding along the way, existing PR comments are triaged, and a consolidation agent converges everything into one report.
 - **light** — fast single-pass read of the diff. No fan-out, no verification agents, no comment triage.
 
-Every review is **checkpointed** to `.ignore/reviews/<slug>.md` with the reviewed SHA and date. You call `/review` often and a fresh deep review is expensive, so re-runs are cheap by design — §0 has the full path table. In **deep mode on a PR**, a cache hit re-checks the PR for new comments before serving, so a stale report is never served blind. (Light mode and no-PR targets have no comments to re-check and cache directly.)
+Every review is **checkpointed** to `.ignore/reviews/<slug>.md` with the reviewed SHA and date. You call `/nick:review` often and a fresh deep review is expensive, so re-runs are cheap by design — §0 has the full path table. In **deep mode on a PR**, a cache hit re-checks the PR for new comments before serving, so a stale report is never served blind. (Light mode and no-PR targets have no comments to re-check and cache directly.)
 
 > The first full review must be **immaculate and stable** — thorough enough that follow-ups only touch the delta. Every later re-run trusts it, so don't cut corners on the initial pass.
 
@@ -25,11 +25,11 @@ Parse `args` for:
 - **`--reply`** / **`--resolve`** — *automated reviewers only.* Reply to / resolve the bot threads (CodeRabbit, Lucille, etc.) triaged in §4. Never on human comments, never on your own initiative — the flag (or an explicit ask) is required. Combine to reply then resolve.
 
 Examples:
-- `/review` → cached / incremental / full review of the current branch (per checkpoint)
-- `/review #107704` → same, for PR 107704
-- `/review light` → light-mode review of the current branch
-- `/review --force` → full deep review, ignoring any checkpoint
-- `/review #107704 --reply --resolve` → deep review, then reply to and resolve the bot threads; the report still stays in the terminal
+- `/nick:review` → cached / incremental / full review of the current branch (per checkpoint)
+- `/nick:review #107704` → same, for PR 107704
+- `/nick:review light` → light-mode review of the current branch
+- `/nick:review --force` → full deep review, ignoring any checkpoint
+- `/nick:review #107704 --reply --resolve` → deep review, then reply to and resolve the bot threads; the report still stays in the terminal
 
 ---
 
@@ -254,7 +254,7 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 
 ## 7. Write the checkpoint (always, except a pure CACHED serve — which at most rewrites `last_activity`)
 
-After producing the report — FULL and INCREMENTAL, deep and light — persist it so the next `/review` is cheap.
+After producing the report — FULL and INCREMENTAL, deep and light — persist it so the next `/nick:review` is cheap.
 
 1. `mkdir -p .ignore/reviews`, and make sure `.ignore/` is git-ignored (add to `.gitignore` or `.git/info/exclude` if not) so review artifacts never get committed.
 2. Write `.ignore/reviews/<slug>.md` (overwriting any prior checkpoint) with frontmatter + the full §6 report as the body:
