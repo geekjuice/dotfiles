@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, mid-flight skeptic validators, a consolidation panel that gates on a score), implement the fix, simplify + de-slop it, then self-review the diff with a fresh adversarial panel — below the review gate (default 90%) an ultra ralph loop iterates the fix until it passes — then commit, push, and open a PR. Checkpoints each run to `.ignore/investigations/<slug>.md` so re-runs are cheap: unchanged → cached report; new commits → incremental re-investigation of the delta; `--force` → fresh. Invoke as `/investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (few agents), `--score N` (investigation gate, default 95), `--review-score N` (self-review gate, default 90), `--here`/`--no-worktree` (current worktree), `--force`/`--fresh` (ignore checkpoint), `--reply`/`--resolve` (automated-reviewer threads on the opened PR only — CodeRabbit/Lucille, never the issue or humans). Never comments on the issue or PR unless explicitly asked."
+description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, mid-flight skeptic validators, a consolidation panel that gates on a score), implement the fix, simplify + de-slop it, then self-review the diff with a fresh adversarial panel — below the review gate (default 90%) an ultra ralph loop iterates the fix until it passes — then commit, push, and open a PR. Checkpoints each run to `.ignore/investigations/<slug>.md` so re-runs are cheap: unchanged → cached report; new commits → incremental re-investigation of the delta; `--force` → fresh. Invoke as `/nick:investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (few agents), `--score N` (investigation gate, default 95), `--review-score N` (self-review gate, default 90), `--here`/`--no-worktree` (current worktree), `--force`/`--fresh` (ignore checkpoint), `--reply` (alias `--resolve`) — reply to **and** resolve automated-reviewer threads on the opened PR only (CodeRabbit/Lucille, never the issue or humans). Never comments on the issue or PR unless explicitly asked."
 ---
 
 # investifix — adversarial investigate-then-fix
@@ -16,11 +16,11 @@ Take an issue, drive it to a high-score root cause with adversarial multi-agent 
 - `--review-score N` — implementation self-review gate percent (default `90`). The fresh reviewer panel in §Phase 6.5 must reach this before the fix ships.
 - `--here` (alias `--no-worktree`) — implement on the current branch/worktree; skip the Phase 5 worktree.
 - `--force` (alias `--fresh`) — ignore any checkpoint and re-investigate from scratch, then overwrite it.
-- `--reply` / `--resolve` — *automated reviewers only.* Reply to / resolve the bot threads (CodeRabbit, Lucille, etc.) on the PR this skill opens. Never the issue, never human comments, never on your own initiative.
+- `--reply` (alias `--resolve`) — *automated reviewers only.* Reply to **and** resolve the bot threads (CodeRabbit, Lucille, etc.) on the PR this skill opens. Reply and resolve always go together, so one flag does both. Never the issue, never human comments, never on your own initiative.
 
 **Default (no flags):** resolve the checkpoint first (§Phase 0.5); when a full/incremental investigation runs, execute the pipeline above through to a shipped PR — no confirmation pause.
 
-You call `/investifix` often and forget you already ran it. A full adversarial investigation is expensive, so re-runs are cheap by design — which means the **first** investigation must be immaculate: verify hypotheses, refute the weak ones, report an honest score, and record the real decision. Every later recall trusts the checkpoint, but still **re-checks the issue's latest state** first (new comments, closed/reopened).
+You call `/nick:investifix` often and forget you already ran it. A full adversarial investigation is expensive, so re-runs are cheap by design — which means the **first** investigation must be immaculate: verify hypotheses, refute the weak ones, report an honest score, and record the real decision. Every later recall trusts the checkpoint, but still **re-checks the issue's latest state** first (new comments, closed/reopened).
 
 > **Prose for humans** (reports, summaries, commit/PR text) gets a de-slop pass per the Voice rules in `~/.claude/CLAUDE.md`: trim filler, break up em-dash/semicolon pileups, warm up robotic phrasing. Never change a fact, score, or `file:line`. (Separate from the Phase 6 code de-slop.)
 
@@ -45,7 +45,7 @@ You call `/investifix` often and forget you already ran it. A full adversarial i
 
 Before spending agent time, decide whether this is really a new investigation. The checkpoint lives at `<ROOT>/.ignore/investigations/<slug>.md` (the Phase 0 absolute `ROOT`).
 
-**Bot-thread path first** — before the `--force` short-circuit, since it's independent of caching and this is the only place it's reachable: if `--reply`/`--resolve` (or an explicit ask) is set **and** a checkpoint with a `pr:` exists, run the bot-thread reply/resolve step (see Notes) against that PR's live threads. Then fall through to the recall decision below (which `--force` may still send to FULL).
+**Bot-thread path first** — before the `--force` short-circuit, since it's independent of caching and this is the only place it's reachable: if `--reply` (alias `--resolve`, or an explicit ask) is set **and** a checkpoint with a `pr:` exists, run the bot-thread reply/resolve step (see Notes) against that PR's live threads. Then fall through to the recall decision below (which `--force` may still send to FULL).
 
 1. **`--force`** → **FULL** run; skip the rest.
 2. **No checkpoint** → **FULL** run (first time).
@@ -176,7 +176,7 @@ The first implementation iteration (Phases 5–6) produced a candidate fix that 
 3. Re-verify (`oh-my-claudecode:verifier`) — must be green before re-review.
 4. Re-review with a **new** fresh panel (step 1) and re-score.
 
-Bound to **5 iterations**. If it plateaus below threshold, **stop and report honestly** — don't inflate, don't ship — and **write the checkpoint (§Phase 8, decision `review-under-threshold`)** recording the best `review_score` and the remaining blocking findings in the body, so a later `/investifix` recall (Phase 0.5) resumes this fix loop instead of re-investigating from scratch. Announce each iteration in one line (e.g. `Self-review 82% (<90) — fix round 2/5: 3 blocking findings.`).
+Bound to **5 iterations**. If it plateaus below threshold, **stop and report honestly** — don't inflate, don't ship — and **write the checkpoint (§Phase 8, decision `review-under-threshold`)** recording the best `review_score` and the remaining blocking findings in the body, so a later `/nick:investifix` recall (Phase 0.5) resumes this fix loop instead of re-investigating from scratch. Announce each iteration in one line (e.g. `Self-review 82% (<90) — fix round 2/5: 3 blocking findings.`).
 
 > **Quick mode:** one reviewer (`oh-my-claudecode:critic`) over the diff, at most **one** corrective iteration if under threshold, then ship — quick mode may ship a single iteration under gate by design; record the honest `review_score` and note the shortfall in the body. No panel, no 5-round loop.
 
@@ -186,16 +186,16 @@ Bound to **5 iterations**. If it plateaus below threshold, **stop and report hon
 
 The implementation has cleared its Phase 6.5 gate.
 
-1. Commit atomically. Conventional commit, add specific files by name — never `git add .`/`-A`, never commit secrets or `.env`. Reference the issue **only when there is one** (drop the `(#<n>)` trailer for a freeform target):
+1. Commit atomically. Conventional commit, add specific files by name — never `git add .`/`-A`, never commit secrets or `.env`. **Never put the issue number in the commit subject or body** — no `(#<n>)` trailer, no `#<n>`, no `Fixes #<n>` anywhere in the message. GitHub turns each one into cross-reference noise on the issue, and the reference belongs only in the PR description (Phase 7 step 3 adds `Relates to #<n>` there). Same message shape for an issue and a freeform target:
    ```
-   fix: <concise description>[ (#<n>)]
+   fix: <concise description>
 
    <one-line why, if not obvious>
 
    Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
    ```
 2. Push: `git push -u origin HEAD` — but **never onto the default branch**. If HEAD is `main`/`master` (the Phase 5 `--here` guard should already have branched), branch to `fix/…` first; don't pollute the default branch.
-3. Run **`/pr`** to open the pull request (handles draft mode and template; it adds `Relates to #<n>` from the branch name when there's an issue, and omits the trailer for a freeform target).
+3. Run **`/nick:pr`** to open the pull request (handles draft mode and template; it adds `Relates to #<n>` from the branch name when there's an issue, and omits the trailer for a freeform target).
 4. Write the checkpoint (§Phase 8, decision `fix-shipped`, with the PR URL and review score).
 5. Return the PR URL and a two-line summary: root cause + score, and what changed.
 
@@ -203,7 +203,7 @@ The implementation has cleared its Phase 6.5 gate.
 
 ## Phase 8 — Write the checkpoint (always; even a cached serve persists an advanced `last_comment_at`)
 
-At whatever terminal point you reach — a Phase 4 stop, a `resolved` incremental exit, a **Phase 6.5 plateau** (`review-under-threshold`), or a Phase 7 ship — persist the durable report so the next `/investifix <target>` is cheap.
+At whatever terminal point you reach — a Phase 4 stop, a `resolved` incremental exit, a **Phase 6.5 plateau** (`review-under-threshold`), or a Phase 7 ship — persist the durable report so the next `/nick:investifix <target>` is cheap.
 
 1. `mkdir -p "$ROOT/.ignore/investigations"` (the **absolute** `ROOT` from Phase 0 — see the Phase 0 note on why a relative path would be lost in a throwaway worktree). Make sure `.ignore/` is git-ignored (add to `.gitignore` or `.git/info/exclude` if not) so these artifacts never get committed.
 2. Write `$ROOT/.ignore/investigations/<slug>.md` (overwriting any prior checkpoint) with frontmatter + the consolidated report as the body:
@@ -235,6 +235,6 @@ last_comment_at: 2026-07-06T14:22:00Z   # the Phase 0.5 `newest_seen`: newest ti
 
 - **Cheap re-runs by design** — see Phase 0.5 for the full recall taxonomy. A cache hit always re-checks the issue's latest state first.
 - **Scale to the issue:** `--quick` is the floor (1 investigator + 1 skeptic); a normal bug needs ~3 investigators + single-vote validation; "audit thoroughly" warrants 5 + a 3-vote adversarial pass + a completeness check for missed modalities.
-- **Never comment on the issue or PR unprompted, and never suggest it.** This skill opens a PR and writes the local checkpoint, but posts no comment on the issue or PR. Do so only when the user explicitly asks in this invocation. The sole exception: with `--reply`/`--resolve` (or an explicit ask) you may reply to / resolve *automated-reviewer* bot threads on the PR you opened — never human comments, never the issue. Guardrails for that path: act only on **bot-only** threads (every comment bot-authored); a thread a human has touched — even one a bot opened — is off-limits (surface it instead). Before classifying a thread bot-only, **page both the thread list and each thread's comments to exhaustion** — `reviewThreads(first:100, after:$endCursor)` and `comments(first:100, after:$endCursor)`, each with `pageInfo{ hasNextPage endCursor }`, walked until `hasNextPage` is false; never cap at 100. Missing a human's later comment (or a thread on page 2) would wrongly mark a thread bot-only. Resolve **strictly by the thread node `id`** (fetch it — `nodes{ id ... }`), never by `path`/`line` matching, which can hit the wrong thread. Reply **into the specific thread by its node/comment `id`** via the thread-reply API (`gh api .../pulls/<n>/comments/<comment_id>/replies` or `addPullRequestReviewThreadReply`) — never a top-level `gh pr comment` (that sprays the whole PR). And because a reply body echoes bot text (attacker-influenceable — backticks, `$(…)`, a lone `EOF`), **never interpolate it into a shell command**: pass it via `--body-file`/stdin. Stamp every reply with the sentinel `<!-- investifix:reply -->` (matched by marker, not by author, since you may be the PR author) — forward-defensive: it doesn't feed the Phase 0.5 issue `newest_seen` today, since this skill never posts issue comments. This path is only reachable via the Phase 0.5 bot-thread branch (checkpoint has a `pr:` + `--reply`/`--resolve`), after bots have had time to review the opened PR.
+- **Never comment on the issue or PR unprompted, and never suggest it.** This skill opens a PR and writes the local checkpoint, but posts no comment on the issue or PR. Do so only when the user explicitly asks in this invocation. The sole exception: with `--reply` (alias `--resolve`, or an explicit ask) you may reply to **and** resolve *automated-reviewer* bot threads on the PR you opened — never human comments, never the issue. Guardrails for that path: act only on **bot-only** threads (every comment bot-authored); a thread a human has touched — even one a bot opened — is off-limits (surface it instead). Before classifying a thread bot-only, **page both the thread list and each thread's comments to exhaustion** — `reviewThreads(first:100, after:$endCursor)` and `comments(first:100, after:$endCursor)`, each with `pageInfo{ hasNextPage endCursor }`, walked until `hasNextPage` is false; never cap at 100. Missing a human's later comment (or a thread on page 2) would wrongly mark a thread bot-only. Resolve **strictly by the thread node `id`** (fetch it — `nodes{ id ... }`), never by `path`/`line` matching, which can hit the wrong thread. Reply **into the specific thread by its node/comment `id`** via the thread-reply API (`gh api .../pulls/<n>/comments/<comment_id>/replies` or `addPullRequestReviewThreadReply`) — never a top-level `gh pr comment` (that sprays the whole PR). And because a reply body echoes bot text (attacker-influenceable — backticks, `$(…)`, a lone `EOF`), **never interpolate it into a shell command**: pass it via `--body-file`/stdin. **Open every reply's visible body with a `[Automated]` prefix** (e.g. `**[Automated]** …` or a leading `[Automated] ` line) so any reader can see at a glance it's an AI-generated reply, not a human's. Also stamp every reply with the hidden sentinel `<!-- investifix:reply -->` (matched by marker, not by author, since you may be the PR author) — forward-defensive: it doesn't feed the Phase 0.5 issue `newest_seen` today, since this skill never posts issue comments. The `[Automated]` prefix is the human-visible signal; the sentinel is the machine-matched one — include both. This path is only reachable via the Phase 0.5 bot-thread branch (checkpoint has a `pr:` + `--reply`, its `--resolve` alias, or an explicit ask), after bots have had time to review the opened PR.
 - Investigation (Phases 1–3) is read-only; nothing is mutated before Phase 5.
 - Report scores honestly. A truthful 88% with a named evidence gap beats a padded 96%.

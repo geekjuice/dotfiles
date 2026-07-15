@@ -40,7 +40,7 @@ Body:
 
 ## Why?
 
-<Short to medium length description of why the changes were made if it can be inferred>
+<Short description of why the change was made, if it can be inferred>
 
 ---
 
@@ -51,10 +51,38 @@ Body:
 🤖 Generated with [Claude Code](https://claude.com/claude-code)
 ```
 
+Title rules:
+- Never put an issue or PR number (`#123`, `GH-123`) in the title. GitHub turns it into cross-reference noise on the referenced issue/PR. Issue references live in the body only — the `Relates to` line from step 4.
+
 Ordering rules:
 - Everything after the "Why?" section must be separated by `---`
 - Branch-derived references are always the second-to-last section
 - The "Generated with Claude Code" line is always last
+
+### Writing the What and Why
+
+The description is for humans: the reviewer now, and whoever maintains this code
+later (often the more important reader). Write for them.
+
+- **Be succinct.** Only include what's necessary. Short sentences, plain words.
+  A trivial change can be a single line — don't pad it out to fill the template.
+- **What?** One sentence on what changed at a high level. Don't narrate the diff
+  line by line; the reader can read the code.
+- **Why?** This is the part code can't explain. Capture the reason for the change,
+  a decision that isn't obvious from the diff, or scope you deliberately cut or
+  added. If a linked ticket or spec already explains it, link to it instead of
+  restating it.
+- **No AI slop.** No stock filler ("It's worth noting", "Additionally"),
+  no strained analogies or metaphors, no em-dash pileups. If a line doesn't help
+  the reader, cut it. Read it back and make sure a human would actually write it.
+
+### Leave out
+
+- **CI / build / test status.** Never mention whether CI, linting, or tests passed
+  or failed. That's visible in the GitHub UI and it's just noise here.
+- **Descriptions of the tests you added.** The code shows that.
+- **Low-level walkthroughs of the code.** High-level intent is fine; line-by-line
+  narration isn't.
 
 6. Create the PR using `gh pr create` with a HEREDOC for the body:
 
