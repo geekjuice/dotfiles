@@ -1,0 +1,571 @@
+#!/usr/bin/env bash
+#
+# spotlight — mirror a git worktree's working state into the main worktree.
+#
+# Point your main checkout at whatever a worktree currently looks like, so the
+# dev server, editor, build cache and hard-coded paths you already have running
+# there pick up an agent's changes without you switching branches.
+#
+# One-way, worktree -> main. The source worktree's HEAD, index, stash and files
+# are never touched: the sync builds a commit from a scratch index and checks
+# that commit out in the main worktree.
+#
+# Nothing is deleted. Uncommitted work in the main worktree is parked in a
+# labelled `git stash` entry and put back by `spotlight stop`.
+
+set -euo pipefail
+
+STATE_VERSION=1
+PROG=${0##*/}
+WATCH_DEFAULT=3
+
+die()  { printf '%s: %s\n' "$PROG" "$*" >&2; exit 1; }
+warn() { printf '%s: %s\n' "$PROG" "$*" >&2; }
+say()  { printf '%s\n' "$*"; }
+log()  { printf '%s%s\n' "${LOG_PREFIX:-}" "$*"; }
+
+usage() {
+  cat <<'EOF'
+spotlight — mirror a git worktree's working state into the main worktree.
+
+  spotlight start [<worktree|branch>] [--watch[=sec]] [--branch[=name]]
+                                      [--to <path>] [--no-stash] [--force]
+  spotlight refresh [--force]     re-sync the latest worktree state (alias: update, sync)
+  spotlight status                what is spotlit, and whether it has drifted
+  spotlight stop [--force]        put the main worktree back how it was
+
+start    checkpoints the worktree and checks that commit out in the main
+         worktree. Uncommitted work there is parked in a labelled stash.
+refresh  checkpoints again and moves the main worktree forward. Refuses if you
+         have edited the main worktree (--force parks those edits in a stash).
+stop     restores the original branch, HEAD and stashed work, then cleans up.
+
+Ignored files (node_modules, .env, dist) are never synced — the main worktree
+keeps its own. Sync is one-way: edits made in the main worktree while spotlit
+never travel back, so make changes in the worktree.
+EOF
+  exit "${1:-0}"
+}
+
+# ---------------------------------------------------------------- git helpers
+
+gitdir_of()    { local d; d=$(git -C "$1" rev-parse --git-dir)        || return 1; (cd "$1" && cd "$d" && pwd); }
+commondir_of() { local d; d=$(git -C "$1" rev-parse --git-common-dir) || return 1; (cd "$1" && cd "$d" && pwd); }
+toplevel_of()  { git -C "$1" rev-parse --show-toplevel 2>/dev/null; }
+branch_of()    { git -C "$1" symbolic-ref -q --short HEAD 2>/dev/null || true; }
+short()        { git -C "$1" rev-parse --short "$2" 2>/dev/null || printf '%.10s' "$2"; }
+
+is_dirty() { [ -n "$(git -C "$1" status --porcelain --untracked-files=normal)" ]; }
+
+dirty_list() { git -C "$1" status --porcelain --untracked-files=normal | sed 's/^/    /' | head -20; }
+
+# Any half-finished operation makes checkout and stash unsafe. Name it, so the
+# caller can tell the user what to finish.
+in_progress() {
+  local g f
+  g=$(gitdir_of "$1") || return 1
+  for f in MERGE_HEAD CHERRY_PICK_HEAD REVERT_HEAD BISECT_LOG rebase-merge rebase-apply; do
+    [ -e "$g/$f" ] && { printf '%s\n' "$f"; return 0; }
+  done
+  return 1
+}
+
+# path <TAB> branch   (branch empty when detached or bare)
+worktree_table() {
+  git -C "$1" worktree list --porcelain | awk '
+    /^worktree /{ if (p != "") printf "%s\t%s\n", p, b; p = substr($0, 10); b = "" }
+    /^branch /  { b = substr($0, 8); sub(/^refs\/heads\//, "", b) }
+    END         { if (p != "") printf "%s\t%s\n", p, b }
+  '
+}
+
+# git lists the main worktree first. Fails on a bare repo, which has none.
+main_worktree() {
+  local block path
+  block=$(git -C "$1" worktree list --porcelain | awk 'NF==0{exit} {print}')
+  printf '%s\n' "$block" | grep -qx 'bare' && return 1
+  path=$(printf '%s\n' "$block" | sed -n 's/^worktree //p')
+  [ -n "$path" ] || return 1
+  printf '%s\n' "$path"
+}
+
+# Accept a path, a branch name, or a unique substring of either.
+resolve_worktree() {
+  local q=$1 repo=$2 hits t
+  if [ -e "$q" ] && t=$(toplevel_of "$q"); then printf '%s\n' "$t"; return 0; fi
+  hits=$(worktree_table "$repo" | awk -F'\t' -v q="$q" '$1 == q || $2 == q { print $1 }')
+  [ -n "$hits" ] || hits=$(worktree_table "$repo" | awk -F'\t' -v q="$q" 'index($1, q) || index($2, q) { print $1 }')
+  [ "$(printf '%s\n' "$hits" | grep -c .)" = 1 ] || return 1
+  printf '%s\n' "$hits"
+}
+
+candidates() {
+  local list
+  list=$(worktree_table "$1" | awk -F'\t' -v m="$2" '$1 != m { printf "    %s%s\n", $1, ($2 ? "  [" $2 "]" : "") }')
+  if [ -n "$list" ]; then
+    say "Name the worktree you want, or run this from inside it:"
+    printf '%s\n' "$list"
+  else
+    say "This repo has no other worktrees yet — make one with: wt switch --create <branch>"
+  fi
+}
+
+# ------------------------------------------------------------------ snapshots
+
+# Write the source worktree's exact current contents to a tree object, using a
+# scratch index seeded from the worktree's own index — the stat cache makes
+# repeat calls cheap, and files that are tracked but gitignored survive.
+# Ignored files are excluded, which is the point: node_modules, .env and dist
+# stay exactly as the main worktree already has them.
+peek_tree() {
+  local src=$1 srcidx
+  srcidx=$(gitdir_of "$src")/index
+  mkdir -p "$SPOT_DIR"
+  if ! cp -f "$srcidx" "$IDX" 2>/dev/null; then
+    rm -f "$IDX"
+    GIT_INDEX_FILE="$IDX" git -C "$src" read-tree HEAD 2>/dev/null || :
+  fi
+  GIT_INDEX_FILE="$IDX" git -C "$src" add -A
+  GIT_INDEX_FILE="$IDX" git -C "$src" write-tree
+}
+
+# tree -> commit, parented on the source's HEAD so history and diffs read
+# normally from the main worktree. Never moves a ref in the source.
+make_checkpoint() {
+  local src=$1 tree head name email
+  tree=$(peek_tree "$src")
+  head=$(git -C "$src" rev-parse HEAD 2>/dev/null || true)
+  name=$(git -C "$src" config user.name   || echo spotlight)
+  email=$(git -C "$src" config user.email || echo spotlight@localhost)
+  local commit
+  commit=$(
+    GIT_AUTHOR_NAME=$name GIT_AUTHOR_EMAIL=$email \
+    GIT_COMMITTER_NAME=$name GIT_COMMITTER_EMAIL=$email \
+      git -C "$src" commit-tree "$tree" ${head:+-p "$head"} \
+        -m "spotlight checkpoint: $(basename "$src")"
+  )
+  # Hold a ref so gc can't reap the checkpoint while the main worktree sits on it.
+  git -C "$src" update-ref "$CHECKPOINT_REF" "$commit"
+  printf '%s %s\n' "$commit" "$tree"
+}
+
+# Park uncommitted work (including untracked files) in a labelled stash, echo
+# its sha. Echoes nothing when the tree is already clean.
+stash_park() {
+  local w=$1 msg=$2
+  is_dirty "$w" || return 0
+  git -C "$w" stash push --include-untracked --message "$msg" >/dev/null
+  git -C "$w" rev-parse refs/stash
+}
+
+# Restore a parked stash by sha, wherever it has drifted to in the stash list.
+stash_restore() {
+  local w=$1 sha=$2 n ref
+  [ -n "$sha" ] || return 0
+  n=$(git -C "$w" stash list --format='%H' | grep -nx "$sha" | head -1 | cut -d: -f1 || true)
+  if [ -z "$n" ]; then
+    warn "the pre-spotlight stash ($(short "$w" "$sha")) is no longer in the stash list — nothing restored"
+    return 1
+  fi
+  ref="stash@{$((n - 1))}"
+  git -C "$w" stash pop --index "$ref" >/dev/null 2>&1 && return 0
+  if git -C "$w" stash pop "$ref" >/dev/null 2>&1; then
+    warn "restored your changes, but could not restore the staged/unstaged split"
+    return 0
+  fi
+  warn "could not restore $ref automatically — it is still there: git -C $w stash pop $ref"
+  return 1
+}
+
+# ---------------------------------------------------------------------- state
+
+# Every stored key is sp_-prefixed so sourcing the state file can never clobber
+# a local in the calling function.
+state_file() { printf '%s/state\n' "$SPOT_DIR"; }
+
+state_load() {
+  local f; f=$(state_file)
+  [ -f "$f" ] || return 1
+  # shellcheck disable=SC1090
+  . "$f"
+  [ "${sp_version:-0}" = "$STATE_VERSION" ] \
+    || die "state file $f came from another version of $PROG — run: $PROG stop --force"
+}
+
+state_save() {
+  local k v
+  mkdir -p "$SPOT_DIR"
+  for k in version source source_branch main checkpoint tree orig_head orig_branch \
+           stash spot_branch watch_pid watch_interval started synced; do
+    v="sp_$k"
+    printf '%s=%q\n' "$v" "${!v:-}"
+  done >"$(state_file)"
+}
+
+state_clear() { rm -f "$(state_file)" "$IDX" "$PID_FILE"; }
+
+# The watcher owns the pid file — `$!` from the spawning shell can name the
+# nohup wrapper rather than the watcher itself, so never trust it.
+watcher_pid() { cat "$PID_FILE" 2>/dev/null || true; }
+
+watcher_alive() { local p; p=$(watcher_pid); [ -n "$p" ] && kill -0 "$p" 2>/dev/null; }
+
+watcher_stop() {
+  local p; p=$(watcher_pid)
+  sp_watch_pid=""
+  [ -n "$p" ] || return 0
+  kill "$p" 2>/dev/null || true
+  rm -f "$PID_FILE"
+}
+
+now() { date '+%Y-%m-%d %H:%M:%S'; }
+
+# ------------------------------------------------------------------- checkout
+
+# Move the main worktree onto a checkpoint commit. Detached by default; a named
+# branch is available for tooling that insists on reading a branch name.
+apply_checkpoint() {
+  local commit=$1
+  if [ -n "${sp_spot_branch:-}" ]; then
+    git -C "$sp_main" checkout -q -B "$sp_spot_branch" "$commit"
+  else
+    git -C "$sp_main" checkout -q --detach "$commit"
+  fi
+}
+
+# Where the main worktree should be sitting right now, if nobody moved it.
+main_drifted() { [ "$(git -C "$sp_main" rev-parse HEAD)" != "$sp_checkpoint" ]; }
+
+# ---------------------------------------------------------------------- setup
+
+bootstrap() {
+  HERE=$(toplevel_of "$PWD") || die "not inside a git repository"
+  COMMON=$(commondir_of "$HERE")
+  SPOT_DIR="$COMMON/spotlight"
+  IDX="$SPOT_DIR/index"
+  LOG_FILE="$SPOT_DIR/watch.log"
+  PID_FILE="$SPOT_DIR/watch.pid"
+  CHECKPOINT_REF="refs/spotlight/checkpoint"
+}
+
+# ------------------------------------------------------------------- commands
+
+cmd_start() {
+  local target="" to="" watch_int="" branch_name="" force="" nostash="" want_branch=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --to)        to=${2:?--to needs a path}; shift 2 ;;
+      --to=*)      to=${1#*=}; shift ;;
+      --watch)     watch_int=$WATCH_DEFAULT; shift ;;
+      --watch=*)   watch_int=${1#*=}; shift ;;
+      --branch)    want_branch=1; shift ;;
+      --branch=*)  want_branch=1; branch_name=${1#*=}; shift ;;
+      --no-stash)  nostash=1; shift ;;
+      --force|-f)  force=1; shift ;;
+      -h|--help)   usage ;;
+      -*)          die "unknown flag: $1" ;;
+      *)           [ -z "$target" ] || die "unexpected argument: $1"; target=$1; shift ;;
+    esac
+  done
+  [ -z "$watch_int" ] || [ "$watch_int" -ge 1 ] 2>/dev/null || die "--watch needs a whole number of seconds"
+
+  local src tgt
+  if [ -n "$target" ]; then
+    src=$(resolve_worktree "$target" "$HERE") || {
+      warn "no single worktree matches '$target'"
+      candidates "$HERE" "" >&2
+      exit 1
+    }
+    src=$(toplevel_of "$src")
+  else
+    src=$HERE
+  fi
+
+  if [ -n "$to" ]; then
+    tgt=$(toplevel_of "$to") || die "--to $to is not a git worktree"
+  else
+    tgt=$(main_worktree "$HERE") \
+      || die "this repo is bare, so it has no main worktree — pass --to <path>"
+  fi
+
+  if [ "$src" = "$tgt" ]; then
+    warn "the main worktree is not something you can spotlight onto itself"
+    candidates "$HERE" "$tgt" >&2
+    exit 1
+  fi
+
+  local op
+  if op=$(in_progress "$src"); then die "the worktree has an unfinished $op — finish or abort it first"; fi
+  if op=$(in_progress "$tgt"); then die "the main worktree has an unfinished $op — finish or abort it first"; fi
+
+  # Re-targeting keeps the original restore point: what puts the main worktree
+  # back is the state from before the *first* start, not this one.
+  local keep_orig_head="" keep_orig_branch="" keep_stash="" keep_started="" retarget=""
+  if state_load 2>/dev/null; then
+    if [ "$sp_source" = "$src" ]; then
+      say "already spotlighting $(basename "$src") — refreshing instead"
+      cmd_refresh ${force:+--force}
+      return
+    fi
+    [ -n "$force" ] || die "$(basename "$sp_source") is already spotlit onto $sp_main.
+Run '$PROG stop' first, or '$PROG start $target --force' to switch to it."
+    watcher_stop
+    keep_orig_head=$sp_orig_head
+    keep_orig_branch=$sp_orig_branch
+    keep_stash=$sp_stash
+    keep_started=$sp_started
+    retarget=1
+  fi
+
+  sp_version=$STATE_VERSION
+  sp_source=$src
+  sp_source_branch=$(branch_of "$src")
+  sp_main=$tgt
+  sp_spot_branch=""
+  [ -z "$want_branch" ] || sp_spot_branch=${branch_name:-spotlight/${sp_source_branch:-$(basename "$src")}}
+
+  if [ -n "$retarget" ]; then
+    sp_orig_head=$keep_orig_head
+    sp_orig_branch=$keep_orig_branch
+    sp_stash=$keep_stash
+    sp_started=$keep_started
+  else
+    sp_orig_head=$(git -C "$tgt" rev-parse HEAD)
+    sp_orig_branch=$(branch_of "$tgt")
+    sp_stash=""
+    sp_started=$(now)
+    if is_dirty "$tgt"; then
+      if [ -n "$nostash" ]; then
+        warn "the main worktree has uncommitted work and --no-stash was given:"
+        dirty_list "$tgt" >&2
+        exit 1
+      fi
+      sp_stash=$(stash_park "$tgt" "spotlight: main worktree before spotlighting ${sp_source_branch:-$(basename "$src")}")
+      say "parked your uncommitted work in the main worktree — 'spotlight stop' puts it back"
+    fi
+  fi
+
+  local cp
+  cp=$(make_checkpoint "$src") || die "could not checkpoint $src"
+  sp_checkpoint=${cp% *}
+  sp_tree=${cp#* }
+
+  if ! apply_checkpoint "$sp_checkpoint"; then
+    warn "could not check the checkpoint out in $tgt"
+    [ -z "$sp_stash" ] || { stash_restore "$tgt" "$sp_stash" || true; }
+    die "the main worktree was left as it was"
+  fi
+  sp_synced=$(now)
+  sp_watch_pid=""
+  sp_watch_interval=${watch_int:-}
+  state_save
+
+  if [ -n "$watch_int" ]; then
+    mkdir -p "$SPOT_DIR"
+    rm -f "$PID_FILE"
+    ( cd "$sp_main" && exec nohup "$SELF" watch "$watch_int" >>"$LOG_FILE" 2>&1 & )
+    local i=0
+    while [ -z "$(watcher_pid)" ] && [ $i -lt 40 ]; do sleep 0.1; i=$((i + 1)); done
+    sp_watch_pid=$(watcher_pid)
+    [ -n "$sp_watch_pid" ] || warn "the watcher did not come up — see $LOG_FILE"
+    state_save
+  fi
+
+  say ""
+  say "spotlighting  ${sp_source_branch:-detached}  ($src)"
+  say "          on  $tgt"
+  say "          at  $(short "$tgt" "$sp_checkpoint")${sp_spot_branch:+  on branch $sp_spot_branch}"
+  [ -z "$watch_int" ] || say "     watching  every ${watch_int}s (pid $sp_watch_pid) → $LOG_FILE"
+  say ""
+  say "Edit in the worktree, not here — this sync is one-way."
+  [ -n "$watch_int" ] || say "Pull in later changes with 'spotlight refresh'. Undo with 'spotlight stop'."
+}
+
+cmd_refresh() {
+  local force="" from_watch=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --force|-f)  force=1; shift ;;
+      --from-watch) from_watch=1; LOG_PREFIX="$(now)  "; shift ;;
+      -h|--help)   usage ;;
+      *)           die "unknown argument: $1" ;;
+    esac
+  done
+
+  state_load || die "nothing is spotlit — start with '$PROG start <worktree>'"
+  [ -d "$sp_source" ] || die "the spotlit worktree is gone ($sp_source) — run '$PROG stop' to restore the main worktree"
+
+  local op
+  if op=$(in_progress "$sp_main"); then die "the main worktree has an unfinished $op — finish or abort it first"; fi
+
+  if main_drifted; then
+    if [ -z "$force" ]; then
+      warn "the main worktree has moved off the spotlight commit (now at $(short "$sp_main" HEAD))."
+      die "someone checked something else out. Use '$PROG stop' to clean up, or '$PROG refresh --force' to take it back."
+    fi
+    warn "main worktree had moved off the spotlight commit — taking it back"
+  fi
+
+  # Edits made in the main worktree while spotlit would be overwritten by the
+  # checkout. Never destroy them: refuse, or park them somewhere recoverable.
+  if is_dirty "$sp_main"; then
+    if [ -n "$from_watch" ]; then
+      log "skipped: the main worktree has local edits"
+      return 0
+    fi
+    if [ -z "$force" ]; then
+      warn "the main worktree has local edits that a refresh would overwrite:"
+      dirty_list "$sp_main" >&2
+      die "this sync is one-way, so those edits are not in the worktree. Move them yourself, or '$PROG refresh --force' to park them in a stash."
+    fi
+    local parked
+    parked=$(stash_park "$sp_main" "spotlight: main worktree edits discarded by refresh $(now)")
+    warn "parked your edits to the main worktree in a stash: git -C $sp_main stash pop $(short "$sp_main" "$parked")"
+  fi
+
+  local cp new_commit new_tree
+  cp=$(make_checkpoint "$sp_source") || die "could not checkpoint $sp_source"
+  new_commit=${cp% *}
+  new_tree=${cp#* }
+
+  if [ "$new_tree" = "$sp_tree" ] && ! main_drifted; then
+    log "already up to date with ${sp_source_branch:-$(basename "$sp_source")}"
+    return 0
+  fi
+
+  apply_checkpoint "$new_commit" || die "could not check the new checkpoint out in $sp_main"
+  local prev=$sp_checkpoint
+  sp_checkpoint=$new_commit
+  sp_tree=$new_tree
+  sp_synced=$(now)
+  state_save
+
+  local files
+  files=$(git -C "$sp_main" diff --name-only "$prev" "$new_commit" | wc -l | tr -d ' ')
+  log "synced $files file$([ "$files" = 1 ] || echo s) from ${sp_source_branch:-$(basename "$sp_source")} → $(short "$sp_main" "$new_commit")"
+}
+
+cmd_status() {
+  if ! state_load 2>/dev/null; then
+    say "not spotlighting anything"
+    return 0
+  fi
+  local live="no"
+  watcher_alive && live="every ${sp_watch_interval:-?}s (pid $(watcher_pid))"
+
+  say "source     ${sp_source_branch:-detached}  ($sp_source)"
+  say "target     $sp_main"
+  say "commit     $(short "$sp_main" "$sp_checkpoint")${sp_spot_branch:+  on branch $sp_spot_branch}"
+  say "started    $sp_started"
+  say "synced     $sp_synced"
+  say "watching   $live"
+  [ -z "$sp_stash" ] || say "parked     pre-spotlight work in stash $(short "$sp_main" "$sp_stash")"
+  say ""
+
+  if [ ! -d "$sp_source" ]; then
+    say "! the spotlit worktree is gone — 'spotlight stop' will still restore the main worktree"
+    return 0
+  fi
+  if main_drifted; then
+    say "! the main worktree moved off the spotlight commit (now $(short "$sp_main" HEAD))"
+  elif is_dirty "$sp_main"; then
+    say "! the main worktree has local edits — they are not in the worktree, and a refresh would park them"
+  fi
+  if [ "$(peek_tree "$sp_source")" != "$sp_tree" ]; then
+    say "! the worktree has changed since the last sync — 'spotlight refresh' to pick it up"
+  else
+    say "up to date with the worktree"
+  fi
+}
+
+cmd_stop() {
+  local force=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --force|-f) force=1; shift ;;
+      -h|--help)  usage ;;
+      *)          die "unknown argument: $1" ;;
+    esac
+  done
+
+  if ! state_load 2>/dev/null; then
+    [ -n "$force" ] || die "nothing is spotlit"
+    warn "no state file; cleaning up leftovers"
+    git update-ref -d "$CHECKPOINT_REF" 2>/dev/null || true
+    rm -rf "$SPOT_DIR"
+    return 0
+  fi
+
+  watcher_stop
+
+  local op
+  if op=$(in_progress "$sp_main"); then die "the main worktree has an unfinished $op — finish or abort it before stopping"; fi
+
+  if main_drifted && [ -z "$force" ]; then
+    warn "the main worktree is no longer on the spotlight commit — it is at $(short "$sp_main" HEAD)."
+    die "restoring would move it off whatever you checked out. Re-run with '--force' if that is what you want."
+  fi
+
+  if is_dirty "$sp_main"; then
+    local parked
+    parked=$(stash_park "$sp_main" "spotlight: main worktree edits at stop $(now)")
+    warn "you had edited the main worktree while it was spotlit — parked in a stash: git -C $sp_main stash pop $(short "$sp_main" "$parked")"
+  fi
+
+  local restored=""
+  if [ -n "$sp_orig_branch" ] && git -C "$sp_main" checkout -q "$sp_orig_branch" 2>/dev/null; then
+    restored=$sp_orig_branch
+  else
+    [ -z "$sp_orig_branch" ] || warn "could not check $sp_orig_branch back out (checked out elsewhere?) — restoring the commit instead"
+    git -C "$sp_main" checkout -q --detach "$sp_orig_head" || die "could not restore $sp_main to $(short "$sp_main" "$sp_orig_head")"
+    restored="detached at $(short "$sp_main" "$sp_orig_head")"
+  fi
+
+  [ -z "${sp_spot_branch:-}" ] || git -C "$sp_main" branch -q -D "$sp_spot_branch" 2>/dev/null || true
+
+  if [ -n "$sp_stash" ]; then
+    stash_restore "$sp_main" "$sp_stash" && say "restored the work you had going in the main worktree"
+  fi
+
+  git -C "$sp_main" update-ref -d "$CHECKPOINT_REF" 2>/dev/null || true
+  state_clear
+
+  say "stopped — $sp_main is back on $restored"
+}
+
+# Poll the worktree and re-sync when its contents change. Cheap because the
+# scratch index inherits the worktree's stat cache, so an unchanged tree costs
+# a stat walk. Started detached by `start --watch`; runs until stop kills it.
+cmd_watch() {
+  local interval=${1:-$WATCH_DEFAULT}
+  mkdir -p "$SPOT_DIR"
+  printf '%s\n' "$$" >"$PID_FILE"
+  trap '[ "$(watcher_pid)" = "$$" ] && rm -f "$PID_FILE"; exit 0' TERM INT
+  say "$(now)  watching every ${interval}s (pid $$)"
+  while :; do
+    sleep "$interval"
+    state_load 2>/dev/null || { say "$(now)  spotlight stopped; exiting"; break; }
+    [ "$(watcher_pid)" = "$$" ] || { say "$(now)  another watcher took over; exiting"; break; }
+    [ -d "$sp_source" ] || { say "$(now)  worktree is gone; exiting"; break; }
+    # Subshell: a refusal inside refresh must not take the watcher down with it.
+    ( cmd_refresh --from-watch ) 2>&1 || say "$(now)  refresh failed; will retry"
+  done
+  [ "$(watcher_pid)" = "$$" ] && rm -f "$PID_FILE" || true
+}
+
+# ----------------------------------------------------------------------- main
+
+SELF=$(cd "$(dirname "$0")" && pwd)/$PROG
+bootstrap
+
+cmd=${1:-status}
+[ $# -eq 0 ] || shift
+case $cmd in
+  start)                    cmd_start   "$@" ;;
+  refresh|update|sync|re)   cmd_refresh "$@" ;;
+  status|st)                cmd_status  "$@" ;;
+  stop|off|end)             cmd_stop    "$@" ;;
+  watch)                    cmd_watch   "$@" ;;
+  -h|--help|help)           usage ;;
+  *)                        warn "unknown command: $cmd"; usage 1 ;;
+esac
