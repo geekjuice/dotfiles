@@ -1,7 +1,7 @@
 {
   "name": "nick",
-  "description": "Nick's personal skills — review, pr, summarize, investifix, spotlight — namespaced under nick:.",
-  "version": "1.0.0",
+  "description": "Nick's personal skills — review, pr, summarize, investifix, spotlight, retro — namespaced under nick:.",
+  "version": "1.1.0",
   "author": {
     "name": "Nicholas Hwang"
   }
