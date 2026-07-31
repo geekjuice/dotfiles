@@ -1,23 +1,18 @@
 ---
 user-invocable: true
-description: "Mirror a git worktree's working state into the main worktree it came from, so the dev server, editor and build cache already running there see an agent's changes without switching branches. `start` points the main checkout at the worktree, `refresh` pulls in later changes (`--watch` does it automatically), `status` shows drift, `stop` puts everything back. One-way and non-destructive: the worktree is never touched, ignored files (node_modules, .env) stay put, and uncommitted work in the main checkout is parked in a labelled stash and restored on stop."
+description: "Mirror a git worktree's state into the main worktree, so the dev server, editor and build cache already running there see an agent's changes without a branch switch. Subcommands: start, refresh, status, stop. One-way and non-destructive."
 ---
 
 # Spotlight
 
-Take what a worktree currently looks like and put it in the main worktree, so
-the things that only run there — the dev server on a fixed port, the editor
-window, the warm build cache, the hard-coded paths — exercise an agent's changes
-without anyone checking out a branch.
-
-Borrowed from Conductor's spotlight testing, same shape: checkpoint the
-worktree, check that checkpoint out in the repo root, restore the root when
-you're done.
+Put what a worktree currently looks like into the main worktree, so the things
+that only run there (dev server on a fixed port, editor window, warm build
+cache, hard-coded paths) exercise an agent's changes without a branch switch.
 
 All the work is done by the `spotlight` CLI (`~/.dotfiles/bin/spotlight`, on
-PATH). **Always drive it through that command.** Do not hand-roll the git for
-this — the CLI is the thing that knows how to put the main worktree back, and
-improvised `checkout`/`stash`/`rsync` will lose someone's work.
+PATH). **Always drive it through that command.** Never hand-roll the git: the
+CLI is what knows how to put the main worktree back, and improvised
+`checkout`/`stash`/`rsync` will lose someone's work.
 
 ## Inputs
 
@@ -27,7 +22,7 @@ Map what the user said onto one subcommand:
 |---|---|
 | "spotlight this", "spotlight my worktree", "run this in main" | `spotlight start` (from the worktree) |
 | "spotlight `<branch>`", "put fix/login in main" | `spotlight start <branch>` |
-| "keep it in sync", "watch it", "auto-refresh" | `spotlight start --watch` (or `refresh --watch`-less loop already running) |
+| "keep it in sync", "watch it", "auto-refresh" | `spotlight start --watch` (if already spotlit, `stop` then `start --watch`) |
 | "refresh", "update it", "push my latest over", "re-sync" | `spotlight refresh` |
 | "what's spotlit?", "is it still current?" | `spotlight status` |
 | "stop", "undo it", "give me my repo back" | `spotlight stop` |
@@ -57,10 +52,10 @@ worktree), `--force` (see the rules below).
 
 ## Rules
 
-1. **Edit in the worktree, never in the spotlit main worktree.** If you make a
-   change while a spotlight is active, make it in `sp_source` and run
-   `spotlight refresh`. Editing the main checkout puts work somewhere the next
-   refresh will park in a stash, and it isn't on the branch.
+1. **Edit in the worktree, never in the spotlit main worktree.** Make the change
+   in the source worktree (`spotlight status` prints its path), then run
+   `spotlight refresh`. Edits made in the main checkout aren't on the branch, and
+   the next refresh parks them in a stash.
 2. **Don't commit from the main worktree while spotlit.** It's on a detached
    checkpoint commit. Commit in the worktree.
 3. **`--force` is the user's call, not yours.** Every `--force` path moves work
