@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: Create a pull request using personal template
+description: Create a pull request with gh using the personal template. Draft by default. Use for "open a PR", "raise a PR", or refreshing an existing PR's title and body.
 ---
 
 # Create Pull Request
@@ -9,13 +9,25 @@ Create a pull request using the `gh` CLI (not the GitHub MCP tools). Default to 
 
 ## Steps
 
-1. Run the following in parallel to understand the current state:
+1. Resolve the base branch first — never assume `develop` or `main`:
+
+   ```bash
+   BASE=$(gh pr view --json baseRefName -q .baseRefName 2>/dev/null) \
+     || BASE=$(gh repo view --json defaultBranchRef -q .defaultBranchRef.name)
+   ```
+
+   If `BASE` comes back empty, stop and ask which base to use. Never fall through
+   to a guess: an empty base makes the diff and log below empty or wrong, and the
+   PR gets drafted from nothing.
+
+   Then run the following in parallel:
 
    - `git status` (never use `-uall`)
-   - `git diff` for any uncommitted changes
-   - `git log --oneline develop..HEAD` to see all commits on this branch
-   - `git diff develop...HEAD` to see the full diff against the base branch
-   - Check if the branch has been pushed to the remote
+   - `git diff` for uncommitted changes
+   - `git log --oneline "$BASE"..HEAD` for every commit on this branch
+   - `git diff "$BASE"...HEAD` for the full diff against the base
+   - `gh pr view --json number,title,url` — a non-zero exit means no PR yet
+   - whether the branch is pushed to the remote
 
 2. If there are uncommitted changes, ask the user if they want to commit first.
 
@@ -26,7 +38,7 @@ Create a pull request using the `gh` CLI (not the GitHub MCP tools). Default to 
    - If branch contains `/issue/<number>`: include `Relates to #<number>`
    - If branch contains `/project/<number>`: include `Relates to https://github.com/ashbyhq/ProjectTracker/issues/<number>`
    - If branch contains `/leverage/`: include `#leveragefriday`
-   - ONLY include these references when the branch name actually contains the matching pattern. Do NOT include `#leveragefriday` or any other tag unless the branch name explicitly matches.
+   - Include a reference ONLY when the branch name actually matches its pattern. No match, no reference.
 
 5. Analyze ALL commits on the branch (not just the latest) and draft the PR:
 
@@ -52,7 +64,7 @@ Body:
 ```
 
 Title rules:
-- Never put an issue or PR number (`#123`, `GH-123`) in the title. GitHub turns it into cross-reference noise on the referenced issue/PR. Issue references live in the body only — the `Relates to` line from step 4.
+- Never put an issue or PR number (`#123`, `GH-123`) in the title. It creates cross-reference noise on the referenced issue. Issue references live in the body only, on the step-4 `Relates to` line.
 
 Ordering rules:
 - Everything after the "Why?" section must be separated by `---`
@@ -61,30 +73,25 @@ Ordering rules:
 
 ### Writing the What and Why
 
-The description is for humans: the reviewer now, and whoever maintains this code
-later (often the more important reader). Write for them.
+Write for the reviewer now and whoever maintains this later.
 
-- **Be succinct.** Only include what's necessary. Short sentences, plain words.
-  A trivial change can be a single line — don't pad it out to fill the template.
-- **What?** One sentence on what changed at a high level. Don't narrate the diff
-  line by line; the reader can read the code.
-- **Why?** This is the part code can't explain. Capture the reason for the change,
-  a decision that isn't obvious from the diff, or scope you deliberately cut or
-  added. If a linked ticket or spec already explains it, link to it instead of
-  restating it.
-- **No AI slop.** No stock filler ("It's worth noting", "Additionally"),
-  no strained analogies or metaphors, no em-dash pileups. If a line doesn't help
-  the reader, cut it. Read it back and make sure a human would actually write it.
+- **Be succinct.** A trivial change can be one line. Don't pad to fill the template.
+- **What?** One sentence, high level. Don't narrate the diff.
+- **Why?** The part the code can't explain: the reason, a decision that isn't
+  obvious from the diff, scope you cut or added. If a ticket or spec covers it,
+  link instead of restating.
+- **No AI slop.** No stock filler ("It's worth noting", "Additionally"), no
+  strained metaphors, no em-dash pileups. If a line doesn't help the reader, cut it.
 
 ### Leave out
 
-- **CI / build / test status.** Never mention whether CI, linting, or tests passed
-  or failed. That's visible in the GitHub UI and it's just noise here.
-- **Descriptions of the tests you added.** The code shows that.
-- **Low-level walkthroughs of the code.** High-level intent is fine; line-by-line
-  narration isn't.
+- **CI / build / test status.** Never mention whether CI, lint, or tests passed.
+- **Descriptions of the tests you added.**
+- **Low-level walkthroughs.** High-level intent is fine, line-by-line narration isn't.
 
-6. Create the PR using `gh pr create` with a HEREDOC for the body:
+6. Create or update the PR, using a HEREDOC for the body. If step 1 found an
+   existing PR, swap `gh pr create --draft` for `gh pr edit` with the same title
+   and body — that refreshes it in place and leaves its draft state alone.
 
 ```bash
 gh pr create --draft --title "..." --body "$(cat <<'EOF'
@@ -93,12 +100,4 @@ EOF
 )"
 ```
 
-7. Check if a PR already exists for the current branch (`gh pr view --json number,title,url`).
-   - If a PR exists, update its title and body using `gh pr edit` with the newly generated content.
-   - If no PR exists, create one using `gh pr create --draft`.
-
-8. Return the PR URL when done.
-
-## Re-running on an existing PR
-
-If this skill is invoked on a branch that already has an open PR, it will regenerate the title and description based on the current state of all commits and update the existing PR. This is useful when the PR has evolved over time and needs a refreshed title/description.
+7. Return the PR URL.

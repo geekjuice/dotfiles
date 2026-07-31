@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: "Investigate an issue with adversarial multi-agent orchestration (competing root-cause hypotheses, mid-flight skeptic validators, a consolidation panel that gates on a score), implement the fix, simplify + de-slop it, then self-review the diff with a fresh adversarial panel — below the review gate (default 90%) an ultra ralph loop iterates the fix until it passes — then commit, push, and open a PR. Checkpoints each run to `.ignore/investigations/<slug>.md` so re-runs are cheap: unchanged → cached report; new commits → incremental re-investigation of the delta; `--force` → fresh. Invoke as `/nick:investifix #123` (also accepts an issue URL or a freeform problem description). Flags: `--skip` (investigate only), `--quick`/`--light` (few agents), `--score N` (investigation gate, default 95), `--review-score N` (self-review gate, default 90), `--here`/`--no-worktree` (current worktree), `--force`/`--fresh` (ignore checkpoint), `--reply` (alias `--resolve`) — reply to **and** resolve automated-reviewer threads on the opened PR only (CodeRabbit/Lucille, never the issue or humans). Never comments on the issue or PR unless explicitly asked."
+description: "Adversarial multi-agent investigation of an issue, then implement the fix, self-review it against a score gate, and open a PR. Checkpointed so re-runs are cheap. Never comments on the issue or PR unless asked. Invoke as `/nick:investifix #123` (issue ref, URL, or freeform). Flags: `--skip`, `--quick`, `--score N`, `--review-score N`, `--here`, `--force`, `--reply` (aliases in body: `--light`, `--no-worktree`, `--fresh`, `--resolve`)."
 ---
 
 # investifix — adversarial investigate-then-fix
@@ -29,7 +29,7 @@ You call `/nick:investifix` often and forget you already ran it. A full adversar
 ## Phase 0 — Intake & scope
 
 1. Resolve the target:
-   - **Input parses as an issue ref** (`#123`, `123`, or an issue URL) → `gh issue view <n> --json number,title,body,state,labels,assignees,url,comments`. Capture title, body, labels, and **all comments** — comments often hold the real repro and prior attempts. **If `gh` is missing/unauthenticated here, fail loudly** with a remediation (`"#123 looks like an issue but gh is unavailable — run \`gh auth login\` or pass a description"`) — do **not** silently investigate the literal token `#123` as freeform (that would investigate a meaningless string and derive a different slug than a working-`gh` run, breaking dedup).
+   - **Input parses as an issue ref** (`#123`, `123`, or an issue URL) → `gh issue view <n> --json number,title,body,state,labels,assignees,url,comments`. Capture title, body, labels, and **all comments** — comments often hold the real repro and prior attempts. Also record `newest_seen` = the newest timestamp among all comments; Phase 0.5 and Phase 8 both need it, and computing it here means every terminal path can write `last_comment_at`, not just the cached one. **If `gh` is missing/unauthenticated here, fail loudly** with a remediation (`"#123 looks like an issue but gh is unavailable — run \`gh auth login\` or pass a description"`) — do **not** silently investigate the literal token `#123` as freeform (that would investigate a meaningless string and derive a different slug than a working-`gh` run, breaking dedup).
    - **Input is genuinely freeform** (not an issue ref) → treat `$ARGUMENTS` as the problem statement and say so. Don't block on a tracker.
 2. **Capture the main-repo root as an absolute path:** `ROOT=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")`. Use the *common* git dir, not `--show-toplevel`, so `ROOT` resolves to the original repo even when you're invoked from inside a linked worktree. Phase 5 may switch into a throwaway worktree and never switch back, so **every durable artifact (the scratch file and the checkpoint) is written under this `ROOT` by absolute path** — never a relative path, which would land in the disposable worktree and be lost.
 3. Resolve the **slug** — must be **deterministic** so a recall finds the prior checkpoint:
@@ -135,9 +135,9 @@ Write the consolidated report (root cause, key evidence for/against, score %, re
 1. **Isolate the work.** Unless `--here`, create a worktree: `wt switch --create <branch>` (fallback: `EnterWorktree`, then `git worktree add`). `<branch>` = `fix/issue-<n>` for a GitHub issue or `fix/<slug>` for a freeform target (`<slug>` is the Phase 0 slug — both are deterministic, so a re-run resolves the same branch). **Record `<branch>` in the checkpoint (§Phase 8)** so a `review-under-threshold` recall can re-enter it. Announce the branch.
    - **Branch/worktree already exists** (a re-run — the encouraged workflow — so this is expected): switch into the existing fix worktree instead of failing. If `wt switch --create` exits nonzero, fall back to `EnterWorktree`/`git worktree add`; never proceed as if it succeeded. **If the default branch has advanced since the branch was cut — or the branch's commits already landed on the default (a merged-then-reopened re-fix) — rebase onto the default branch, not onto the fix branch's own HEAD** (`git fetch origin && git rebase origin/<default>`, `<default>` from `git symbolic-ref --short refs/remotes/origin/HEAD` stripped of `origin/`; if that's unset, fall back to `git remote show origin | sed -n 's/.*HEAD branch: //p'`; if `<default>` still can't be resolved, skip the rebase and branch off HEAD instead) **before re-fixing**, so stale or already-merged commits don't leak into the re-opened PR. (If the rebase drops every commit as already-applied, that's expected — the new fix commits go on top.)
    - **`--here`/`--no-worktree`:** implement on the current branch in place, and say so — but first two guards. **(a) Default-branch guard:** compare `git rev-parse --abbrev-ref HEAD` to the repo default (`git symbolic-ref --short refs/remotes/origin/HEAD`, stripped of `origin/`; if that's unset, fall back to `git remote show origin | sed -n 's/.*HEAD branch: //p'`). If they match, the default can't be determined, or the branch is protected, **branch to `fix/…` first — never implement-and-push straight onto `main`/`master`.** **(b) Clean-tree guard:** unrelated uncommitted edits must not enter the review. Prefer a clean tree — if `git status --porcelain` is nonempty, stash first (or ask the user to). If it stays dirty, **scope the Phase 6/6.5 diff and cleanup to the explicit list of files the fix touches** (never the whole working tree), so in-progress edits aren't swept into the review, gate, or commit.
-2. Delegate to `oh-my-claudecode:executor` (`deep-executor` for complex multi-file fixes). Hand it the consolidated report + exact `file:line` targets so it's grounded.
-3. Add/update tests that capture the bug (`oh-my-claudecode:test-engineer`) when the fix is behavioral.
-4. Verify with `oh-my-claudecode:verifier` (size the model per the verification guidance). Iterate until it passes — never proceed on a red verification.
+2. **Test first** (behavioral fixes). Before any implementation, have `oh-my-claudecode:test-engineer` write the test that captures the bug, then **run it and confirm it fails for the right reason** — failing on the root cause, not a typo or missing import. A test that's green against the unfixed code proves nothing; rewrite it until it's red. Skip only when the fix isn't behaviorally testable (build config, docs, a type-only change), and say so when you skip.
+3. **Implement the minimum.** Delegate to `oh-my-claudecode:executor` (pass `model="opus"` for complex multi-file fixes). Hand it the consolidated report + exact `file:line` targets so it's grounded, and scope it explicitly: fix the root cause and nothing else. No adjacent refactors, no speculative abstractions, no unrequested flags or config, no drive-by cleanups in files the root cause doesn't require touching. Prefer deleting over adding. Anything else worth doing gets one line in the Phase 7 summary, not a place in the diff.
+4. Verify with `oh-my-claudecode:verifier` (size the model per the verification guidance): the new test now passes and nothing else broke. Iterate until it passes — never proceed on a red verification.
 
 ---
 
@@ -154,12 +154,12 @@ Scoped to the diff just produced:
 
 The first implementation iteration (Phases 5–6) produced a candidate fix that passes verification. Before shipping, turn the adversarial machinery on the fix itself — the same **competing viewpoints → validation → high-score consolidation** throughline, now aimed at the diff. Don't ship a fix that hasn't cleared its own review.
 
-1. **Fresh reviewers only** — none that investigated or implemented this fix, so they come at the diff cold. Prefer `Workflow` (fall back to parallel `Agent`/`Task`, then `/team`). Distribute lenses, scaled to the change:
-   - `oh-my-claudecode:code-reviewer` — correctness, API contracts, backward compatibility
+1. **Fresh reviewers only** — a new invocation carrying no prior context, so it comes at the diff cold. An agent type reused from Phase 3 is fine; a reviewer that already saw this fix's reasoning is not. Prefer `Workflow` (fall back to parallel `Agent`/`Task`, then `/team`). Distribute lenses, scaled to the change:
+   - `oh-my-claudecode:code-reviewer` — correctness, API contracts, backward compatibility, logic defects, maintainability, performance, and dead weight (unused params/exports, comments restating the code)
    - `oh-my-claudecode:security-reviewer` — trust boundaries, injection, authz
-   - `oh-my-claudecode:quality-reviewer` — logic defects, maintainability, performance
-   - `oh-my-claudecode:test-engineer` — does the added/updated test actually capture the bug; coverage gaps
-   - `oh-my-claudecode:critic` — prompted to **reject** ("Default to not-approved unless the diff fully and correctly fixes the root cause with no regressions. Find the disconfirming case.")
+   - `oh-my-claudecode:architect` — **scope and abstraction fitness**: anything the root cause doesn't require is a blocking finding — speculative abstractions, unrelated refactors, drive-by edits. Prompt it to cut, not to propose structure.
+   - `oh-my-claudecode:test-engineer` — does the added/updated test actually capture the bug (would it fail without the fix?); coverage gaps
+   - `oh-my-claudecode:critic` — prompted to **reject** ("Default to not-approved unless the diff fully and correctly fixes the root cause with no regressions **and contains nothing beyond that minimum**. Find the disconfirming case.")
 
    Ground every reviewer in the consolidated root-cause report **and** the diff (`git diff` of the change just made). Each returns:
    `{ approved (bool), score (0-100), blockingFindings[] (file:line + why), nits[] }`
@@ -171,7 +171,7 @@ The first implementation iteration (Phases 5–6) produced a candidate fix that 
    - **score < threshold** → **enter the ultra ralph loop.** Don't ship past a failed gate silently.
 
 **Ultra ralph loop.** Iterate the *implementation* until it clears the gate — the boulder never stops until the review passes (or the bound trips). Drive it with `/oh-my-claudecode:ralph` + `ultrawork`, or inline with `Workflow`; the exit condition is the ≥ threshold gate, not a fixed round count. Each iteration:
-1. Hand the blocking findings + current diff to `oh-my-claudecode:executor` (`deep-executor` for multi-file) and fix them; run independent fixes in parallel (ultrawork posture).
+1. Hand the blocking findings + current diff to `oh-my-claudecode:executor` (`model="opus"` for multi-file) and fix them; run independent fixes in parallel (ultrawork posture).
 2. Re-run **Phase 6** cleanup on the new diff.
 3. Re-verify (`oh-my-claudecode:verifier`) — must be green before re-review.
 4. Re-review with a **new** fresh panel (step 1) and re-score.
@@ -192,7 +192,7 @@ The implementation has cleared its Phase 6.5 gate.
 
    <one-line why, if not obvious>
 
-   Co-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>
+   Co-Authored-By: Claude <noreply@anthropic.com>
    ```
 2. Push: `git push -u origin HEAD` — but **never onto the default branch**. If HEAD is `main`/`master` (the Phase 5 `--here` guard should already have branched), branch to `fix/…` first; don't pollute the default branch.
 3. Run **`/nick:pr`** to open the pull request (handles draft mode and template; it adds `Relates to #<n>` from the branch name when there's an issue, and omits the trailer for a freeform target).
@@ -220,7 +220,7 @@ decision: fix-shipped      # fix-shipped | no-change-needed | investigate-only |
 pr: https://github.com/OWNER/REPO/pull/123   # present only when a PR was opened
 branch: fix/issue-108114   # the Phase 5 fix branch; lets a review-under-threshold recall re-enter the worktree where the plateaued diff lives (omit if --here or no fix branch)
 date: 2026-07-06           # today's date
-last_comment_at: 2026-07-06T14:22:00Z   # the Phase 0.5 `newest_seen`: newest timestamp among ALL issue comments seen, so it always advances and an immaterial comment can't re-trigger the recall (GitHub issue only; omit for freeform)
+last_comment_at: 2026-07-06T14:22:00Z   # the Phase 0 `newest_seen`: newest timestamp among ALL issue comments seen, so it always advances and an immaterial comment can't re-trigger the recall (GitHub issue only; omit for freeform)
 ---
 
 <the consolidated report: root cause, key evidence for/against, score %, recommended fix or
