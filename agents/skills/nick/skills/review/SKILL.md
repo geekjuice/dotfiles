@@ -239,6 +239,13 @@ Hand all verified findings + comment dispositions (INCREMENTAL: **plus the carri
 ### What's Done Well
 - Positive observations agreed on by 2+ agents
 
+### Merge readiness
+**SAFE TO MERGE** | **SAFE WITH CAVEATS** | **NOT SAFE**
+- Behavior this diff can change: <surfaces, or "nothing outside the new code path">
+- Existing flows checked and unaffected: <flow — how you checked>
+- Not checked: <gaps, or "nothing material">
+- Solves the stated issue: yes / partially / no — name the issue and what's left over
+
 ### Verdict
 **APPROVE** | **CONCERNS** | **REQUEST_CHANGES**
 Rationale: 1–2 sentences.
@@ -246,6 +253,8 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 ```
 
 **Verdict rules:** any CRITICAL → **REQUEST_CHANGES**; 2+ HIGH → **REQUEST_CHANGES**; 1 HIGH or 3+ MEDIUM → **CONCERNS**; otherwise → **APPROVE**.
+
+**Merge readiness is never omitted** — deep or light, cached or fresh. "Is this regression-free and safe to merge?" is the question the review exists to answer, so answer it unasked; `APPROVE` alone reads as a code-quality verdict, not a merge decision. Name what you did *not* check rather than letting silence imply full coverage — an honest SAFE WITH CAVEATS beats a bare APPROVE. In light mode (`--quick`), emit it marked `unverified — light pass`.
 
 ---
 
