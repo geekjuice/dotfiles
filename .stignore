@@ -1,4 +1,7 @@
-.DS_Store
 node_modules
 plugged
+.DS_Store
+.next
+.omc
+.parcel-cache
 .tmp

@@ -3,8 +3,8 @@ export HOMEBREW_NO_ENV_HINTS=true
 
 brewup() {
   brew update
-  brew upgrade
-  brew upgrade --cask
+  brew upgrade --no-ask
+  brew upgrade --cask --no-ask
   brew autoremove
   brew cleanup
   brew doctor

@@ -12,6 +12,7 @@
       "Bash(pnpm publish*)"
     ]
   },
+  "model": "opus",
   "hooks": {
     "SessionStart": [
       {

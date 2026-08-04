@@ -1,3 +1,5 @@
+alias git-pack="git gc --aggressive --prune"
+
 alias git-churn="git log --format=format: --name-only | grep -v '^$' | sort | uniq -c | sort -rg"
 
 git-trust() {

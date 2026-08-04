@@ -172,6 +172,8 @@ Each agent MUST output:
 
 ### 3b. Verify findings (along the way)
 
+**Stop each lens the moment its report block arrives.** Call `TaskStop` on it right then — don't wait for the slowest to finish, and never spend a turn narrating an idle or duplicate agent message. A lens that has delivered its findings has nothing left to add; a fan-out left running is what ends up killed by hand, and a killed fan-out costs a `resume` round to recover. If a lens goes idle *without* a report, ask it once for its output, then stop it and cover that lens yourself.
+
 As each lens reports, verify its non-trivial findings before they reach the report. For each CRITICAL/HIGH (and any disputed MEDIUM), spawn a verifier (`oh-my-claudecode:verifier`, `sonnet`) prompted **adversarially — try to refute the finding**:
 - Confirm the triggering code path actually exists in the diff and is reachable.
 - Default to `refuted` when the evidence is hand-wavy or the path can't be reproduced.
@@ -199,8 +201,9 @@ Hand all verified findings + comment dispositions (INCREMENTAL: **plus the carri
 2. **Rank by severity** — CRITICAL > HIGH > MEDIUM > LOW.
 3. **Confidence filter** — drop LOW items flagged by only one agent.
 4. **Resolve conflicts** — if agents disagree, present both sides and make the call.
-5. **Fold in comment triage** — surface WORTH_ADDRESSING (and NEEDS_DISCUSSION) items alongside the agents' findings.
-6. **Reconcile with the checkpoint** (INCREMENTAL) — carry untouched prior findings forward, mark delta-fixed ones resolved, add only genuinely new delta findings. Produce a short changelog: `N new · M resolved · K carried forward`.
+5. **Triage each finding by action** — tag every survivor `FIX NOW` (blocks this PR), `DEFER` (real, fine as a follow-up), or `IGNORE` (noise, wrong, or not worth the churn). Severity is how bad it is; this is whether Nick should act before merging, and the two come apart constantly. A finding nobody would act on gets cut, not listed. Answer this unasked — "any of these worth fixing, or okay to defer?" is not a question the report should leave open.
+6. **Fold in comment triage** — surface WORTH_ADDRESSING (and NEEDS_DISCUSSION) items alongside the agents' findings.
+7. **Reconcile with the checkpoint** (INCREMENTAL) — carry untouched prior findings forward, mark delta-fixed ones resolved, add only genuinely new delta findings. Produce a short changelog: `N new · M resolved · K carried forward`.
 
 ---
 
@@ -215,17 +218,22 @@ Hand all verified findings + comment dispositions (INCREMENTAL: **plus the carri
 <!-- INCREMENTAL only: -->
 **Delta since checkpoint (<prev-date>, <prev-short-sha>):** N new · M resolved · K carried forward
 
+### Worth acting on
+The edits themselves, not a restatement of the findings. One instruction per item carrying the literal value, path, or diff line to apply — not a bare `file:line`, not "consider". Mark each **required** or **optional**; if order matters (recompute-after-edit, parent-before-child) say so in one line. Close with a single offer: `Want me to apply <the required one>, or all N?` If none: `Nothing blocking — the rest is DEFER/IGNORE.`
+
 ### Critical / Must Fix
-- [ ] `file:line` — issue (Source: Agent 1, Agent 3 · Verified)
+- [ ] `file:line` — issue — **FIX NOW** (Source: Agent 1, Agent 3 · Verified)
 
 ### High / Should Fix
-- [ ] `file:line` — issue (Source: Agent 2 · Verified)
+- [ ] `file:line` — issue — **DEFER** (Source: Agent 2 · Verified)
 
 ### Medium / Consider
-- [ ] `file:line` — issue
+- [ ] `file:line` — issue — **DEFER**
 
 ### Low / Nitpicks
-- `file:line` — observation
+- `file:line` — observation — **DEFER**
+
+`IGNORE` findings are never printed. Close the section with one line: `N findings dropped as IGNORE.`
 
 ### Resolved Since Last Review  (incremental only)
 - ~~`file:line` — issue~~ — fixed by <commit/change>
@@ -238,6 +246,11 @@ Hand all verified findings + comment dispositions (INCREMENTAL: **plus the carri
 
 ### What's Done Well
 - Positive observations agreed on by 2+ agents
+
+### Comment on this PR?
+One line, unhedged: `Approve — nothing worth a comment.` or `Comment on N: <file:line>, <file:line>.`
+
+For each one listed, draft the comment text — short, ready to paste, no preamble. Fold findings that resolve to the same thread into one comment. Only list something here you'd defend if asked "is that actually important?" A nit you'd shrug at is an `IGNORE`, and IGNOREs don't get printed.
 
 ### Merge readiness
 **SAFE TO MERGE** | **SAFE WITH CAVEATS** | **NOT SAFE**
