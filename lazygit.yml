@@ -9,9 +9,10 @@ customCommands:
     context: "global"
     output: log
 git:
-  pagers:
+  diffRenderers:
     - colorArg: always
-      externalDiffCommand: difft --color=always
+      command: difft --color=always
+      type: extDiff
 gui:
   commandLogSize: 16
   mouseEvents: false

@@ -12,18 +12,7 @@
       "Bash(pnpm publish*)"
     ]
   },
-  "model": "opus",
   "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$HOME/.claude/skills/nick/skills/retro/scripts/session-start.py\" 2>/dev/null || true"
-          }
-        ]
-      }
-    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",
@@ -52,8 +41,7 @@
     "lua-lsp@claude-plugins-official": true
   },
   "effortLevel": "xhigh",
-  "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "agentPushNotifEnabled": true
+  "tui": "fullscreen"
 }

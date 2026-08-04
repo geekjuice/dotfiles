@@ -18,7 +18,7 @@ from pathlib import Path
 RETRO_DIR = Path.home() / ".claude" / "retro"
 STATE = RETRO_DIR / "state.json"
 LEARNED = RETRO_DIR / "learned"
-MAX_CHARS = 1800
+MAX_CHARS = 2400
 
 
 def emit(context: str) -> None:
