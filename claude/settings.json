@@ -12,7 +12,7 @@
       "Bash(pnpm publish*)"
     ]
   },
-  "model": "opus",
+  "model": "claude-fable-5-1[1m]",
   "hooks": {
     "SessionStart": [
       {
@@ -51,9 +51,15 @@
     "playwright@claude-plugins-official": true,
     "lua-lsp@claude-plugins-official": true
   },
+  "feedbackDrafts": "off",
   "effortLevel": "xhigh",
   "tui": "fullscreen",
   "skipDangerousModePermissionPrompt": true,
   "editorMode": "vim",
-  "agentPushNotifEnabled": true
+  "agentPushNotifEnabled": true,
+  "modelSettings": {
+    "claude-fable-5-1": {
+      "effortLevel": "high"
+    }
+  }
 }
