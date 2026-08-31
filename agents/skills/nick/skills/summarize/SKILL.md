@@ -23,6 +23,7 @@ Parse `$ARGUMENTS` into exactly one **source** and any number of **modifier flag
 
 **Rendering flags** (compose freely with the depth flag):
 - `--bullet` (alias `--bullets`) — render the chosen depth as a tight bulleted list instead of prose.
+- `"next steps"` / `"+ next steps"` in the argument is redundant — the Next step block is always emitted (§4). Treat it as a request to weight it, not to add it.
 - `--focus "<angle>"` — bias the summary toward one concern (e.g. `--focus "security impact"`, `--focus "what a reviewer needs to know"`). Keep the fixed skeleton; just weight it. Requires a quoted argument; treat an empty or whitespace-only value as if the flag were omitted; an unquoted value runs to the next recognized flag or end of input.
 - `--changelog` — format as release-note bullets grouped by change type (Added / Changed / Fixed / Removed), ≤ ~12 bullets. Meant for sources with a changeset (PR, branch, commit range, or a session that made code edits). For a changeset-less source (open issue, plain file, directory, web page, text), ignore it with a one-line note.
 - `--copy` — after printing, also copy the result to the clipboard (§6, best-effort per platform).
@@ -92,7 +93,7 @@ Pull the minimum context for the resolved source. Prefer one or two targeted com
 
 ## 4. Output contract
 
-Same headers every run. Emit only the sections the depth flag calls for, and drop any section (or skeleton part) you have nothing real to put in.
+Same headers every run. Emit only the sections the depth flag calls for, and drop any section (or skeleton part) you have nothing real to put in — except **Next step**, which is never dropped (see below).
 
 **Default (TL;DR + detailed):**
 
@@ -109,10 +110,12 @@ Same headers every run. Emit only the sections the depth flag calls for, and dro
 **Detailed block by source** (a skeleton, not a script — drop empty parts, keep it tight):
 - **SESSION** — **What we set out to do** · **What got done** · **Decisions made** · **Where it stands now** · **Open threads / next step**.
 - **ISSUE** — **The problem** · **Discussion / findings** · **Current state** (open/closed, decided/blocked) · **Next step**.
-- **PR** — **What it changes and why** · **Key areas touched** (group files by theme, not a raw list) · **Risk / impact** · **Status & how to verify**.
-- **GITREF** — **What changed**, grouped by theme, most significant first · **Why, if the commits say** · **Anything risky**.
-- **FILE / DIR** — **What it is / does** · **Key pieces** · **How it's used / called** · **Gotchas**.
-- **WEB / TEXT** — **The gist** · **Key points** · **Caveats or claims to check**.
+- **PR** — **What it changes and why** · **Key areas touched** (group files by theme, not a raw list) · **Risk / impact** · **Status & how to verify** · **Next step**.
+- **GITREF** — **What changed**, grouped by theme, most significant first · **Why, if the commits say** · **Anything risky** · **Next step**.
+- **FILE / DIR** — **What it is / does** · **Key pieces** · **How it's used / called** · **Gotchas** · **Next step**.
+- **WEB / TEXT** — **The gist** · **Key points** · **Caveats or claims to check** · **Next step**.
+
+**Next step is never dropped, for any source type.** Who has the ball and the one action — including post-merge actions and whether the issue can be closed. "Nothing left, it's merged and the issue is closed" is a valid next step; silence is not. It survives `--simple` (one line under the TL;DR) and the length budget: the budget cuts the summary, never the ask.
 
 **Length budget (keep it concise):** TL;DR ≤ ~60 words. Default `## Summary` ≤ ~200 words (or ≤ ~8 bullets). `--verbose` ≤ ~400 words (or ≤ ~12 bullets with `--bullet`). `--changelog` ≤ ~12 bullets. Shorter is fine — never pad to hit a number.
 

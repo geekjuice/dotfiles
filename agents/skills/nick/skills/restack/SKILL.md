@@ -111,6 +111,9 @@ For a stack, verify each push didn't absorb its parent: `gh pr diff <n> --name-o
 file list suddenly includes its parent's files was rebased onto the wrong point. Catching it here is
 the difference between one bad branch and a bad stack.
 
+Then run `spotlight status`. If a branch you just pushed is spotlit, run `spotlight refresh` and put
+it in the report.
+
 ## 7. Report
 
 Single branch: base, commits replayed, conflicts and how each was resolved, new SHA, push status.

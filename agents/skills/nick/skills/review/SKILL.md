@@ -19,7 +19,7 @@ Every review is **checkpointed** to `.ignore/reviews/<slug>.md` so re-runs are c
 ## Inputs
 
 Parse `args` for:
-- **Target** — a PR ref (`#107704`, `107704`, or a GitHub URL). If none, review the current branch.
+- **Target** — one or more PR refs (`#107704`, `107704`, or a GitHub URL). If none, review the current branch. **Multiple targets** (`#117138 and #117140`, `both PRs`, a list) are reviewed one at a time, each with its own slug, checkpoint, and full §6 report — never merged into one report, never silently narrowed to the first. `both PRs` resolves to the PRs for the branches this session has touched; if that's ambiguous, name the candidates and ask before spending agent time.
 - **Mode** — `light` (aliases `--light`, `--quick`) selects light mode; anything else is deep.
 - **`--force`** (alias `--fresh`) — ignore any checkpoint and run a full review from scratch, then overwrite it.
 - **`--reply`** / **`--resolve`** — *automated reviewers only.* Reply to / resolve the bot threads (CodeRabbit, Lucille, etc.) triaged in §4. Never on human comments, never on your own initiative — the flag (or an explicit ask) is required. Combine to reply then resolve.
@@ -266,6 +266,8 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 ```
 
 **Verdict rules:** any CRITICAL → **REQUEST_CHANGES**; 2+ HIGH → **REQUEST_CHANGES**; 1 HIGH or 3+ MEDIUM → **CONCERNS**; otherwise → **APPROVE**.
+
+**Multi-target runs open with a verdict table**, before the first report — one row per PR: `| PR | Verdict | Merge readiness |`. Then the full per-PR reports in the order given, and one offer per PR at the close, each with a literal selector the user can type back (`#117138: apply`, `#117140: none`). "Are they all safe to merge?" must be answerable from the table alone.
 
 **Merge readiness is never omitted** — deep or light, cached or fresh. "Is this regression-free and safe to merge?" is the question the review exists to answer, so answer it unasked; `APPROVE` alone reads as a code-quality verdict, not a merge decision. Name what you did *not* check rather than letting silence imply full coverage — an honest SAFE WITH CAVEATS beats a bare APPROVE. In light mode (`--quick`), emit it marked `unverified — light pass`.
 
