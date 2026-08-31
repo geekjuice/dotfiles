@@ -73,6 +73,10 @@ Say which worktree is spotlit onto which path, and how to undo it. On `start`,
 mention whether uncommitted work got parked. If the user has a dev server up,
 point out that it should have hot-reloaded.
 
+For the rest of the session, while this worktree is spotlit, end every turn that
+changed it (edit, commit, restack, conflict fix) with `spotlight refresh` and one
+line: `spotlight refreshed → <sha>`. Don't wait to be asked.
+
 ## When it refuses
 
 | Message | What to do |

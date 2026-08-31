@@ -10,7 +10,8 @@ windows:
     panes:
       - ashby-shared
       - ashby-frontend
-      - ashby-api
       - ashby-task-worker-no-scheduler
+      - ashby-sqs-task-worker
+      - ashby-api
       - ashby-consumer
       - ashby-operations
