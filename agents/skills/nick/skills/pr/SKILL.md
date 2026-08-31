@@ -45,7 +45,13 @@ Create a pull request using the `gh` CLI (not the GitHub MCP tools). Default to 
    - **Comments.** Delete any comment that restates the code. Keep only the durable why a reader who never saw this change couldn't infer. Two lines max.
    - **Tests.** Stash the implementation half, re-run the tests this branch added, delete any that still pass. Two tests failing for the same reason are one test.
    - **Code.** Remove defensive branches for cases that can't happen, unused exports, speculative params.
-   - **Split.** If the diff mixes concerns, say so and offer the split — PR 1 is the fix plus only the tests that would have caught it, the rest goes in a stacked follow-up. Don't split on line count alone.
+   - **Split.** If the diff mixes concerns, say so and offer the split — PR 1 is the fix plus only the tests that would have caught it, the rest goes in a stacked follow-up. Don't split on line count alone. Propose the split while drafting the branch, not once the diff is already big.
+
+     Split when any of these is true, at any size: the diff mixes concerns (a behavior fix plus a refactor, or a fix plus a test-only cleanup); it trips required human review when a narrower PR wouldn't have; the interesting change is a handful of lines buried in mechanical churn (split so it stands alone and point at it from the description); or it exceeds ~1k added lines. A flag-only change is its own PR. To find the seam for PR 1, stash the fix and run each test — anything still green belongs in the follow-up.
+
+     Good seams: pure refactor/extraction + its tests, then the feature core (one mode/subject), then the extension. Each branch must pass tests, `tsc`, and lint on its own, and the stack's final tree should match the monolithic version (`git diff` — expect empty, or only deliberate fixes). Interim states may scope descriptions down and restore them in the next PR.
+
+     Don't over-split. If a piece can't be described in a sentence, or can't merge without its neighbor, it's a fragment — bundle it back.
 
    If this pass changes files, commit and re-push before drafting. Skip the whole step only if the user says the diff is final.
 
@@ -65,7 +71,7 @@ Body:
 
 <!-- QA (only when the change touches the product surface: see below)
 
-## QA
+## QA Steps Taken
 
 **Setup:** <branch, seed data, feature flag, anything needed before step 1>
 
@@ -97,7 +103,8 @@ Title rules:
 Ordering rules:
 - Everything after the "Why?" section must be separated by `---`
 - The hidden QA comment sits directly under "Why?", above the first `---`, so
-  uncommenting it drops a real `## QA` section into place with no other edits.
+  uncommenting it drops a real `## QA Steps Taken` section into place with no
+  other edits.
   Keep `---` out of the comment body: it belongs to the scaffold, not the block
 - Branch-derived references are always the second-to-last section
 - The "Generated with Claude Code" line is last of the visible body
@@ -133,6 +140,10 @@ Steps for Nick to run by hand before the PR goes up for review. They ship
 commented out. He walks them, and if they hold up he deletes the `<!--` / `-->`
 wrapper so reviewers get them too. So write them for a person at a keyboard, not
 as a summary of what you tested.
+
+The heading is "QA Steps Taken" because an uncommented block means Nick already
+walked every step and they passed. Reviewers read it as his record, not a to-do
+list, so never uncomment it yourself.
 
 Include a QA block when the change can be seen or felt in the product:
 
@@ -209,4 +220,17 @@ gh pr create --draft --title "..." --body-file /tmp/pr-body.md
 sed -i '' "s|<PR_URL>|$URL|" /tmp/pr-body.md && gh pr edit --body-file /tmp/pr-body.md
 ```
 
-9. Return the PR URL.
+9. Return the PR URL, followed by a **Merge verdict** block:
+
+```
+Merge verdict: SAFE TO MERGE | SAFE WITH CAVEAT | NOT SAFE
+Regression surface: <the call sites, orgs, or flags this change can reach, named>
+Not checked: <what you did not verify — or `nothing`>
+Post-merge: <ops tool, backfill, flag enable, issue to close — or `none`>
+Revertable: <yes/no + why>
+```
+
+Never omit it and never wait to be asked — "is this safe to merge, no regressions?" is
+the next thing you will be asked otherwise. The same block closes any later turn that
+leaves the PR changed (a CI fix, a cleanup push, a body edit); if the change was
+cosmetic, say so and carry the prior verdict forward by name instead of re-deriving it.
