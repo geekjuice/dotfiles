@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+#
+# revive — bring Claude Code sessions back into their tmux panes after a reboot.
+#
+# tmux-resurrect restores the panes but not the programs in them. `snapshot`
+# records which Claude session runs in which pane (and with which flags);
+# `restore` types the matching `claude --resume` into each pane.
+#
+# Snapshots are taken by the tmux-resurrect post-save hook, so continuum keeps
+# them fresh. `restore` reads the newest snapshot taken before this boot, so a
+# save that happens after the reboot never hides the sessions you lost.
+
+set -euo pipefail
+
+PROG=${0##*/}
+STATE_DIR=${REVIVE_STATE_DIR:-${XDG_STATE_HOME:-$HOME/.local/state}/revive}
+SESSIONS_DIR=$HOME/.claude/sessions
+PROJECTS_DIR=$HOME/.claude/projects
+KEEP_DAYS=14
+
+die() { printf '%s: %s\n' "$PROG" "$*" >&2; exit 1; }
+
+usage() {
+  cat <<'EOF'
+revive — bring Claude Code sessions back into their tmux panes after a reboot.
+
+  revive snapshot                      record which Claude session runs in which pane
+  revive restore [--dry-run] [--from <file>]
+                                       resume each session in its pane
+
+restore reads the newest snapshot taken before this boot (or --from <file>).
+It only types into panes sitting at a shell prompt, skips the pane it runs in,
+sessions that are already live, and sessions that were suspended (^Z) when
+the snapshot was taken. Those are printed with the command to run by hand.
+
+Snapshots live in $XDG_STATE_HOME/revive (default ~/.local/state/revive).
+EOF
+  exit "${1:-0}"
+}
+
+# The transcript lives under the project dir of the directory claude was
+# launched from, which can differ from the pane's cwd. When a session has been
+# resumed from several dirs, the biggest transcript is the real one.
+transcript_of() {
+  ls -S "$PROJECTS_DIR"/*/"$1".jsonl 2>/dev/null | head -1
+}
+
+# ps drops the original quoting, so flags with spaces in their values come back
+# split. Good enough for the flags people actually launch claude with.
+flags_of() {
+  local args=() out=() skip=0 a
+  read -r -a args <<<"$1"
+  for a in "${args[@]:1}"; do
+    if ((skip)); then skip=0; continue; fi
+    case $a in
+      --resume|-r) skip=1 ;;
+      --resume=*|--continue|-c) ;;
+      *) out+=("$a") ;;
+    esac
+  done
+  printf '%s' "${out[*]:-}"
+}
+
+cmd_snapshot() {
+  command -v jq >/dev/null || die "needs jq"
+  local f pid ps_out stat args tmux_ref pane id transcript title run_from rows=()
+  for f in "$SESSIONS_DIR"/*.json; do
+    [ -e "$f" ] || continue
+    pid=$(basename "$f" .json)
+    ps_out=$(ps -o stat=,args= -p "$pid" 2>/dev/null) || continue
+    read -r stat args <<<"$ps_out"
+    tmux_ref=$(jq -r '.tmux // empty' "$f")
+    [ -n "$tmux_ref" ] || continue
+    # "session:@window.%pane" — ids don't survive a reboot, indexes do.
+    pane=$(tmux display -p -t "%${tmux_ref##*%}" '#{session_name}:#{window_index}.#{pane_index}' 2>/dev/null) || continue
+    id=$(jq -r .sessionId "$f")
+    transcript=$(transcript_of "$id")
+    title=""
+    run_from=$(jq -r .cwd "$f")
+    if [ -n "$transcript" ]; then
+      title=$(grep -o '"customTitle":"[^"]*"' "$transcript" | tail -1 | cut -d'"' -f4 || true)
+      run_from=$(grep -m1 -o '"cwd":"[^"]*"' "$transcript" | cut -d'"' -f4 || echo "$run_from")
+    fi
+    [ -n "$title" ] || title=$(jq -r '.name // ""' "$f")
+    rows+=("$(jq -n --arg pane "$pane" --arg id "$id" --arg title "$title" \
+      --arg run_from "$run_from" --arg flags "$(flags_of "$args")" \
+      --argjson suspended "$([[ $stat == *T* ]] && echo true || echo false)" \
+      '{pane: $pane, id: $id, title: $title, run_from: $run_from, flags: $flags, suspended: $suspended}')")
+  done
+
+  # An empty snapshot would only ever shadow a useful one.
+  if [ ${#rows[@]} -eq 0 ]; then
+    echo "no Claude sessions in tmux; nothing saved"
+    return
+  fi
+  mkdir -p "$STATE_DIR"
+  local out="$STATE_DIR/$(date +%Y%m%d-%H%M%S).json"
+  printf '%s\n' "${rows[@]}" | jq -s --argjson at "$(date +%s)" '{taken_at: $at, sessions: .}' >"$out"
+  find "$STATE_DIR" -name '*.json' -mtime +"$KEEP_DAYS" -delete
+  echo "saved ${#rows[@]} sessions to $out"
+}
+
+boot_time() {
+  if [ -r /proc/stat ]; then
+    awk '/^btime/ { print $2 }' /proc/stat
+  else
+    sysctl -n kern.boottime | sed -E 's/^[{] sec = ([0-9]+),.*/\1/'
+  fi
+}
+
+pick_snapshot() {
+  local boot f newest=""
+  boot=$(boot_time)
+  for f in $(ls -r "$STATE_DIR"/*.json 2>/dev/null); do
+    [ -n "$newest" ] || newest=$f
+    if [ "$(jq .taken_at "$f")" -lt "$boot" ]; then
+      echo "$f"
+      return
+    fi
+  done
+  [ -n "$newest" ] || die "no snapshots in $STATE_DIR (run: $PROG snapshot)"
+  echo "$newest"
+}
+
+is_live() {
+  local f pid
+  for f in $(grep -l "\"sessionId\":\"$1\"" "$SESSIONS_DIR"/*.json 2>/dev/null); do
+    pid=$(basename "$f" .json)
+    kill -0 "$pid" 2>/dev/null && return 0
+  done
+  return 1
+}
+
+cmd_restore() {
+  command -v jq >/dev/null || die "needs jq"
+  local dry=0 from=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --dry-run|-n) dry=1 ;;
+      --from) from=${2:?--from needs a file}; shift ;;
+      --from=*) from=${1#--from=} ;;
+      -h|--help) usage ;;
+      *) die "unknown option: $1" ;;
+    esac
+    shift
+  done
+  [ -n "$from" ] || from=$(pick_snapshot)
+  echo "snapshot: $from ($(date -r "$(jq .taken_at "$from")" '+%F %T' 2>/dev/null || jq .taken_at "$from"))"
+
+  local pane id title run_from flags suspended cmd info pane_id pane_cmd sent=0
+  # \x1f, not tab: read merges runs of whitespace, so an empty field would shift the rest.
+  while IFS=$'\x1f' read -r pane id title run_from flags suspended; do
+    cmd="cd $(printf '%q' "$run_from") && claude ${flags:+$flags }--resume $id"
+    printf -- '- %-10s %s\n' "$pane" "${title:-$id}"
+    if [ "$suspended" = true ]; then
+      echo "    skipped: was suspended. By hand: $cmd"; continue
+    fi
+    if is_live "$id"; then
+      echo "    skipped: already running"; continue
+    fi
+    if [ -z "$(transcript_of "$id")" ]; then
+      echo "    skipped: no transcript for $id"; continue
+    fi
+    # tmux resolves an unknown target to some other pane, so match it exactly.
+    info=$(tmux list-panes -a -F '#{session_name}:#{window_index}.#{pane_index} #{pane_id} #{pane_current_command}' |
+      awk -v p="$pane" '$1 == p { print $2, $3 }')
+    if [ -z "$info" ]; then
+      echo "    skipped: pane missing. By hand: $cmd"; continue
+    fi
+    read -r pane_id pane_cmd <<<"$info"
+    if [ "$pane_id" = "${TMUX_PANE:-}" ]; then
+      echo "    skipped: this pane"; continue
+    fi
+    case $pane_cmd in
+      zsh|bash|fish|sh|-zsh|-bash) ;;
+      *) echo "    skipped: pane busy ($pane_cmd). By hand: $cmd"; continue ;;
+    esac
+    if ((dry)); then
+      echo "    would run: $cmd"
+    else
+      tmux send-keys -t "$pane" "$cmd" Enter
+      echo "    resumed"
+      sent=$((sent + 1))
+    fi
+  done < <(jq -r '.sessions[] | [.pane, .id, .title, .run_from, .flags, (.suspended|tostring)] | join("\u001f")' "$from")
+  ((dry)) || echo "resumed $sent sessions"
+}
+
+case ${1:-} in
+  snapshot) shift; cmd_snapshot "$@" ;;
+  restore) shift; cmd_restore "$@" ;;
+  -h|--help|help) usage ;;
+  "") usage 1 ;;
+  *) die "unknown command: $1 (try --help)" ;;
+esac
