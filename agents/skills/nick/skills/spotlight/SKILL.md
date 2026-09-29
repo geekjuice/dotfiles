@@ -1,6 +1,6 @@
 ---
 user-invocable: true
-description: "Mirror a git worktree's state into the main worktree, so the dev server, editor and build cache already running there see an agent's changes without a branch switch. Subcommands: start, refresh, status, stop. One-way and non-destructive."
+description: "Mirror a git worktree's state into the main worktree, so the dev server, editor and build cache already running there see an agent's changes without a branch switch. Subcommands: start, refresh, watch, unwatch, status, stop. One-way and non-destructive."
 ---
 
 # Spotlight
@@ -22,7 +22,8 @@ Map what the user said onto one subcommand:
 |---|---|
 | "spotlight this", "spotlight my worktree", "run this in main" | `spotlight start` (from the worktree) |
 | "spotlight `<branch>`", "put fix/login in main" | `spotlight start <branch>` |
-| "keep it in sync", "watch it", "auto-refresh" | `spotlight start --watch` (if already spotlit, `stop` then `start --watch`) |
+| "keep it in sync", "watch it", "auto-refresh" | `spotlight start --watch`, or `spotlight watch` if it's already spotlit |
+| "stop watching", "quit auto-refreshing", "leave it where it is" | `spotlight unwatch` |
 | "refresh", "update it", "push my latest over", "re-sync" | `spotlight refresh` |
 | "what's spotlit?", "is it still current?" | `spotlight status` |
 | "stop", "undo it", "give me my repo back" | `spotlight stop` |
@@ -35,6 +36,13 @@ than the main worktree), `--no-stash` (refuse rather than stash a dirty main
 worktree), `--force` (see the rules below).
 
 `start` accepts a worktree path, a branch name, or a unique substring of either.
+
+`watch` takes the interval in seconds and detaches, logging to
+`<repo>/.git/spotlight/watch.log`; `--fg` keeps it in the terminal instead.
+`stop` and `unwatch` both end it, and it refuses to start a second one. Either
+one waits for a sync already in flight to finish, so on a big repo they can
+take a few seconds to return — that's the watcher being shut down cleanly, not
+a hang.
 
 ## The model to explain, if asked
 
@@ -83,6 +91,7 @@ line: `spotlight refreshed → <sha>`. Don't wait to be asked.
 |---|---|
 | unfinished `rebase-merge` / `MERGE_HEAD` etc. | Finish or abort it in the named worktree (`git rebase --continue`, `git merge --abort`), then retry. |
 | "already spotlit onto …" | `spotlight stop` first, or `start <target> --force` to switch. Ask which. |
+| "already watching every …s" | A watcher is up. `spotlight unwatch` to stop it, or `watch --force` to replace it with a different interval. |
 | "local edits that a refresh would overwrite" | Those edits exist only in the main worktree. Offer: move them into the worktree yourself, or `refresh --force` to park them in a stash. |
 | "moved off the spotlight commit" | Someone checked something else out. `stop` cleans up state without disturbing it; `--force` takes it back. Ask. |
 | "the main worktree is not something you can spotlight onto itself" | You're in the main checkout. Name the worktree: `spotlight start <branch>`. |

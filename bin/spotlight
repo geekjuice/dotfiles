@@ -31,6 +31,8 @@ spotlight — mirror a git worktree's working state into the main worktree.
   spotlight start [<worktree|branch>] [--watch[=sec]] [--branch[=name]]
                                       [--to <path>] [--no-stash] [--force]
   spotlight refresh [--force]     re-sync the latest worktree state (alias: update, sync)
+  spotlight watch [sec] [--fg]    keep re-syncing on a timer (default 3s)
+  spotlight unwatch               stop the timer, stay spotlit
   spotlight status                what is spotlit, and whether it has drifted
   spotlight stop [--force]        put the main worktree back how it was
 
@@ -38,6 +40,9 @@ start    checkpoints the worktree and checks that commit out in the main
          worktree. Uncommitted work there is parked in a labelled stash.
 refresh  checkpoints again and moves the main worktree forward. Refuses if you
          have edited the main worktree (--force parks those edits in a stash).
+watch    refreshes on a timer, on something already spotlit. Detaches and logs
+         to a file; --fg keeps it in this terminal. Refuses if a watcher is
+         already up (--force takes over). Same thing 'start --watch' starts.
 stop     restores the original branch, HEAD and stashed work, then cleans up.
 
 Ignored files (node_modules, .env, dist) are never synced — the main worktree
@@ -192,30 +197,76 @@ state_load() {
     || die "state file $f came from another version of $PROG — run: $PROG stop --force"
 }
 
+# Written through a temp file: the watcher and a hand-run command can both be
+# saving at once, and a half-written state file is unrecoverable.
 state_save() {
-  local k v
+  local k v f
+  f=$(state_file)
   mkdir -p "$SPOT_DIR"
   for k in version source source_branch main checkpoint tree orig_head orig_branch \
            stash spot_branch watch_pid watch_interval started synced; do
     v="sp_$k"
     printf '%s=%q\n' "$v" "${!v:-}"
-  done >"$(state_file)"
+  done >"$f.$$"
+  mv -f "$f.$$" "$f"
 }
 
-state_clear() { rm -f "$(state_file)" "$IDX" "$PID_FILE"; }
+state_clear() { rm -f "$(state_file)" "$(state_file)".[0-9]* "$IDX" "$PID_FILE"; }
 
 # The watcher owns the pid file — `$!` from the spawning shell can name the
 # nohup wrapper rather than the watcher itself, so never trust it.
 watcher_pid() { cat "$PID_FILE" 2>/dev/null || true; }
 
-watcher_alive() { local p; p=$(watcher_pid); [ -n "$p" ] && kill -0 "$p" 2>/dev/null; }
+# Never trust the pid file on its own. A --fg watcher whose terminal closes
+# leaves one behind, and once that pid is reused we would be signalling a
+# stranger, so check the process really is one of ours before touching it.
+watcher_owns() {
+  local cmd
+  cmd=$(ps -o command= -p "$1" 2>/dev/null) || return 1
+  case $cmd in *"$SELF watch "*) return 0 ;; esac
+  return 1
+}
 
+watcher_alive() { local p; p=$(watcher_pid); [ -n "$p" ] && watcher_owns "$p"; }
+
+# Start the poll loop detached and wait for it to claim the pid file. Sets
+# sp_watch_pid; returns nonzero if the child never came up.
+spawn_watcher() {
+  local interval=$1 i=0
+  mkdir -p "$SPOT_DIR"
+  rm -f "$PID_FILE"
+  ( cd "$sp_main" && exec nohup "$SELF" watch "$interval" --fg >>"$LOG_FILE" 2>&1 & )
+  while [ -z "$(watcher_pid)" ] && [ $i -lt 40 ]; do sleep 0.1; i=$((i + 1)); done
+  sp_watch_pid=$(watcher_pid)
+  [ -n "$sp_watch_pid" ]
+}
+
+# SIGTERM is not enough on its own: bash runs the watcher's trap only once its
+# current command finishes, so a refresh already in flight would land after the
+# caller had restored the main worktree and quietly undo it. Wait for the
+# process to actually go before returning — and then re-read state, because the
+# sync we waited out will have moved the checkpoint under our caller.
+# Returns nonzero if the watcher outlived the wait, because a caller that then
+# restores or re-targets anyway is back to the race this wait exists to close.
 watcher_stop() {
-  local p; p=$(watcher_pid)
+  local p i=0 stubborn=""
+  p=$(watcher_pid)
   sp_watch_pid=""
   [ -n "$p" ] || return 0
+  if ! watcher_owns "$p"; then
+    rm -f "$PID_FILE"
+    return 0
+  fi
   kill "$p" 2>/dev/null || true
+  while kill -0 "$p" 2>/dev/null && [ $i -lt 100 ]; do sleep 0.1; i=$((i + 1)); done
+  kill -0 "$p" 2>/dev/null && stubborn=1
   rm -f "$PID_FILE"
+  state_load 2>/dev/null || true
+  sp_watch_pid=""
+  [ -z "$stubborn" ] || {
+    warn "the watcher (pid $p) is still finishing a sync after 10s, and it will move ${sp_main:-the main worktree} once more when it lands: kill -9 $p"
+    return 1
+  }
 }
 
 now() { date '+%Y-%m-%d %H:%M:%S'; }
@@ -309,12 +360,17 @@ cmd_start() {
     fi
     [ -n "$force" ] || die "$(basename "$sp_source") is already spotlit onto $sp_main.
 Run '$PROG stop' first, or '$PROG start $target --force' to switch to it."
-    watcher_stop
+    # Captured before watcher_stop, which re-reads state: these four describe
+    # the restore point and must come from what the caller loaded.
     keep_orig_head=$sp_orig_head
     keep_orig_branch=$sp_orig_branch
     keep_stash=$sp_stash
     keep_started=$sp_started
     retarget=1
+    if watcher_alive; then
+      say "dropping the watcher on $(basename "$sp_source") — re-add it with '$PROG watch' after this"
+    fi
+    watcher_stop || die "kill that watcher before re-targeting, or it will sync the old worktree over this one"
   fi
 
   sp_version=$STATE_VERSION
@@ -361,13 +417,7 @@ Run '$PROG stop' first, or '$PROG start $target --force' to switch to it."
   state_save
 
   if [ -n "$watch_int" ]; then
-    mkdir -p "$SPOT_DIR"
-    rm -f "$PID_FILE"
-    ( cd "$sp_main" && exec nohup "$SELF" watch "$watch_int" >>"$LOG_FILE" 2>&1 & )
-    local i=0
-    while [ -z "$(watcher_pid)" ] && [ $i -lt 40 ]; do sleep 0.1; i=$((i + 1)); done
-    sp_watch_pid=$(watcher_pid)
-    [ -n "$sp_watch_pid" ] || warn "the watcher did not come up — see $LOG_FILE"
+    spawn_watcher "$watch_int" || warn "the watcher did not come up — see $LOG_FILE"
     state_save
   fi
 
@@ -496,7 +546,9 @@ cmd_stop() {
     return 0
   fi
 
-  watcher_stop
+  if ! watcher_stop && [ -z "$force" ]; then
+    die "not restoring $sp_main while that sync is still coming — it would land on top and undo this. Kill the watcher and re-run, or '$PROG stop --force' to restore anyway."
+  fi
 
   local op
   if op=$(in_progress "$sp_main"); then die "the main worktree has an unfinished $op — finish or abort it before stopping"; fi
@@ -533,14 +585,72 @@ cmd_stop() {
   say "stopped — $sp_main is back on $restored"
 }
 
+# Attach a watcher to something already spotlit, so adding one doesn't mean
+# stopping and starting over. Detaches like `start --watch` does; --fg is the
+# loop itself, which is also how the detached child re-enters here.
+cmd_watch() {
+  local interval="" fg="" force=""
+  while [ $# -gt 0 ]; do
+    case $1 in
+      --fg)        fg=1; shift ;;
+      --force|-f)  force=1; shift ;;
+      -h|--help)   usage ;;
+      -*)          die "unknown flag: $1" ;;
+      *)           [ -z "$interval" ] || die "unexpected argument: $1"; interval=$1; shift ;;
+    esac
+  done
+  interval=${interval:-$WATCH_DEFAULT}
+  [ "$interval" -ge 1 ] 2>/dev/null || die "watch needs a whole number of seconds"
+
+  state_load || die "nothing is spotlit — start with '$PROG start <worktree>'"
+  [ -d "$sp_source" ] || die "the spotlit worktree is gone ($sp_source) — run '$PROG stop' to restore the main worktree"
+  if watcher_alive && [ -z "$force" ]; then
+    die "already watching every ${sp_watch_interval:-?}s (pid $(watcher_pid)) — '$PROG unwatch' stops it, or '$PROG watch --force' takes it over"
+  fi
+  # Two watchers driving the same scratch index is how you get the older
+  # checkpoint landing last, so never spawn until the old one is really gone.
+  watcher_stop || die "not starting a second watcher while the old one is still syncing"
+
+  sp_watch_interval=$interval
+  if [ -n "$fg" ]; then
+    sp_watch_pid=$$
+    state_save
+    watch_loop "$interval"
+    return
+  fi
+
+  spawn_watcher "$interval" || die "the watcher did not come up — see $LOG_FILE"
+  state_save
+  say "watching ${sp_source_branch:-$(basename "$sp_source")} every ${interval}s (pid $sp_watch_pid) → $LOG_FILE"
+}
+
+cmd_unwatch() {
+  [ $# -eq 0 ] || case $1 in
+    -h|--help) usage ;;
+    *)         die "unknown argument: $1" ;;
+  esac
+
+  state_load || die "nothing is spotlit, so nothing is watching it"
+  local p=""
+  watcher_alive && p=$(watcher_pid)
+  watcher_stop || true   # it warned and named the pid; the state below is still right
+  sp_watch_interval=""
+  state_save
+  if [ -n "$p" ]; then
+    say "stopped watching (pid $p) — '$PROG refresh' still syncs by hand"
+  else
+    say "not watching"
+  fi
+}
+
 # Poll the worktree and re-sync when its contents change. Cheap because the
 # scratch index inherits the worktree's stat cache, so an unchanged tree costs
-# a stat walk. Started detached by `start --watch`; runs until stop kills it.
-cmd_watch() {
-  local interval=${1:-$WATCH_DEFAULT}
+# a stat walk. Runs until unwatch, stop, or a signal ends it.
+watch_loop() {
+  local interval=$1
   mkdir -p "$SPOT_DIR"
   printf '%s\n' "$$" >"$PID_FILE"
-  trap '[ "$(watcher_pid)" = "$$" ] && rm -f "$PID_FILE"; exit 0' TERM INT
+  trap '[ "$(watcher_pid)" = "$$" ] && rm -f "$PID_FILE"; exit 0' TERM INT HUP
   say "$(now)  watching every ${interval}s (pid $$)"
   while :; do
     sleep "$interval"
@@ -566,6 +676,7 @@ case $cmd in
   status|st)                cmd_status  "$@" ;;
   stop|off|end)             cmd_stop    "$@" ;;
   watch)                    cmd_watch   "$@" ;;
+  unwatch)                  cmd_unwatch "$@" ;;
   -h|--help|help)           usage ;;
   *)                        warn "unknown command: $cmd"; usage 1 ;;
 esac
