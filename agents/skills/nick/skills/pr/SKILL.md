@@ -71,7 +71,8 @@ Body:
 
 <!-- QA (only when the change touches the product surface: see below)
 
-## QA Steps Taken
+<details>
+<summary>QA Steps Taken</summary>
 
 **Setup:** <branch, seed data, feature flag, anything needed before step 1>
 
@@ -79,6 +80,8 @@ Body:
    Expect: <what you should see>
 2. <Action>
    Expect: <what you should see>
+
+</details>
 
 -->
 
@@ -103,8 +106,9 @@ Title rules:
 Ordering rules:
 - Everything after the "Why?" section must be separated by `---`
 - The hidden QA comment sits directly under "Why?", above the first `---`, so
-  uncommenting it drops a real `## QA Steps Taken` section into place with no
-  other edits.
+  uncommenting it drops a collapsed "QA Steps Taken" block into place with no
+  other edits. QA is never its own `##` section. Keep the blank line after
+  `</summary>` or GitHub won't render the markdown inside.
   Keep `---` out of the comment body: it belongs to the scaffold, not the block
 - Branch-derived references are always the second-to-last section
 - The "Generated with Claude Code" line is last of the visible body, and it is the
@@ -121,7 +125,8 @@ Hard counts, not vibes — "be succinct" has never been enough on its own:
 - **What?** One sentence. Hard stop.
 - **Why?** Three sentences, max.
 - **Visible body:** 15 lines, max, excluding the template scaffold. The QA block
-  is hidden, so it doesn't count against this.
+  is hidden, so it doesn't count against this. Neither do media, tables, and code blocks
+  carried over on a refresh (step 7).
 
 A refresh never lengthens an existing body. If a draft exceeds a count, cut it
 *before* showing it — don't show it and ask.
@@ -209,7 +214,8 @@ Same voice rules as the body: no filler, no hedging, no AI slop.
   or rollout recipes. The body is the template's sections and nothing else; the rest goes
   in chat. Same for issue bodies you draft.
 - **Edits from outside this skill.** Any `gh pr edit --body` from investifix, a QA pass, or
-  a restack re-applies this list and the step-6 length ceiling before pushing.
+  a restack re-applies this list and the step-6 length ceiling before pushing, and
+  keeps media, tables, and code blocks per step 7.
 
 7. Write the body to a file, leaving `<PR_URL>` in place in the `#shipping` comment.
    Then create or update the PR. If step 1 found an existing PR, swap
@@ -219,6 +225,9 @@ Same voice rules as the body: no filler, no hedging, no AI slop.
    On a refresh, pull the current body first (`gh pr view --json body -q .body`).
    If its QA section is already uncommented, those steps passed: keep it
    uncommented and edit the steps in place. Never re-wrap it in `<!--`.
+   Rewrite only prose. Carry every image, GIF, video, table, diagram, and code block over
+   as-is, in the section it sat in. If that section gets cut, move it to the end
+   of "Why?".
 
 ```bash
 gh pr create --draft --title "..." --body-file /tmp/pr-body.md

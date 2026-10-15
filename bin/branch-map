@@ -1,0 +1,345 @@
+#!/usr/bin/env python3
+"""branch-map: every local branch, joined to its worktree, Conductor workspace, PR, and a cleanup verdict.
+
+Deterministic, read-only. Facts come from git (branches, worktrees, ahead/behind, status),
+gh (PRs), the ~/conductor/workspaces alias symlinks and Conductor's sqlite registry.
+
+  branch-map                 table for the repo containing the cwd
+  branch-map --candidates    only rows whose verdict is remove:* or review:*
+  branch-map --json          machine-readable, same facts
+  branch-map --no-status     skip per-worktree git status (faster)
+  branch-map --no-pr         skip GitHub entirely
+  branch-map --refresh       ignore the 15-minute PR cache
+
+Verdicts (first rule that matches wins):
+  main                 the main checkout
+  conductor:*          a Conductor workspace: never remove with git/wt, archive in the app
+  remove:merged        PR merged
+  remove:closed        PR closed, nothing unpushed, worktree clean
+  remove:no-commits    no PR, zero commits beyond the base, nothing uncommitted
+  review:closed-wip    PR closed but local work remains
+  review:no-pr         commits beyond the base with no PR
+  keep:open-stale      open PR with no activity for --stale-days
+  keep:open            open PR
+"""
+import argparse
+import concurrent.futures as cf
+import hashlib
+import json
+import os
+import re
+import sqlite3
+import subprocess
+import sys
+import time
+from datetime import datetime, timezone
+
+HOME = os.path.expanduser("~")
+CONDUCTOR_ROOT = os.path.join(HOME, "conductor", "workspaces")
+CONDUCTOR_DB = os.path.join(HOME, "Library", "Application Support", "com.conductor.app", "conductor.db")
+CACHE_DIR = os.path.join(HOME, ".cache", "branch-map")
+CACHE_TTL = 15 * 60
+CONTEXT_DIRS = (".context", ".omc/plans", ".omc/research", ".omc/autopilot", ".ignore")
+VERDICT_ORDER = ["remove", "review", "keep", "conductor", "main"]
+
+
+def git(repo, *args, check=True):
+    r = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)}: {r.stderr.strip()}")
+    return r.stdout
+
+
+def main_repo(start):
+    common = git(start, "rev-parse", "--path-format=absolute", "--git-common-dir").strip()
+    return os.path.dirname(common) if os.path.basename(common) == ".git" else common
+
+
+def default_base(repo):
+    try:
+        ref = git(repo, "symbolic-ref", "--short", "refs/remotes/origin/HEAD").strip()
+        return ref or "origin/develop"
+    except RuntimeError:
+        for cand in ("origin/develop", "origin/main", "origin/master"):
+            if subprocess.run(["git", "-C", repo, "rev-parse", "--verify", "-q", cand], capture_output=True).returncode == 0:
+                return cand
+    return "origin/develop"
+
+
+def branches(repo):
+    fmt = "%(refname:short)%00%(objectname:short)%00%(committerdate:iso-strict)%00%(upstream:short)%00%(upstream:track,nobracket)%00%(contents:subject)"
+    out = {}
+    for line in git(repo, "for-each-ref", "refs/heads", f"--format={fmt}").splitlines():
+        name, sha, date, up, track, subject = line.split("\x00")
+        out[name] = {"branch": name, "sha": sha, "committed_at": date[:10], "upstream": up or None,
+                     "upstream_track": track or ("" if up else "none"), "subject": subject}
+    return out
+
+
+def worktrees(repo):
+    out, cur = {}, {}
+    for line in git(repo, "worktree", "list", "--porcelain").splitlines() + [""]:
+        if not line:
+            if cur:
+                out[cur.get("branch", f"detached@{cur.get('head', '')[:11]}")] = cur
+            cur = {}
+            continue
+        key, _, val = line.partition(" ")
+        if key == "worktree":
+            cur["path"] = val
+        elif key == "branch":
+            cur["branch"] = val.replace("refs/heads/", "", 1)
+        elif key == "HEAD":
+            cur["head"] = val
+        elif key in ("locked", "prunable", "detached", "bare"):
+            cur[key] = val or True
+    return out
+
+
+def conductor_aliases():
+    """realpath(city dir) -> alias symlink name, for every repo under ~/conductor/workspaces."""
+    out = {}
+    if not os.path.isdir(CONDUCTOR_ROOT):
+        return out
+    for repo in os.listdir(CONDUCTOR_ROOT):
+        rdir = os.path.join(CONDUCTOR_ROOT, repo)
+        if not os.path.isdir(rdir):
+            continue
+        for name in os.listdir(rdir):
+            p = os.path.join(rdir, name)
+            if os.path.islink(p):
+                target = os.path.realpath(p)
+                mtime = os.lstat(p).st_mtime
+                if target not in out or mtime > out[target][1]:
+                    out[target] = (name, mtime)
+    return {k: v[0] for k, v in out.items()}
+
+
+def conductor_registry():
+    """(directory_name, branch) -> state, plus directory_name -> newest ready row."""
+    rows = {}
+    if not os.path.exists(CONDUCTOR_DB):
+        return rows
+    try:
+        con = sqlite3.connect(f"file:{CONDUCTOR_DB}?mode=ro", uri=True, timeout=2)
+        for d, b, s, u in con.execute("select directory_name, branch, state, updated_at from workspaces order by updated_at"):
+            rows[(d, b)] = {"state": s, "updated_at": (u or "")[:10]}
+            if s == "ready":
+                rows[d] = {"state": s, "updated_at": (u or "")[:10], "branch": b}
+        con.close()
+    except Exception:
+        pass
+    return rows
+
+
+def ahead_behind(repo, base, branch):
+    out = git(repo, "rev-list", "--left-right", "--count", f"{base}...{branch}", check=False).split()
+    return (int(out[1]), int(out[0])) if len(out) == 2 else (None, None)
+
+
+def status(path):
+    r = subprocess.run(["git", "-C", path, "status", "--porcelain"], capture_output=True, text=True)
+    mod = unt = 0
+    for line in r.stdout.splitlines():
+        if line[:2] == "??":
+            unt += 1
+        else:
+            mod += 1
+    ctx = 0
+    for rel in CONTEXT_DIRS:
+        d = os.path.join(path, rel)
+        if not os.path.isdir(d):
+            continue
+        for root, _, files in os.walk(d):
+            ctx += sum(1 for f in files if f != "todos.md")
+    return {"modified": mod, "untracked": unt, "context_files": ctx}
+
+
+def gh_json(args):
+    r = subprocess.run(["gh", *args], capture_output=True, text=True)
+    if r.returncode != 0:
+        return None
+    try:
+        return json.loads(r.stdout)
+    except json.JSONDecodeError:
+        return None
+
+
+def pull_requests(repo, names, refresh):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    key = hashlib.sha1(repo.encode()).hexdigest()[:12]
+    cache = os.path.join(CACHE_DIR, f"{key}.json")
+    if not refresh and os.path.exists(cache) and time.time() - os.path.getmtime(cache) < CACHE_TTL:
+        with open(cache) as f:
+            data = json.load(f)
+        if set(names) <= set(data):
+            return {n: data[n] for n in names}
+    fields = "headRefName,number,state,isDraft,mergedAt,closedAt,updatedAt,url,author"
+    found = {}
+    for pr in gh_json(["pr", "list", "--author", "@me", "--state", "all", "--limit", "1000", "--json", fields]) or []:
+        found.setdefault(pr["headRefName"], []).append(pr)
+
+    def lookup(name):
+        prs = gh_json(["pr", "list", "--head", name, "--state", "all", "--limit", "5", "--json", fields]) or []
+        return name, prs
+
+    missing = [n for n in names if n not in found]
+    with cf.ThreadPoolExecutor(8) as pool:
+        for name, prs in pool.map(lookup, missing):
+            found[name] = prs
+    result = {}
+    for name in names:
+        prs = sorted(found.get(name, []), key=lambda p: p["number"], reverse=True)
+        result[name] = [{"number": p["number"], "state": p["state"], "draft": p["isDraft"],
+                         "author": (p.get("author") or {}).get("login"), "url": p["url"],
+                         "merged_at": (p.get("mergedAt") or "")[:10], "closed_at": (p.get("closedAt") or "")[:10],
+                         "updated_at": (p.get("updatedAt") or "")[:10]} for p in prs]
+    with open(cache, "w") as f:
+        json.dump(result, f)
+    return result
+
+
+def verdict(row, stale_days):
+    if row["worktree_kind"] == "main":
+        return "main"
+    pr = row["pr"]
+    if row["worktree_kind"] == "conductor":
+        if pr and pr["state"] in ("MERGED", "CLOSED"):
+            return f"conductor:{pr['state'].lower()}-archive-in-app"
+        return "conductor:keep"
+    wip = (row["modified"] or 0) + (row["untracked"] or 0) > 0 or (row["unpushed"] or 0) > 0
+    if pr and pr["state"] == "MERGED":
+        return "remove:merged" if not wip else "review:merged-wip"
+    if pr and pr["state"] == "CLOSED":
+        return "remove:closed" if not wip else "review:closed-wip"
+    if not pr:
+        if (row["ahead"] or 0) == 0 and not wip:
+            return "remove:no-commits"
+        return "review:no-pr"
+    if pr["updated_at"]:
+        age = (datetime.now(timezone.utc) - datetime.fromisoformat(pr["updated_at"]).replace(tzinfo=timezone.utc)).days
+        if age > stale_days:
+            return "keep:open-stale"
+    return "keep:open"
+
+
+def build(args):
+    repo = main_repo(args.repo or os.getcwd())
+    base = args.base or default_base(repo)
+    brs = branches(repo)
+    wts = worktrees(repo)
+    aliases = conductor_aliases()
+    registry = conductor_registry()
+    main_branch = next((n for n, w in wts.items() if os.path.realpath(w["path"]) == os.path.realpath(repo)), None)
+    base_short = base.split("/", 1)[1] if "/" in base else base
+    lookup = sorted(n for n in brs if n not in (main_branch, base_short))
+    prs = pull_requests(repo, lookup, args.refresh) if not args.no_pr else {}
+
+    rows = []
+    for name, b in sorted(brs.items()):
+        wt = wts.get(name)
+        row = dict(b)
+        row.update({"worktree": None, "worktree_kind": None, "conductor_alias": None, "conductor_state": None,
+                    "locked": None, "prunable": None, "modified": None, "untracked": None, "context_files": None})
+        if wt:
+            path = wt["path"]
+            real = os.path.realpath(path)
+            row["worktree"] = path
+            row["locked"] = wt.get("locked")
+            row["prunable"] = wt.get("prunable")
+            if real == os.path.realpath(repo):
+                row["worktree_kind"] = "main"
+            elif real.startswith(os.path.realpath(CONDUCTOR_ROOT) + os.sep):
+                row["worktree_kind"] = "conductor"
+                row["conductor_alias"] = aliases.get(real)
+                reg = registry.get((os.path.basename(real), name)) or registry.get(os.path.basename(real))
+                row["conductor_state"] = reg["state"] if reg else "unregistered"
+            else:
+                row["worktree_kind"] = "wt"
+        row["ahead"], row["behind"] = ahead_behind(repo, base, name)
+        track = b["upstream_track"]
+        m = re.search(r"ahead (\d+)", track)
+        row["unpushed"] = int(m.group(1)) if m else (row["ahead"] if track == "none" else 0)
+        prlist = prs.get(name, [])
+        row["pr"] = prlist[0] if prlist else None
+        row["prs"] = prlist
+        rows.append(row)
+
+    if not args.no_status:
+        targets = [r for r in rows if r["worktree"] and not r["prunable"]]
+        with cf.ThreadPoolExecutor(8) as pool:
+            for r, st in zip(targets, pool.map(lambda r: status(r["worktree"]), targets)):
+                r.update(st)
+
+    for r in rows:
+        r["verdict"] = verdict(r, args.stale_days)
+    rows.sort(key=lambda r: (VERDICT_ORDER.index(r["verdict"].split(":")[0]), r["verdict"], r["branch"]))
+    return repo, base, rows
+
+
+def fmt_pr(pr):
+    if not pr:
+        return "-"
+    s = f"#{pr['number']} {pr['state'].lower()}"
+    if pr["draft"] and pr["state"] == "OPEN":
+        s += " draft"
+    return s
+
+
+def fmt_wt(r):
+    if not r["worktree"]:
+        return "-"
+    name = os.path.basename(r["worktree"])
+    if r["worktree_kind"] == "conductor":
+        alias = r["conductor_alias"] or "?"
+        return f"conductor:{name} ({alias}, {r['conductor_state']})"
+    if r["worktree_kind"] == "main":
+        return "main"
+    flags = "".join(f for f, v in (("L", r["locked"]), ("P", r["prunable"])) if v)
+    return f"wt:{name}" + (f" [{flags}]" if flags else "")
+
+
+def table(rows, base):
+    cols = ["VERDICT", "BRANCH", "WORKTREE", "PR", f"vs {base}", "UPSTREAM", "DIRTY", "CTX", "LAST"]
+    data = []
+    for r in rows:
+        ab = "-" if r["ahead"] is None else f"+{r['ahead']}/-{r['behind']}"
+        up = r["upstream_track"] or ("sync" if r["upstream"] else "none")
+        dirty = "-" if r["modified"] is None else f"{r['modified']}m/{r['untracked']}u"
+        ctx = "-" if r["context_files"] is None else str(r["context_files"])
+        data.append([r["verdict"], r["branch"], fmt_wt(r), fmt_pr(r["pr"]), ab, up, dirty, ctx, r["committed_at"]])
+    widths = [max(len(str(x)) for x in col) for col in zip(cols, *data)]
+    lines = ["  ".join(c.ljust(w) for c, w in zip(cols, widths))]
+    lines += ["  ".join(str(c).ljust(w) for c, w in zip(d, widths)) for d in data]
+    return "\n".join(lines)
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--repo", help="any path inside the repo (default: cwd)")
+    ap.add_argument("--base", help="base ref for ahead/behind (default: origin/HEAD)")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--candidates", action="store_true", help="only remove:* and review:* rows")
+    ap.add_argument("--no-pr", action="store_true")
+    ap.add_argument("--no-status", action="store_true")
+    ap.add_argument("--refresh", action="store_true", help="bypass the PR cache")
+    ap.add_argument("--stale-days", type=int, default=60)
+    args = ap.parse_args()
+    try:
+        repo, base, rows = build(args)
+    except RuntimeError as e:
+        sys.exit(f"branch-map: {e}")
+    if args.candidates:
+        rows = [r for r in rows if r["verdict"].split(":")[0] in ("remove", "review")]
+    if args.json:
+        print(json.dumps({"repo": repo, "base": base, "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"), "branches": rows}, indent=2))
+        return
+    counts = {}
+    for r in rows:
+        counts[r["verdict"].split(":")[0]] = counts.get(r["verdict"].split(":")[0], 0) + 1
+    print(f"{repo}  base={base}  " + "  ".join(f"{k}={v}" for k, v in counts.items()))
+    print(table(rows, base))
+
+
+if __name__ == "__main__":
+    main()
