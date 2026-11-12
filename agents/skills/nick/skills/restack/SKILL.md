@@ -119,6 +119,8 @@ it in the report.
 Single branch: base, commits replayed, conflicts and how each was resolved, new SHA, push status.
 Stack: a table — PR, old base, new base, conflicts resolved, pushed SHA.
 
+Then the Merge verdict per pushed PR, same shape as `/nick:pr` step 9 (SAFE TO MERGE | SAFE WITH CAVEAT | NOT SAFE, regression surface, not checked, post-merge, revertable). For 2+ PRs, the stack table `| PR | What it does | Impact | Merge verdict | Human review? |` in merge order. A replay that `git range-diff` shows identical carries the prior verdict forward by name and adds `Not checked: CI on <new sha>` until it is green; a replay with conflict resolutions re-derives it and says `Verified by: <n> independent agents | single pass`. "Safe to merge? no regressions?" is the next message otherwise.
+
 ## Rules
 
 - Never amend commit messages during a restack. A restack moves commits; it doesn't rewrite them.

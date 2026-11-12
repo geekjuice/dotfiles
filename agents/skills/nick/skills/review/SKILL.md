@@ -267,7 +267,7 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 
 **Verdict rules:** any CRITICAL → **REQUEST_CHANGES**; 2+ HIGH → **REQUEST_CHANGES**; 1 HIGH or 3+ MEDIUM → **CONCERNS**; otherwise → **APPROVE**.
 
-**Multi-target runs open with a verdict table**, before the first report — one row per PR: `| PR | Verdict | Merge readiness |`. Then the full per-PR reports in the order given, and one offer per PR at the close, each with a literal selector the user can type back (`#117138: apply`, `#117140: none`). "Are they all safe to merge?" must be answerable from the table alone.
+**Multi-target runs open with a verdict table**, before the first report — one row per PR in merge order: `| PR | What it does | Impact | Verdict | Merge readiness | Human review? |`. Human review? is yes when a required-review rule or CODEOWNERS path fires on the diff; say which. Then the full per-PR reports in the order given, and one offer per PR at the close, each with a literal selector the user can type back (`#117138: apply`, `#117140: none`). "Are they all safe to merge?" must be answerable from the table alone.
 
 **Merge readiness is never omitted** — deep or light, cached or fresh. "Is this regression-free and safe to merge?" is the question the review exists to answer, so answer it unasked; `APPROVE` alone reads as a code-quality verdict, not a merge decision. Name what you did *not* check rather than letting silence imply full coverage — an honest SAFE WITH CAVEATS beats a bare APPROVE. In light mode (`--quick`), emit it marked `unverified — light pass`.
 

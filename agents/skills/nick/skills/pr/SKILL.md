@@ -47,11 +47,13 @@ Create a pull request using the `gh` CLI (not the GitHub MCP tools). Default to 
    - **Code.** Remove defensive branches for cases that can't happen, unused exports, speculative params.
    - **Split.** If the diff mixes concerns, say so and offer the split — PR 1 is the fix plus only the tests that would have caught it, the rest goes in a stacked follow-up. Don't split on line count alone. Propose the split while drafting the branch, not once the diff is already big.
 
-     Split when any of these is true, at any size: the diff mixes concerns (a behavior fix plus a refactor, or a fix plus a test-only cleanup); it trips required human review when a narrower PR wouldn't have; the interesting change is a handful of lines buried in mechanical churn (split so it stands alone and point at it from the description); or it exceeds ~1k added lines. A flag-only change is its own PR. To find the seam for PR 1, stash the fix and run each test — anything still green belongs in the follow-up.
+     Split when any of these is true, at any size: the diff mixes concerns (a behavior fix plus a refactor, or a fix plus a test-only cleanup); it trips required human review when a narrower PR wouldn't have; the interesting change is a handful of lines buried in mechanical churn (split so it stands alone and point at it from the description); or it exceeds ~400 added lines of hand-written code (generated files and lockfiles don't count; name them in the body). A flag-only change is its own PR and goes first. To find the seam for PR 1, stash the fix and run each test — anything still green belongs in the follow-up.
 
      Good seams: pure refactor/extraction + its tests, then the feature core (one mode/subject), then the extension. Each branch must pass tests, `tsc`, and lint on its own, and the stack's final tree should match the monolithic version (`git diff` — expect empty, or only deliberate fixes). Interim states may scope descriptions down and restore them in the next PR.
 
      Don't over-split. If a piece can't be described in a sentence, or can't merge without its neighbor, it's a fragment — bundle it back.
+
+     Whatever shape you land on, say it in one line before the PR URL, every time: `Shape: 1 PR` or `Shape: 3 PRs, stacked: flag, then model, then UI. Split because <reason>.` The same line opens any later turn that changes the shape.
 
    If this pass changes files, commit and re-push before drafting. Skip the whole step only if the user says the diff is final.
 
@@ -185,6 +187,32 @@ How to write them:
   step 5's split offer applies.
 - Steps must be runnable by someone who didn't write the code. No "verify the
   reducer handles the empty case."
+
+### Screenshots
+
+When the QA verdict is `yes` and the change is visible on a screen (a frontend path, component,
+style, copy, or route), the body carries a before/after table at the end of "Why?", unasked:
+
+```
+| Before | After |
+|---|---|
+| ![before](./<name>-before.png) | ![after](./<name>-after.png) |
+```
+
+One row, at most two images per PR. Capture with Playwright MCP `browser_take_screenshot` against
+the spotlit dev server during the QA run (before = the base branch, after = this branch), cropped to
+the surface that changed. Upload with `gh` itself; never say gh cannot attach images and never hand
+the files to Nick to drag in:
+
+```bash
+gh pr edit <n> -R <owner/repo> --body-file /tmp/pr-<n>-body.md --attach './<name>-before.png#before' --attach './<name>-after.png#after'
+```
+
+GitHub rewrites each `![alt](./<file>.png)` to a user-attachments URL. Write the body file with `>|`
+(noclobber), `grep -c` a phrase unique to this PR before the edit, and re-read the body with
+`gh pr view <n> --json body -q .body` after it: `gh pr edit` exits 0 whether the body is right or
+garbage. A backend-only or tool-output change gets a code block of the before/after output instead.
+Skip when nothing renders differently and say `Screenshots: none — <why>` in chat.
 
 ### Writing the #shipping draft
 
