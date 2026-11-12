@@ -19,17 +19,17 @@ Every review is **checkpointed** to `.ignore/reviews/<slug>.md` so re-runs are c
 ## Inputs
 
 Parse `args` for:
-- **Target** — one or more PR refs (`#107704`, `107704`, or a GitHub URL). If none, review the current branch. **Multiple targets** (`#117138 and #117140`, `both PRs`, a list) are reviewed one at a time, each with its own slug, checkpoint, and full §6 report — never merged into one report, never silently narrowed to the first. `both PRs` resolves to the PRs for the branches this session has touched; if that's ambiguous, name the candidates and ask before spending agent time.
+- **Target** — one or more PR refs (`#1234`, `1234`, or a GitHub URL). If none, review the current branch. **Multiple targets** (`#117138 and #117140`, `both PRs`, a list) are reviewed one at a time, each with its own slug, checkpoint, and full §6 report — never merged into one report, never silently narrowed to the first. `both PRs` resolves to the PRs for the branches this session has touched; if that's ambiguous, name the candidates and ask before spending agent time.
 - **Mode** — `light` (aliases `--light`, `--quick`) selects light mode; anything else is deep.
 - **`--force`** (alias `--fresh`) — ignore any checkpoint and run a full review from scratch, then overwrite it.
-- **`--reply`** / **`--resolve`** — *automated reviewers only.* Reply to / resolve the bot threads (CodeRabbit, Lucille, etc.) triaged in §4. Never on human comments, never on your own initiative — the flag (or an explicit ask) is required. Combine to reply then resolve.
+- **`--reply`** / **`--resolve`** — *automated reviewers only.* Reply to / resolve the bot threads (CodeRabbit, Copilot, etc.) triaged in §4. Never on human comments, never on your own initiative — the flag (or an explicit ask) is required. Combine to reply then resolve.
 
 Examples:
 - `/nick:review` → cached / incremental / full review of the current branch (per checkpoint)
-- `/nick:review #107704` → same, for PR 107704
+- `/nick:review #1234` → same, for PR 1234
 - `/nick:review light` → light-mode review of the current branch
 - `/nick:review --force` → full deep review, ignoring any checkpoint
-- `/nick:review #107704 --reply --resolve` → deep review, then reply to and resolve the bot threads; the report still stays in the terminal
+- `/nick:review #1234 --reply --resolve` → deep review, then reply to and resolve the bot threads; the report still stays in the terminal
 
 ---
 
@@ -38,7 +38,7 @@ Examples:
 Do this **first**, before spending any agent time. The checkpoint lives at `.ignore/reviews/<slug>.md`.
 
 **Resolve the slug** — must be **deterministic**: the same target maps to the same slug every run. Each kind gets a reserved prefix:
-- PR target → `pr-<number>` (e.g. `pr-107704`)
+- PR target → `pr-<number>` (e.g. `pr-1234`)
 - Named branch → `branch-<sanitized>` (`/`→`-`, non-`[A-Za-z0-9._-]` stripped; `feat/email-notifs` → `branch-feat-email-notifs`). Empty `<sanitized>` → `branch-<short-head-sha>`. Branches that sanitize alike still collide — the target guard below is the backstop.
 - Detached HEAD / generic branch (`main`, `develop`) with no PR → `detached-<short-head-sha>`. New commits yield a new slug, so these get CACHED or FULL, never INCREMENTAL. Never use a model-written title.
 
@@ -86,7 +86,7 @@ Run these together:
 - **Project conventions**: locate all `CLAUDE.md` and `AGENTS.md` files in the repo.
 - **Prior checkpoint report** (INCREMENTAL only): read `.ignore/reviews/<slug>.md` in full — its findings and comment dispositions are the baseline you carry forward.
 
-**Deep mode + PR only — existing review comments.** Pull every existing comment/thread so it can be triaged in §4. Generalize across *all* reviewers (humans and bots alike — CodeRabbit, Lucille, etc. are just examples; don't special-case them):
+**Deep mode + PR only — existing review comments.** Pull every existing comment/thread so it can be triaged in §4. Generalize across *all* reviewers (humans and bots alike — CodeRabbit, Copilot, etc. are just examples; don't special-case them):
 
 ```bash
 # Issue-level + review summaries
@@ -267,7 +267,7 @@ Agent breakdown: Agent 1 (APPROVE), Agent 2 (CONCERNS), …
 
 **Verdict rules:** any CRITICAL → **REQUEST_CHANGES**; 2+ HIGH → **REQUEST_CHANGES**; 1 HIGH or 3+ MEDIUM → **CONCERNS**; otherwise → **APPROVE**.
 
-**Multi-target runs open with a verdict table**, before the first report — one row per PR: `| PR | Verdict | Merge readiness |`. Then the full per-PR reports in the order given, and one offer per PR at the close, each with a literal selector the user can type back (`#117138: apply`, `#117140: none`). "Are they all safe to merge?" must be answerable from the table alone.
+**Multi-target runs open with a verdict table**, before the first report — one row per PR in merge order: `| PR | What it does | Impact | Verdict | Merge readiness | Human review? |`. Human review? is yes when a required-review rule or CODEOWNERS path fires on the diff; say which. Then the full per-PR reports in the order given, and one offer per PR at the close, each with a literal selector the user can type back (`#117138: apply`, `#117140: none`). "Are they all safe to merge?" must be answerable from the table alone.
 
 **Merge readiness is never omitted** — deep or light, cached or fresh. "Is this regression-free and safe to merge?" is the question the review exists to answer, so answer it unasked; `APPROVE` alone reads as a code-quality verdict, not a merge decision. Name what you did *not* check rather than letting silence imply full coverage — an honest SAFE WITH CAVEATS beats a bare APPROVE. In light mode (`--quick`), emit it marked `unverified — light pass`.
 
@@ -282,8 +282,8 @@ After producing the report — FULL and INCREMENTAL, deep and light — persist 
 
 ```markdown
 ---
-target: "PR #107704"        # or "branch: feat/email-notifs"
-slug: pr-107704
+target: "PR #1234"        # or "branch: feat/email-notifs"
+slug: pr-1234
 sha: <full 40-char reviewed head SHA>
 base: develop               # base ref the diff was taken against
 base_sha: <full base–HEAD merge-base SHA>   # required — §0's base guard compares against this
@@ -304,7 +304,7 @@ last_activity: 2026-07-06T14:22:00Z   # §0's `newest_seen` — fetch-time high-
 
 **Hard default: display the report in the terminal only.** Don't post it as an issue/PR comment, and don't offer or ask. The checkpoint (§7) is all this skill writes by default. Post **only** when the user explicitly asks — and then **never interpolate the report into a shell command**: report bodies contain arbitrary code (a lone `EOF`, backticks, `$(…)`), so a heredoc or `--body "$(…)"` can truncate or execute it. Pass the body by file or stdin: `gh pr comment <number> --body-file <path>` (or `--body-file -`). Same rule for every write below. Prefix the posted report with the `<!-- review-skill:reply -->` sentinel so §0 excludes it next run.
 
-**Exception — automated reviewers only** (CodeRabbit, Lucille, etc.), gated on `--reply`/`--resolve` or an explicit ask — never on your own initiative. Both actions apply **only to threads §4 marked bot-only**; a **human-touched** thread (any human comment, even on a bot-opened thread) is never auto-replied or auto-resolved — surface it in the report for the human instead:
+**Exception — automated reviewers only** (CodeRabbit, Copilot, etc.), gated on `--reply`/`--resolve` or an explicit ask — never on your own initiative. Both actions apply **only to threads §4 marked bot-only**; a **human-touched** thread (any human comment, even on a bot-opened thread) is never auto-replied or auto-resolved — surface it in the report for the human instead:
 - `--reply` → reply on the bot-only threads from §4 (answer the bot; note what was addressed or skipped). Post **into the specific thread by its node/comment `id`** via the thread-reply API (`gh api .../pulls/<n>/comments/<comment_id>/replies` or `addPullRequestReviewThreadReply`) — never by `path`/`line`, never a top-level `gh pr comment` (that sprays the PR). Pass the reply body injection-safely (it echoes bot text): `gh api … -F body=@<file>` (or `--input`/stdin), never `-f body="$(…)"`. Start every reply body with the `<!-- review-skill:reply -->` sentinel.
 - `--resolve` → resolve the bot-only threads that are addressed or triaged NOT_WORTH_ADDRESSING / ALREADY_HANDLED, via the GraphQL `resolveReviewThread` mutation. Resolve **strictly by the thread node `id`** recorded in §4 (from the §1 `reviewThreads` query) — never match on `path`/`line`, which can hit the wrong thread when two share a location.
 - With neither flag nor an explicit ask, leave every thread untouched — triage them in the report and stop there.

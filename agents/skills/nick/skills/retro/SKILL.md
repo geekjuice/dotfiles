@@ -22,7 +22,7 @@ The bar for a lesson is not "this happened." It is **"this happened more than on
 - `--reset` → ignore `lastSyncAt`, treat this as a first run (14 days unless combined with `--days`/`--since`).
 
 **Scope:**
-- `--project <name>` — only this project (repeatable). Matches the cwd basename, e.g. `Ashby`, `.dotfiles`.
+- `--project <name>` — only this project (repeatable). Matches the cwd basename, e.g. `my-app`, `.dotfiles`.
 - `--exclude <name>` — drop a project (repeatable).
 - `--lens <name>` — run one lens only: `corrections`, `repeats`, `workflow`, `wins`. Repeatable.
 
@@ -34,7 +34,7 @@ The bar for a lesson is not "this happened." It is **"this happened more than on
 Examples:
 - `/nick:retro` → incremental run since last sync.
 - `/nick:retro --days 30 --lens workflow` → month of workflow-waste analysis only.
-- `/nick:retro --dry-run --project Ashby` → see what it would propose for Ashby, change nothing.
+- `/nick:retro --dry-run --project my-app` → see what it would propose for my-app, change nothing.
 
 ---
 
@@ -126,7 +126,7 @@ Lens output:
   "why": "the pattern behind it, one or two sentences",
   "occurrences": 4,
   "distinct_sessions": 3,
-  "evidence": [{"session": "uuid", "ts": "iso", "project": "Ashby", "quote": "verbatim, <200 chars"}],
+  "evidence": [{"session": "uuid", "ts": "iso", "project": "my-app", "quote": "verbatim, <200 chars"}],
   "already_documented": "none" | "CLAUDE.md: <quoted rule>" | "learned/<slug>",
   "scope": "global" | "project:<name>" | "skill:<name>",
   "target_kind": "learned" | "project-memory" | "skill-edit" | "new-skill" | "coaching",
@@ -192,7 +192,7 @@ sessions: 3
 ```
 Keep the body short. It is injected into every session and the digest is capped — a long entry crowds out a better one.
 
-**`project-memory`** → `~/.claude/projects/<project-slug>/memory/<slug>.md` in the standard memory format (`name`, `description`, `metadata.type` of `feedback` or `project`, body with **Why:** and **How to apply:**), plus a one-line pointer in that dir's `MEMORY.md`. The project slug is the cwd path with `/` replaced by `-`, e.g. `/Users/nickhwang/dev/ashby/Ashby` → `-Users-nickhwang-dev-ashby-Ashby`. Check for an existing memory covering the same ground and update it instead of adding a second.
+**`project-memory`** → `~/.claude/projects/<project-slug>/memory/<slug>.md` in the standard memory format (`name`, `description`, `metadata.type` of `feedback` or `project`, body with **Why:** and **How to apply:**), plus a one-line pointer in that dir's `MEMORY.md`. The project slug is the cwd path with `/` replaced by `-`, e.g. `/Users/me/dev/my-app` → `-Users-me-dev-my-app`. Check for an existing memory covering the same ground and update it instead of adding a second.
 
 **`skill-edit`** → Edit the target `SKILL.md`. Smallest change that lands the rule. Put it where the skill will actually read it, not in a trailing "notes" section. Re-read after editing to confirm the surrounding instructions still cohere.
 

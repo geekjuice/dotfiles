@@ -67,7 +67,7 @@ Union the required checks from **both**. Record from the rulesets' `pull_request
 
 State the discovered gates in one line before classifying. If a ruleset is `"enforcement": "disabled"`, ignore its rules but note it exists.
 
-> Real example of why: on `ashbyhq/Ashby`, branch protection lists only `Danger`. The `ci-gate` check — equally blocking — comes from a separate active ruleset. Reading protection alone under-reports the gates.
+> Real example of why: on one large monorepo, branch protection listed a single check. A second check, equally blocking, came from a separate active ruleset. Reading protection alone under-reports the gates.
 
 ---
 
@@ -135,7 +135,7 @@ If it **dismisses on push**, then a bot approval older than the head commit mean
 
 The real exposure is different, and worth reporting on its own: eligibility rules read **paths and words, not logic**. A PR can be rewritten top to bottom, stay eligible, and merge with **no human having read the final diff**. Cross-tabulate "substantively rewritten after approval" against "no human ever approved" — that intersection is the finding.
 
-> On `ashbyhq/Ashby` this is `ashby-automation` running `optional_human_review`: eligible when the author is on an allowlist **and** the diff avoids sensitive paths (GraphQL, migrations, models), sensitive words, and restricted branch pairs. It re-runs on every push and dismisses its own approval when a PR stops qualifying. Applying the naive stale-approval rule here gave 34 false positives against 2 real ones.
+> In one repo this was an automation account running an optional-human-review workflow: eligible when the author is on an allowlist **and** the diff avoids sensitive paths (GraphQL, migrations, models), sensitive words, and restricted branch pairs. It re-runs on every push and dismisses its own approval when a PR stops qualifying. Applying the naive stale-approval rule here gave 34 false positives against 2 real ones.
 
 ### 5b. Post-approval drift
 
@@ -145,7 +145,7 @@ Watch for a **force-push that orphans the approved commit**: if the approved SHA
 
 ### 5c. Review threads
 
-Fetch `reviewThreads` and drop `isResolved` and `isOutdated` ones. **Filter bot authors before counting** — expect the large majority to be bots (`coderabbitai`, `*-lucille-bot`, `github-actions`, `*[bot]`). Typical split is ~85–90% bot noise. Judge only human threads: *blocking* (a change or concern with no resolving reply) vs *non-blocking* (nit, praise, answered question, or the author's own annotation). Author self-annotations are common and are never blocking.
+Fetch `reviewThreads` and drop `isResolved` and `isOutdated` ones. **Filter bot authors before counting** — expect the large majority to be bots (`coderabbitai`, `github-actions`, `*[bot]`). Typical split is ~85–90% bot noise. Judge only human threads: *blocking* (a change or concern with no resolving reply) vs *non-blocking* (nit, praise, answered question, or the author's own annotation). Author self-annotations are common and are never blocking.
 
 If §2 found `required_review_thread_resolution: false`, say plainly that none of these block the merge button.
 
